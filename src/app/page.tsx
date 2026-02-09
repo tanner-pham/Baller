@@ -2,7 +2,7 @@ import { Navigation } from './components/Navigation';
 import { Hero } from './components/Hero';
 import { HowItWorks } from './components/HowItWorks';
 import { Features } from './components/Features';
-import { FinalCTA } from './components/FinalCTA';
+import { FinalCTA } from './components/FinalCTA.tsx';
 import { Footer } from './components/Footer';
 
 export default function App() {
