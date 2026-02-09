@@ -1,27 +1,14 @@
-"use client";
-
-
 export function Footer() {
   const productLinks = [
     { name: 'How It Works', href: '#how-it-works' },
     { name: 'Features', href: '#features' },
-    { name: 'Pricing', href: '#pricing' }
+    { name: 'Learn More', href: '#learn-more'}
   ];
 
   const resourceLinks = [
-    { name: 'Documentation', href: '#docs' },
-    { name: 'GitHub', href: '#github' },
-    { name: 'Support', href: '#support' }
+    { name: 'Living Document', href: 'https://docs.google.com/document/d/1Ne9dMbzxdo1actxRgpeopU2VFmHr2Dr3ZVr-e0mSXKc/edit?tab=t.0' },
+    { name: 'GitHub', href: 'https://github.com/tanner-pham/Baller' },
   ];
-
-  const scrollToSection = (href: string) => {
-    if (href.startsWith('#')) {
-      const element = document.querySelector(href);
-      if (element) {
-        element.scrollIntoView({ behavior: 'smooth' });
-      }
-    }
-  };
 
   return (
     <footer className="bg-black text-white border-t-5 border-black">
@@ -47,12 +34,12 @@ export function Footer() {
             <ul className="space-y-3">
               {productLinks.map((link) => (
                 <li key={link.name}>
-                  <button
-                    onClick={() => scrollToSection(link.href)}
+                  <a
+                    href={link.href}
                     className="font-['Space_Grotesk',sans-serif] font-medium text-gray-400 hover:text-white transition-colors"
                   >
                     {link.name}
-                  </button>
+                  </a>
                 </li>
               ))}
             </ul>
@@ -66,12 +53,14 @@ export function Footer() {
             <ul className="space-y-3">
               {resourceLinks.map((link) => (
                 <li key={link.name}>
-                  <button
-                    onClick={() => scrollToSection(link.href)}
+                  <a
+                    href={link.href}
+                    target="_blank"
+                    rel="noreferrer"
                     className="font-['Space_Grotesk',sans-serif] font-medium text-gray-400 hover:text-white transition-colors"
                   >
                     {link.name}
-                  </button>
+                  </a>
                 </li>
               ))}
             </ul>
