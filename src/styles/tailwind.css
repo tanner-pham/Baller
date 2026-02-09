@@ -1,0 +1,27 @@
+@import 'tailwindcss' source(none);
+@source '../**/*.{js,ts,jsx,tsx}';
+
+@import 'tw-animate-css';
+
+/* Neo-brutalist custom utilities */
+@layer utilities {
+  .border-5 {
+    border-width: 5px;
+  }
+  
+  .text-shadow-neo {
+    text-shadow: -4px 4px 0px black;
+  }
+  
+  .shadow-brutal {
+    box-shadow: 6px 8px 0px 0px black;
+  }
+  
+  .shadow-brutal-sm {
+    box-shadow: 4px 6px 0px 0px black;
+  }
+  
+  .shadow-brutal-lg {
+    box-shadow: 8px 10px 0px 0px black;
+  }
+}
