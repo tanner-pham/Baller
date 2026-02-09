@@ -1,8 +1,6 @@
 @import 'tailwindcss' source(none);
 @source '../**/*.{js,ts,jsx,tsx}';
 
-@import 'tw-animate-css';
-
 /* Neo-brutalist custom utilities */
 @layer utilities {
   .border-5 {
