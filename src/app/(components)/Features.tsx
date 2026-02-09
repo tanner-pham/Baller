@@ -58,9 +58,6 @@ export function Features() {
                     <h3 className="font-['Anton',sans-serif] text-2xl">
                       {feature.title}
                     </h3>
-                    <p className="font-['Space_Grotesk',sans-serif] text-sm font-bold text-gray-500">
-                      {feature.author}
-                    </p>
                   </div>
                 </div>
               </div>

@@ -44,22 +44,6 @@ export function Hero() {
                 className="w-full px-8 py-6 text-lg font-['Space_Grotesk',sans-serif] font-semibold outline-none placeholder:text-gray-400"
               />
             </div>
-            
-            {/* Category Pills */}
-            <div className="flex flex-wrap justify-center gap-3">
-              <button className="bg-white border-4 border-black px-6 py-3 rounded-full font-['Space_Grotesk',sans-serif] font-bold text-sm hover:bg-[#FADF0B] transition-colors shadow-[4px_4px_0px_0px_#000000]">
-                Electronics
-              </button>
-              <button className="bg-white border-4 border-black px-6 py-3 rounded-full font-['Space_Grotesk',sans-serif] font-bold text-sm hover:bg-[#FF69B4] transition-colors shadow-[4px_4px_0px_0px_#000000]">
-                Furniture
-              </button>
-              <button className="bg-white border-4 border-black px-6 py-3 rounded-full font-['Space_Grotesk',sans-serif] font-bold text-sm hover:bg-[#90EE90] transition-colors shadow-[4px_4px_0px_0px_#000000]">
-                Vehicles
-              </button>
-              <button className="bg-white border-4 border-black px-6 py-3 rounded-full font-['Space_Grotesk',sans-serif] font-bold text-sm hover:bg-[#FF6600] transition-colors shadow-[4px_4px_0px_0px_#000000]">
-                Clothing
-              </button>
-            </div>
 
             <button
               onClick={handleAnalyze}
