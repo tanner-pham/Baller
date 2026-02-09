@@ -33,7 +33,7 @@ export function Features() {
   ];
 
   return (
-    <section id="features" className="relative py-20 lg:py-32 bg-[#F5F5F5] border-b-5 border-black overflow-hidden">
+    <section id="features" className="relative py-20 lg:py-32 bg-[#90EE90] border-b-5 border-black overflow-hidden">
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
           <h2 className="font-['Anton',sans-serif] text-6xl lg:text-7xl mb-4 text-black">
