@@ -69,11 +69,6 @@ export function Features() {
               <p className="font-['Space_Grotesk',sans-serif] font-semibold text-gray-700 mb-6">
                 {feature.description}
               </p>
-
-              {/* CTA Button */}
-              <button className="bg-[#3300FF] text-white border-4 border-black px-6 py-3 rounded-full font-['Space_Grotesk',sans-serif] font-bold hover:bg-[#4400FF] transition-colors shadow-[4px_4px_0px_0px_#000000]">
-                Learn More
-              </button>
             </div>
           ))}
         </div>
