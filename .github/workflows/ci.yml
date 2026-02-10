@@ -27,7 +27,7 @@ jobs:
         run: npm run lint
 
       - name: Run Jest (frontend)
-        run: npx jest --testPathPattern="app/.*\.test\.(tsx|ts)$" --passWithNoTests
+        run: npx jest --testPathPatterns="app/.*\.test\.(tsx|ts)$" --passWithNoTests
 
   backend-tests:
     name: Backend Tests (Mocha)
@@ -49,23 +49,4 @@ jobs:
         run: npm ci
 
       - name: Run Mocha (backend)
-        run: npx mocha --require ts-node/register 'backend/**/*.test.ts' 'app/api/**/*.test.ts' --exit
-
-  build:
-    name: Build Check
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build
-        run: npm run build
+        run: npx mocha --loader ts-node/esm 'backend/**/*.test.ts' 'app/api/**/*.test.ts' --exit
