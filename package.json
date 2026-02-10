@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "jest --testPathPatterns='app/.*\\.test\\.(tsx|ts)$' --passWithNoTests",
+    "test": "jest --testPathPatterns='app/.*\\.test\\.(tsx|ts)$' --passWithNoTests --coverage",
     "test:backend": "mocha --require tsx 'backend/**/*.test.ts' 'app/api/**/*.test.ts' --exit",
     "test:all": "npm run test && npm run test:backend"
   },
@@ -28,6 +28,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/supertest": "^6.0.3",
+    "@vitest/coverage-v8": "^4.0.18",
     "chai": "^6.2.2",
     "eslint": "^9",
     "eslint-config-next": "16.1.4",

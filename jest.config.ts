@@ -15,6 +15,17 @@ const config: Config = {
         '^@/(.*)$': '<rootDir>/$1',
       },
       setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
+      collectCoverageFrom: [
+        'app/page.tsx',
+      ],
+      coverageThreshold: {
+        global: {
+          lines: 80,
+          functions: 80,
+          branches: 80,
+          statements: 80,
+        }
+      }
     },
   ]
 };
