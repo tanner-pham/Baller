@@ -12,6 +12,7 @@
     "test:all": "npm run test && npm run test:backend"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.95.3",
     "dotenv": "^17.2.4",
     "lucide-react": "^0.563.0",
     "next": "16.1.4",
