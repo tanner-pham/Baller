@@ -49,4 +49,4 @@ jobs:
         run: npm ci
 
       - name: Run Mocha (backend)
-        run: npx mocha --loader ts-node/esm 'backend/**/*.test.ts' 'app/api/**/*.test.ts' --exit
+        run: npx mocha --loader ts-node/esm/transpile-only 'backend/**/*.test.ts' 'app/api/**/*.test.ts' --exit

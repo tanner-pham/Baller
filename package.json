@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "test": "jest --testPathPatterns='app/.*\\.test\\.(tsx|ts)$' --passWithNoTests",
-    "test:backend": "mocha --loader ts-node/esm 'backend/**/*.test.ts' 'app/api/**/*.test.ts' --exit",
+    "test:backend": "mocha --loader ts-node/esm/transpile-only 'backend/**/*.test.ts' 'app/api/**/*.test.ts' --exit",
     "test:all": "npm run test && npm run test:backend"
   },
   "dependencies": {
