@@ -12,7 +12,7 @@
     "test:all": "npm run test && npm run test:backend"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.93.3",
+    "lucide-react": "^0.563.0",
     "next": "16.1.4",
     "react": "19.2.3",
     "react-dom": "19.2.3"
