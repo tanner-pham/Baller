@@ -1,14 +1,16 @@
 "use client";
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { ChevronRight } from 'lucide-react';
 
 export function Hero() {
   const [url, setUrl] = useState('');
+  const router = useRouter();
 
   const handleAnalyze = () => {
     if (url) {
-      alert(`Analyzing listing: ${url}`);
+      router.push('/dashboard');
     }
   };
 
