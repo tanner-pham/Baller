@@ -1,7 +1,21 @@
 
 import { createClient } from '@supabase/supabase-js'
-const supabaseUrl = process.env.SUPABASE_URL
-const supabaseKey = process.env.SUPABASE_ANON_KEY
-const supabase = createClient(supabaseUrl, supabaseKey)
 
-export default supabase
+let supabase = null
+
+function getEnv(name) {
+  const value = process.env[name]
+  if (!value) {
+    throw new Error(`${name} is required.`)
+  }
+  return value
+}
+
+export function getSupabaseClient() {
+  if (!supabase) {
+    const supabaseUrl = getEnv('SUPABASE_URL')
+    const supabaseKey = getEnv('SUPABASE_ANON_KEY')
+    supabase = createClient(supabaseUrl, supabaseKey)
+  }
+  return supabase
+}
