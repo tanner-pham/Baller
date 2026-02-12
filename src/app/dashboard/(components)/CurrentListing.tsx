@@ -10,6 +10,8 @@ interface CurrentListingProps {
   postedTime: string;
   location: string;
   sellerName: string;
+  conditionScore?: number;
+  conditionLabel?: string;
 }
 
 export function CurrentListing({
@@ -20,6 +22,8 @@ export function CurrentListing({
   postedTime,
   location,
   sellerName,
+  conditionScore,
+  conditionLabel,
 }: CurrentListingProps) {
   return (
     <div className="w-full max-w-2xl">
@@ -63,6 +67,18 @@ export function CurrentListing({
               <div className="bg-[#FF6600] border-2 border-black px-2 py-1">
                 <span className="font-bold text-xs text-white">{postedTime}</span>
               </div>
+              {conditionScore !== undefined && conditionLabel && (
+                <div className={`border-2 border-black px-2 py-1 ${
+                  conditionScore >= 0.8 ? 'bg-[#00FF00]' :
+                  conditionScore >= 0.6 ? 'bg-[#FADF0B]' :
+                  conditionScore >= 0.4 ? 'bg-[#FF6600]' :
+                  'bg-[#FF0000]'
+                }`}>
+                  <span className="font-bold text-xs">
+                    Condition: {conditionLabel}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
 
