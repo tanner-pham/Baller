@@ -29,7 +29,7 @@ function mockGPTVisionError() {
 }
 
 // Simulate the condition assessment logic
-async function simulateAssessCondition(imageUrl: string, mockResponse: any) {
+async function simulateAssessCondition(imageUrl: string, mockResponse: ReturnType<typeof mockGPTVisionSuccess>) {
   if (!imageUrl) {
     return { status: 400, body: { error: 'Image URL is required' } };
   }
