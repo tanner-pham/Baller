@@ -1,0 +1,30 @@
+.brutal-card {
+    border: 5px solid black;
+    box-shadow: 8px 8px 0px black;
+    transition: all 0.15s ease;
+  }
+  
+  .brutal-card:hover {
+    transform: translate(-4px, -4px);
+    box-shadow: 12px 12px 0px black;
+  }
+  
+  .brutal-card:active {
+    transform: translate(6px, 6px);
+    box-shadow: none;
+  }
+  
+  .price-badge {
+    border: 4px solid black;
+    box-shadow: 4px 4px 0px black;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
