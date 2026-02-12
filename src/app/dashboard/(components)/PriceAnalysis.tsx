@@ -3,7 +3,7 @@ interface PricingAnalysisProps {
   suggestedOffer: string;
   modelAccuracy: string;
   marketValue: string;
-  topReasons: Array<String>;
+  topReasons: Array<string>;
   negotiationTip: string;
 }
 
