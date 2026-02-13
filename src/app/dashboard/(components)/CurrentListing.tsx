@@ -26,7 +26,7 @@ export function CurrentListing({
   conditionLabel,
 }: CurrentListingProps) {
   return (
-    <div className="w-full max-w-2xl">
+    <div className="w-full max-w-6xl mx-auto">
       {/* Main Card - Horizontal Layout */}
       <div className="bg-white border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] flex">
         {/* Image Container */}
