@@ -17,41 +17,42 @@ export function SimilarListings({
   listings: ListingCardType[];
 }) {
   return (
-    <section className="bg-[#3300FF] border-4 border-black px-10 pt-10 pb-24 relative">
+    <section className="border-b-4 border-black bg-[#3300FF] p-15">
+      <div className="mx-auto w-full max-w-6xl">
+        {/* Title */}
+        
 
-      {/* Title */}
-      <h2
-        className="font-['Bebas_Neue',sans-serif] text-5xl sm:text-6xl lg:text-7xl text-white leading-[1] tracking-tight text-center mb-8"
-        style={{ 
-          textShadow: '6px 6px 0px #000000, -2px -2px 0px #000000, 2px -2px 0px #000000, -2px 2px 0px #000000',
-          WebkitTextStroke: '3px black'
-        }}
-      >
-        Similar Listings
-      </h2>
+        {/* Cards Frame */}
+        <div className="border-5 border-black bg-white p-8 pb-20 rounded-xl shadow-[8px_8px_0px_0px_#000000] relative">
 
-      {/* Cards Frame */}
-      <div className="border-4 border-black bg-white p-6 relative">
-        {/* Cards Row */}
-        <div className="flex gap-6 snap-x snap-mandatory overflow-x-auto no-scrollbar mb-4">
-          {listings.map((listing, index) => (
-            <div
-              key={index}
-              className="flex-shrink-0 w-[calc((100% - 3*1.5rem)/4)] snap-start"
-            >
-              <ListingCard {...listing} />
+          <h1
+            className="font-['Anton',sans-serif] text-6xl lg:text-7xl mb-4 text-black text-center pb-7"
+          >
+            SIMILAR LISTINGS
+          </h1>
+          
+          {/* Cards Row */}
+          <div className="flex gap-8 snap-x snap-mandatory overflow-x-auto no-scrollbar mb-6">
+            {listings.map((listing, index) => (
+              <div
+                key={index}
+                className="flex-shrink-0 w-[calc((100% - 3*2rem)/4)] snap-start"
+              >
+                <ListingCard {...listing} />
+              </div>
+            ))}
+          </div>
+
+          {/* Swipe Indicator */}
+          <div className="absolute bottom-6 right-7">
+            <div className="bg-[#FF69B4] border-5 border-black px-6 py-3 rounded-md shadow-[4px_4px_0px_0px_#000000]">
+              <span className="font-['Anton',sans-serif] text-base uppercase text-center text-black">
+                SWIPE →
+              </span>
             </div>
-          ))}
-        </div>
-
-        {/* Swipe Indicator INSIDE WHITE FRAME */}
-        <div className="absolute bottom-4 right-4">
-          <div className="bg-pink-400 border-4 border-black px-5 py-2 font-['Anton'] shadow-[4px_4px_0px_black]">
-            SWIPE →
           </div>
         </div>
       </div>
-
     </section>
   );
 }

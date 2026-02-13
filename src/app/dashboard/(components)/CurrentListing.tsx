@@ -22,11 +22,12 @@ export function CurrentListing({
   sellerName,
 }: CurrentListingProps) {
   return (
-    <div className="w-full max-w-2xl">
-      {/* Main Card - Horizontal Layout */}
-      <div className="bg-white border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] flex">
-        {/* Image Container */}
-        <div className="relative flex-shrink-0 w-48 border-r-4 border-black">
+    <div className="border-b-4 border-black bg-[#90EE90] p-15">
+      {/* Main Card */}
+      <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-20 ">
+        
+        {/* Image */}
+        <div className="flex-shrink-0 w-70 border-5 border-black overflow-hidden rounded-xl b-10">
           <img
             src={image}
             alt={title}
@@ -34,45 +35,53 @@ export function CurrentListing({
           />
         </div>
 
-        {/* Content Section */}
-        <div className="flex-1 p-4 flex flex-col justify-between">
+        {/* Content */}
+        <div className="flex-1 p-6 flex flex-col justify-between rounded-r-xl">
           <div>
-            {/* Price & Title Row */}
-            <div className="flex items-start justify-between gap-3 mb-2">
-              <h2 className="font-black text-base leading-tight flex-1">
+            {/* Title + Price */}
+            <div className="flex items-start justify-between gap-4 mb-3">
+              <h1 className="font-['Anton',sans-serif] text-6xl lg:text-7xl mb-4 text-black">
                 {title}
-              </h2>
-              <div className="bg-[#FF69B4] border-3 border-black px-3 py-1 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex-shrink-0">
-                <span className="font-black text-lg">{price}</span>
+              </h1>
+
+              <div className="bg-[#FF69B4] border-5 border-black px-4 py-2 shadow-[4px_4px_0px_0px_#000000] rounded-md">
+                <span className="font-['Anton',sans-serif] text-3xl text-black">
+                  {price}
+                </span>
               </div>
             </div>
 
             {/* Description */}
             {description && (
-              <p className="text-sm text-gray-700 mb-3 leading-relaxed">
+              <p className="font-['Space_Grotesk',sans-serif] font-semibold text-gray-700 text-center mb-4 text-base leading-relaxed">
                 {description}
               </p>
             )}
 
             {/* Location & Time */}
-            <div className="flex flex-wrap gap-2 mb-3">
-              <div className="bg-[#FADF0B] border-2 border-black px-2 py-1 flex items-center gap-1.5">
-                <MapPin className="w-3.5 h-3.5" strokeWidth={3} />
-                <span className="font-bold text-xs">{location}</span>
+            <div className="flex flex-wrap gap-3 mb-4">
+              <div className="bg-[#FADF0B] border-5 border-black px-3 py-2 flex items-center gap-2 rounded-md">
+                <MapPin className="size-4" strokeWidth={3} />
+                <span className="font-['Space_Grotesk',sans-serif] font-semibold text-gray-700 text-center">
+                  {location}
+                </span>
               </div>
-              <div className="bg-[#FF6600] border-2 border-black px-2 py-1">
-                <span className="font-bold text-xs text-white">{postedTime}</span>
+
+              <div className="bg-[#FF6600] border-5 border-black px-3 py-2 rounded-md">
+                <span className="font-['Space_Grotesk',sans-serif] font-semibold text-white text-center">
+                  {postedTime}
+                </span>
               </div>
             </div>
           </div>
 
-          {/* Seller Info */}
-          <div className="border-t-3 border-black pt-2">
-            <div className="flex items-center gap-3">
-              <div className="bg-[#3300FF] border-2 border-black px-3 py-1 inline-flex items-center gap-1.5 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
-                <User className="w-3.5 h-3.5 text-white" strokeWidth={3} />
-                <span className="font-bold text-xs text-white">{sellerName}</span>
-              </div>
+          {/* Seller */}
+          <div className="border-t-5 border-black pt-4">
+            <div className="inline-flex items-center gap-2 bg-[#3300FF] border-5 border-black px-4 py-2 shadow-[4px_4px_0px_0px_#000000] rounded-md">
+              <User className="size-4 text-white" strokeWidth={3} />
+              <span className="font-['Space_Grotesk',sans-serif] font-semibold text-white text-center">
+                {sellerName}
+              </span>
             </div>
           </div>
         </div>

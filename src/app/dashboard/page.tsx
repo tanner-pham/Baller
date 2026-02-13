@@ -1,6 +1,7 @@
 import { SimilarListings } from './(components)/SimilarListings';
 import { CurrentListing } from './(components)/CurrentListing';
 import { PricingAnalysis } from './(components)/PriceAnalysis';
+import { Navigation } from '../(components)/Navigation';
 
 const dummyListings = [
   {
@@ -49,10 +50,8 @@ const dummyListings = [
 
 export default function DashboardPage() {
   return (
-    <main className="mx-auto max-w-6xl px-6 py-12">
-      <h1 className="text-3xl font-bold">Dashboard</h1>
-      <p className="mt-3">Placeholder for future routing</p>
-      
+    <main className="size-full overflow-y-auto bg-[#F5F5F0]">
+      <Navigation />
       <div className="mt-8">
         <CurrentListing
           image="/images/macbook.jpg"
