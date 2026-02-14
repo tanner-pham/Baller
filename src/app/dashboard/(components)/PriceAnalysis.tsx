@@ -1,4 +1,3 @@
-
 interface PricingAnalysisProps {
   suggestedOffer: string;
   modelAccuracy: string;
@@ -14,87 +13,81 @@ export function PricingAnalysis({
   topReasons,
   negotiationTip,
 }: PricingAnalysisProps) {
+  const cardStyle =
+    "border-4 border-black shadow-[6px_6px_0px_0px_#000000] transition-all duration-200 rounded-md";
+
   return (
-    <div className="bg-white p-8 border-8 border-black shadow-[4px_6px_0px_0px_#000000] max-w-6xl mx-auto">
-      {/* Top Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        {/* Suggested Offer */}
-        <div className="bg-[#90EE90] border-4 border-black shadow-[4px_6px_0px_0px_#000000] p-6 text-center transition-all duration-200 hover:brightness-90">
-          <div className="text-xl mb-2 font-semibold">Suggested Offer</div>
-          <div className="text-6xl font-black">${suggestedOffer}</div>
+    <div className="border-b-4 border-black bg-[#FADF0B] p-15">
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12 mx-auto w-full max-w-6xl items-center justify-between">
+        <div className={`${cardStyle} bg-[#90EE90] p-8 text-center`}>
+          <h3 className="font-['Anton',sans-serif] text-3xl mb-3 text-center text-black">
+            Suggested Offer
+          </h3>
+          <p className="font-['Space_Grotesk',sans-serif] font-semibold text-gray-700 text-center text-3xl">
+            ${suggestedOffer}
+          </p>
+
         </div>
 
-        {/* Model Accuracy */}
-        <div className="bg-[#FF69B4] border-4 border-black shadow-[4px_6px_0px_0px_#000000] p-6 text-center transition-all duration-200 hover:brightness-90">
-          <div className="text-xl mb-2 font-semibold">Model Accuracy</div>
-          <div className="text-6xl font-black">{modelAccuracy}%</div>
+        <div className={`${cardStyle} bg-[#FF69B4] p-8 text-center`}>
+          <h3 className="font-['Anton',sans-serif] text-3xl mb-3 text-center text-black">
+            Model Accuracy
+          </h3>
+          <p className="font-['Space_Grotesk',sans-serif] font-semibold text-gray-700 text-center text-3xl">
+            {modelAccuracy}%
+          </p>
         </div>
 
-        {/* Market Value */}
-        <div className="bg-[#FF6600] border-4 border-black shadow-[4px_6px_0px_0px_#000000] p-6 text-center transition-all duration-200 hover:brightness-90">
-          <div className="text-xl mb-2 font-semibold">Market Value</div>
-          <div className="text-6xl font-black">~{marketValue}</div>
-        </div>
-      </div>
-
-      {/* Why This Price Section */}
-      <h2 className="text-3xl mb-6 font-black tracking-wide">WHY THIS PRICE?</h2>
-
-      {/* Reason Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-        {/* Reason 1 */}
-        <div className="border-4 border-black bg-white shadow-[4px_6px_0px_0px_#000000] p-6 flex items-center gap-4 transition-all duration-200 hover:brightness-90">
-          <div className="bg-black text-white text-2xl w-16 h-16 flex items-center justify-center shrink-0 font-black">
-            1
-          </div>
-          <div className="text-base">
-            <span className="font-semibold">{topReasons[0]}</span>         </div>
-        </div>
-
-        {/* Reason 2 */}
-        <div className="border-4 border-black bg-white shadow-[4px_6px_0px_0px_#000000] p-6 flex items-center gap-4 transition-all duration-200 hover:brightness-90">
-          <div className="bg-black text-white text-2xl w-16 h-16 flex items-center justify-center shrink-0 font-black">
-            2
-          </div>
-          <div className="text-base">
-            <span className="font-semibold">{topReasons[1]}</span> 
-          </div>
-        </div>
-
-        {/* Reason 3 */}
-        <div className="border-4 border-black bg-white shadow-[4px_6px_0px_0px_#000000] p-6 flex items-center gap-4 transition-all duration-200 hover:brightness-90">
-          <div className="bg-black text-white text-2xl w-16 h-16 flex items-center justify-center shrink-0 font-black">
-            3
-          </div>
-          <div className="text-base">
-            <span className="font-semibold">{topReasons[2]}</span>
-          </div>
-        </div>
-
-        {/* Reason 4 */}
-        <div className="border-4 border-black bg-white shadow-[4px_6px_0px_0px_#000000] p-6 flex items-center gap-4 transition-all duration-200 hover:brightness-90">
-          <div className="bg-black text-white text-2xl w-16 h-16 flex items-center justify-center shrink-0 font-black">
-            4
-          </div>
-          <div className="text-base">
-            <span className="font-semibold">{topReasons[3]}</span>
-          </div>
+        <div className={`${cardStyle} bg-[#FF6600] p-8 text-center`}>
+          <h3 className="font-['Anton',sans-serif] text-3xl mb-3 text-center text-black">
+            Market Value
+          </h3>
+          <p className="font-['Space_Grotesk',sans-serif] font-semibold text-gray-700 text-center text-3xl">
+            ~{marketValue}
+          </p>
         </div>
       </div>
 
-      {/* Negotiation Tip */}
-      <div className="flex items-stretch gap-4">
-        {/* Learn More Button */}
-        <button className="bg-[#3300FF] text-white border-4 border-black shadow-[4px_6px_0px_0px_#000000] px-8 font-black text-lg hover:brightness-90 transition-all duration-200 active:translate-y-1 flex items-center justify-center shrink-0">
+      {/* Why This Price */}
+      <h2 className="font-['Anton',sans-serif] text-3xl mb-3 text-center text-black">
+        WHY THIS PRICE?
+      </h2>
+
+      {/* Reason Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12 mx-auto w-full max-w-6xl items-center justify-between">
+        {topReasons.map((reason, index) => (
+          <div
+            key={index}
+            className={`${cardStyle} bg-white p-6 flex items-center gap-6`}
+          >
+            <div className="bg-black text-white text-2xl w-16 h-16 flex items-center justify-center shrink-0 font-black rounded-md">
+              {index + 1}
+            </div>
+            <p className="font-['Space_Grotesk',sans-serif] font-semibold text-gray-700 text-center text-base">
+              {reason}
+            </p>
+          </div>
+        ))}
+      </div>
+
+      {/* Negotiation Section */}
+      <div className="flex flex-col md:flex-row items-stretch gap-6 mx-auto w-full max-w-6xl items-center justify-between">
+
+        <button
+          className={`${cardStyle} bg-[#3300FF] text-white px-10 text-lg font-['Anton',sans-serif] flex items-center justify-center hover:shadow-[8px_8px_0px_0px_#000000] hover:translate-x-[-2px] hover:translate-y-[-2px] active:shadow-none active:translate-x-[6px] active:translate-y-[6px] transition-all`}
+        >
           Learn More
         </button>
-        
-        {/* Tip Content */}
+
         <div className="flex-1">
-          <h3 className="text-3xl mb-2 font-black tracking-wide">NEGOTIATION TIP</h3>
-          <div className="bg-[#FADF0B] border-4 border-black shadow-[4px_6px_0px_0px_#000000] p-6 transition-all duration-200 hover:brightness-90">
-            <p className="text-base">
-              <span className="font-semibold">{negotiationTip}</span>
+          <h3 className="font-['Anton',sans-serif] text-3xl mb-3 text-center text-black">
+            NEGOTIATION TIP
+          </h3>
+
+          <div className={`${cardStyle} bg-white p-8 rounded-md`}>
+            <p className="font-['Space_Grotesk',sans-serif] font-semibold text-gray-700 text-center text-base">
+              {negotiationTip}
             </p>
           </div>
         </div>
