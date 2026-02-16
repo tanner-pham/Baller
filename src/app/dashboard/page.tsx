@@ -2,6 +2,7 @@ import { SimilarListings } from './(components)/SimilarListings';
 import { CurrentListing } from './(components)/CurrentListing';
 import { PricingAnalysis } from './(components)/PriceAnalysis';
 import { Navigation } from '../(components)/Navigation';
+import { parseFacebookMarketplaceListingUrl } from '../../lib/facebookMarketplaceListing';
 
 const dummyListings = [
   {
@@ -48,7 +49,28 @@ const dummyListings = [
   },
 ];
 
-export default function DashboardPage() {
+interface DashboardPageProps {
+  searchParams: Promise<{
+    listingUrl?: string | string[];
+    itemId?: string | string[];
+  }>;
+}
+
+export default async function DashboardPage({ searchParams }: DashboardPageProps) {
+  const resolvedSearchParams = await searchParams;
+  const listingUrlParam = Array.isArray(resolvedSearchParams.listingUrl)
+    ? resolvedSearchParams.listingUrl[0]
+    : resolvedSearchParams.listingUrl;
+
+  // Keep listing URL parsing shared with Hero and ready for dashboard-side link input.
+  const parsedListing = parseFacebookMarketplaceListingUrl(listingUrlParam ?? '');
+  const fallbackListingLink = 'https://www.facebook.com/marketplace/item/123456789012345/';
+  const listingLink = parsedListing?.normalizedUrl ?? fallbackListingLink;
+  const listingsWithValidatedLinks = dummyListings.map((listing) => ({
+    ...listing,
+    link: listingLink,
+  }));
+
   return (
     <main className="size-full overflow-y-auto bg-[#F5F5F0]">
       <Navigation />
@@ -74,7 +96,7 @@ export default function DashboardPage() {
         ]}
         negotiationTip={'Make it easy to say yes. Pair a reasonable offer with a clear, low-friction close: "Would you take $180? I can meet today, I\'m ready to pay immediately, and I can come to a spot that\'s convenient for you"'}></PricingAnalysis>
     <div className="size-full overflow-y-auto bg-[#F5F5F0]">
-      <SimilarListings listings={dummyListings} />
+      <SimilarListings listings={listingsWithValidatedLinks} />
     </div>
     </main>
   );
