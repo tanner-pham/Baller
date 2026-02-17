@@ -104,7 +104,7 @@ export function Navigation({
   };
 
   return (
-    <nav className="border-b-4 border-black bg-[#FFFFFF] px-6 py-4">
+    <nav className="bg-[#F5F5F0] px-6 py-6 shadow-sm">
       <div className="mx-auto flex w-full max-w-6xl items-center justify-between">
         <div className="inline-flex items-center gap-3">
           {dashboardNav && onToggleHistory && (
