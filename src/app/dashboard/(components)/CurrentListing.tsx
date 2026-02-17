@@ -28,7 +28,7 @@ export function CurrentListing({
   return (
     <div className="border-b-4 border-black bg-[#90EE90] p-15">
       {/* Main Card */}
-      <div className="mx-auto flex h-[500px] w-full max-w-6xl items-stretch justify-between gap-20 rounded-xl border-5 border-black bg-[#90EE90] p-6 shadow-[8px_8px_0px_0px_#000000]">
+      <div className="mx-auto flex h-[500px] w-full max-w-6xl items-stretch justify-between gap-20 rounded-xl border-5 border-black bg-white p-6 shadow-[8px_8px_0px_0px_#000000]">
         
         {/* Image */}
         <div className="flex-[1] border-5 border-black overflow-hidden rounded-xl">
@@ -59,7 +59,7 @@ export function CurrentListing({
                 {title}
               </h1>
 
-              <div className="rounded-xl border-5 border-black bg-[#FF69B4] px-4 py-2 shadow-[4px_4px_0px_0px_#000000] transition-all hover:translate-x-[-1px] hover:translate-y-[-1px] hover:shadow-[6px_6px_0px_0px_#000000]">
+              <div className="rounded-xl border-5 border-black bg-[#FF69B4] px-4 py-2 shadow-[4px_4px_0px_0px_#000000] transition-all hover:translate-x-[-1px] hover:translate-y-[-1px] hover:shadow-[6px_6px_0px_0px_#000000] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none">
                 <span className="font-['Anton',sans-serif] text-3xl text-black">
                   {price}
                 </span>
@@ -75,26 +75,26 @@ export function CurrentListing({
 
             {/* Location & Time */}
             <div className="flex flex-wrap gap-3 mb-4">
-              <div className="flex items-center gap-2 rounded-xl border-5 border-black bg-[#FADF0B] px-3 py-2">
+              <div className="flex items-center gap-2 rounded-xl border-5 border-black bg-[#FADF0B] px-3 py-2 shadow-[4px_4px_0px_0px_#000000] transition-all hover:translate-x-[-1px] hover:translate-y-[-1px] hover:shadow-[6px_6px_0px_0px_#000000]">
                 <MapPin className="size-4" strokeWidth={3} />
                 <span className="font-['Space_Grotesk',sans-serif] font-semibold text-gray-700 text-center">
                   {location}
                 </span>
               </div>
 
-              <div className="rounded-xl border-5 border-black bg-[#FF6600] px-3 py-2">
+              <div className="rounded-xl border-5 border-black bg-[#FF6600] px-3 py-2 shadow-[4px_4px_0px_0px_#000000] transition-all hover:translate-x-[-1px] hover:translate-y-[-1px] hover:shadow-[6px_6px_0px_0px_#000000]">
                 <span className="font-['Space_Grotesk',sans-serif] font-semibold text-white text-center">
                   {postedTime}
                 </span>
               </div>
               {conditionScore !== undefined && conditionLabel && (
-                <div className={`border-2 border-black px-2 py-1 ${
+                <div className={`inline-flex items-center rounded-xl border-5 border-black px-3 py-2 shadow-[4px_4px_0px_0px_#000000] transition-all hover:translate-x-[-1px] hover:translate-y-[-1px] hover:shadow-[6px_6px_0px_0px_#000000] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none ${
                   conditionScore >= 0.8 ? 'bg-[#00FF00]' :
                   conditionScore >= 0.6 ? 'bg-[#FADF0B]' :
                   conditionScore >= 0.4 ? 'bg-[#FF6600]' :
                   'bg-[#FF0000]'
                 }`}>
-                  <span className="font-bold text-xs">
+                  <span className="font-['Space_Grotesk',sans-serif] text-sm font-bold uppercase">
                     Condition: {conditionLabel}
                   </span>
                 </div>
@@ -104,7 +104,7 @@ export function CurrentListing({
 
           {/* Seller */}
           <div className="border-t-5 border-black pt-8">
-            <div className="inline-flex items-center gap-2 rounded-xl border-5 border-black bg-[#3300FF] px-4 py-2 shadow-[4px_4px_0px_0px_#000000] transition-all hover:translate-x-[-1px] hover:translate-y-[-1px] hover:shadow-[6px_6px_0px_0px_#000000]">
+            <div className="inline-flex items-center gap-2 rounded-xl border-5 border-black bg-[#3300FF] px-4 py-2 shadow-[4px_4px_0px_0px_#000000] transition-all hover:translate-x-[-1px] hover:translate-y-[-1px] hover:shadow-[6px_6px_0px_0px_#000000] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none">
               <User className="size-4 text-white" strokeWidth={3} />
               <span className="font-['Space_Grotesk',sans-serif] font-semibold text-white text-center">
                 {sellerName}

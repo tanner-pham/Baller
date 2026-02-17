@@ -50,6 +50,21 @@ interface ConditionAssessmentApiResponse {
   error?: string;
 }
 
+const LISTING_REQUEST_TIMEOUT_MS = 12000;
+const CONDITION_REQUEST_TIMEOUT_MS = 12000;
+
+async function readJsonResponse<T>(
+  response: Response,
+): Promise<{ payload: T | null; rawText: string }> {
+  const rawText = await response.text();
+
+  try {
+    return { payload: JSON.parse(rawText) as T, rawText };
+  } catch {
+    return { payload: null, rawText };
+  }
+}
+
 const defaultSimilarListings: SimilarListing[] = [
   {
     title: "MacBook Pro M3 14-inch",
@@ -217,7 +232,9 @@ export default function DashboardPage() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [isListingLoading, setIsListingLoading] = useState(false);
+  const [isConditionLoading, setIsConditionLoading] = useState(false);
   const [listingLoadError, setListingLoadError] = useState('');
+  const [conditionLoadError, setConditionLoadError] = useState('');
   const [marketplaceListing, setMarketplaceListing] = useState<MarketplaceListingApiData | null>(
     null,
   );
@@ -285,19 +302,31 @@ export default function DashboardPage() {
   useEffect(() => {
     if (!parsedListing) {
       setConditionAssessment(null);
+      setConditionLoadError('');
+      setIsConditionLoading(false);
     }
   }, [parsedListing]);
 
   useEffect(() => {
     if (!isAuthenticated || !marketplaceListing?.image) {
       setConditionAssessment(null);
+      setConditionLoadError('');
+      setIsConditionLoading(false);
       return;
     }
 
     const abortController = new AbortController();
+    let didTimeout = false;
+    const timeoutId = window.setTimeout(() => {
+      didTimeout = true;
+      abortController.abort();
+    }, CONDITION_REQUEST_TIMEOUT_MS);
     let isMounted = true;
 
     const analyzeCondition = async () => {
+      setIsConditionLoading(true);
+      setConditionLoadError('');
+
       try {
         const response = await fetch('/api/assess-condition', {
           method: 'POST',
@@ -312,38 +341,61 @@ export default function DashboardPage() {
               .join(' | '),
           }),
         });
+        const { payload, rawText } = await readJsonResponse<ConditionAssessmentApiResponse>(
+          response,
+        );
 
-        const payload = (await response.json()) as ConditionAssessmentApiResponse;
-
-        if (!isMounted || !response.ok || !payload.success) {
+        if (!isMounted || !response.ok || !payload?.success) {
           console.error('Condition assessment API failed on dashboard', {
             responseOk: response.ok,
             status: response.status,
             payload,
+            rawTextPreview: rawText.slice(0, 500),
           });
           setConditionAssessment(null);
+          setConditionLoadError(
+            payload?.error ?? 'Condition analysis is unavailable right now. Please try again.',
+          );
           return;
         }
 
         setConditionAssessment(payload.assessment ?? null);
       } catch (error) {
-        if (!isMounted || abortController.signal.aborted) {
+        if (!isMounted || (abortController.signal.aborted && !didTimeout)) {
           return;
         }
 
         console.error('Condition assessment load failed:', error);
         setConditionAssessment(null);
+        if (didTimeout) {
+          setConditionLoadError(
+            'Condition analysis timed out. Listing details loaded, but condition insights are temporarily unavailable.',
+          );
+          return;
+        }
+        setConditionLoadError(
+          error instanceof Error && error.message.trim().length > 0
+            ? error.message
+            : 'Condition analysis is unavailable right now. Please try again.',
+        );
+      } finally {
+        window.clearTimeout(timeoutId);
+        if (isMounted) {
+          setIsConditionLoading(false);
+        }
       }
     };
 
     analyzeCondition().catch(() => {
       if (isMounted) {
         setConditionAssessment(null);
+        setIsConditionLoading(false);
       }
     });
 
     return () => {
       isMounted = false;
+      window.clearTimeout(timeoutId);
       abortController.abort();
     };
   }, [isAuthenticated, marketplaceListing?.image, marketplaceListing?.description, marketplaceListing?.title]);
@@ -413,11 +465,18 @@ export default function DashboardPage() {
     if (!parsedListing) {
       setMarketplaceListing(null);
       setListingLoadError('');
+      setConditionLoadError('');
       setIsListingLoading(false);
+      setIsConditionLoading(false);
       return;
     }
 
     const abortController = new AbortController();
+    let didTimeout = false;
+    const timeoutId = window.setTimeout(() => {
+      didTimeout = true;
+      abortController.abort();
+    }, LISTING_REQUEST_TIMEOUT_MS);
     let isMounted = true;
 
     const loadMarketplaceListing = async () => {
@@ -434,35 +493,45 @@ export default function DashboardPage() {
           signal: abortController.signal,
           cache: 'no-store',
         });
-        const payload = (await response.json()) as MarketplaceListingApiResponse;
+        const { payload, rawText } = await readJsonResponse<MarketplaceListingApiResponse>(
+          response,
+        );
 
         if (!isMounted) {
           return;
         }
 
-        if (!response.ok || !payload.success) {
+        if (!response.ok || !payload?.success) {
           console.error('Marketplace listing API failed on dashboard', {
             responseOk: response.ok,
             status: response.status,
             payload,
+            rawTextPreview: rawText.slice(0, 500),
           });
-          setListingLoadError(payload.error ?? 'Failed to load listing information.');
+          setListingLoadError(payload?.error ?? 'Failed to load listing information.');
           setMarketplaceListing(null);
+          setIsConditionLoading(false);
           return;
         }
 
         setMarketplaceListing(payload.listing ?? null);
+        setIsConditionLoading(Boolean(payload.listing?.image));
       } catch (error) {
-        if (!isMounted || abortController.signal.aborted) {
+        if (!isMounted || (abortController.signal.aborted && !didTimeout)) {
           return;
         }
 
         console.error('Marketplace listing load failed:', error);
-        const message =
-          error instanceof Error ? error.message : 'Failed to load listing information.';
+        const message = didTimeout
+          ? 'Listing request timed out. Please try again.'
+          : error instanceof Error
+            ? error.message
+            : 'Failed to load listing information.';
         setListingLoadError(message);
         setMarketplaceListing(null);
+        setIsConditionLoading(false);
       } finally {
+        window.clearTimeout(timeoutId);
         if (isMounted) {
           setIsListingLoading(false);
         }
@@ -473,12 +542,14 @@ export default function DashboardPage() {
       if (isMounted) {
         console.error('Marketplace listing load promise rejected unexpectedly');
         setIsListingLoading(false);
+        setIsConditionLoading(false);
         setListingLoadError('Failed to load listing information.');
       }
     });
 
     return () => {
       isMounted = false;
+      window.clearTimeout(timeoutId);
       abortController.abort();
     };
   }, [parsedListing]);
@@ -574,6 +645,7 @@ export default function DashboardPage() {
     ...listing,
     link: listing.link || listingLink,
   }));
+  const isDashboardLoading = isListingLoading || (Boolean(parsedListing) && isConditionLoading);
 
   return (
     <main className="size-full overflow-y-auto bg-[#F5F5F0]">
@@ -673,7 +745,15 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {isListingLoading ? (
+      {conditionLoadError && !isListingLoading && (
+        <div className="mx-auto mt-4 w-full max-w-6xl rounded-md border-4 border-black bg-[#FADF0B] px-4 py-3 shadow-[4px_4px_0px_0px_#000000]">
+          <p className="font-['Space_Grotesk',sans-serif] text-sm font-bold text-black">
+            {conditionLoadError}
+          </p>
+        </div>
+      )}
+
+      {isDashboardLoading ? (
         <DashboardLoadingSkeleton />
       ) : (
         <>
