@@ -20,3 +20,23 @@ Utilizing machine learning models and market trends, Baller cross-references and
 ## Getting Started
 
 (Instructions for deployment, to come as architecture is finalized)
+
+## Supabase Auth Setup
+
+1. Copy `.env.example` to `.env.local`.
+2. Fill in:
+   - `SUPABASE_URL`
+   - `SUPABASE_ANON_KEY`
+   - `SUPABASE_SERVICE_ROLE_KEY` (server-only)
+3. In Supabase dashboard:
+   - `Auth > Providers`: enable Email provider.
+   - `Auth > Email`: keep email confirmations disabled for now.
+   - `Auth > URL Configuration`: set `Site URL` to `http://localhost:3000` for local dev.
+4. For Marketplace API lookups, set:
+   - `RAPIDAPI_KEY`
+   - `RAPIDAPI_HOST` (default: `facebook-marketplace1.p.rapidapi.com`)
+
+Auth flow in the app:
+- `/auth` supports email/password sign up and login.
+- Successful auth redirects to `/dashboard`.
+- `/dashboard` requires an active session and redirects to `/auth` when signed out.

@@ -1,33 +1,40 @@
-import { DollarSign, AlertTriangle, TrendingUp, Clock } from 'lucide-react';
+import {
+  ChartNoAxesCombined,
+  Gem,
+  OctagonAlert,
+  PiggyBank,
+  type LucideIcon,
+} from 'lucide-react';
 
 export function Features() {
-  const features = [
+  const features: Array<{
+    title: string;
+    description: string;
+    authorIcon: LucideIcon;
+    color: string;
+  }> = [
     {
-      icon: DollarSign,
       title: 'Fair Market Price',
       description: 'Get instant price comparisons based on thousands of similar listings.',
-      authorIcon: '💰',
+      authorIcon: PiggyBank,
       color: '#FADF0B'
     },
     {
-      icon: AlertTriangle,
       title: 'Scam Detection',
       description: 'AI-powered risk assessment flags suspicious listings and sellers.',
-      authorIcon: '🛡️',
+      authorIcon: OctagonAlert,
       color: '#FF6600'
     },
     {
-      icon: TrendingUp,
       title: 'Resale Potential',
       description: 'Discover if an item is worth flipping for profit on the marketplace.',
-      authorIcon: '📈',
+      authorIcon: Gem,
       color: '#90EE90'
     },
     {
-      icon: Clock,
       title: 'Price History',
       description: 'See how prices have changed over time to spot trends and negotiate.',
-      authorIcon: '⏰',
+      authorIcon: ChartNoAxesCombined,
       color: '#FF69B4'
     }
   ];
@@ -52,7 +59,7 @@ export function Features() {
                 <div className="flex items-center gap-4">
                   <div className="size-16 rounded-xl border-5 border-black flex items-center justify-center text-3xl"
                        style={{ backgroundColor: feature.color }}>
-                    {feature.authorIcon}
+                    <feature.authorIcon className="size-8 text-black" strokeWidth={2.5} />
                   </div>
                   <div>
                     <h3 className="font-['Anton',sans-serif] text-2xl">

@@ -16,10 +16,13 @@ export function FinalCTA() {
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <button className="bg-[#3300FF] text-white border-5 border-black px-10 py-5 text-xl lg:text-2xl font-['Anton',sans-serif] uppercase shadow-[6px_6px_0px_0px_#000000] hover:shadow-[8px_8px_0px_0px_#000000] hover:translate-x-[-2px] hover:translate-y-[-2px] active:shadow-none active:translate-x-[6px] active:translate-y-[6px] transition-all inline-flex items-center gap-3 rounded-xl">
+              <a
+                href="#hero"
+                className="bg-[#3300FF] text-white border-5 border-black px-10 py-5 text-xl lg:text-2xl font-['Anton',sans-serif] uppercase shadow-[6px_6px_0px_0px_#000000] hover:shadow-[8px_8px_0px_0px_#000000] hover:translate-x-[-2px] hover:translate-y-[-2px] active:shadow-none active:translate-x-[6px] active:translate-y-[6px] transition-all inline-flex items-center gap-3 rounded-xl"
+              >
                 Get Started
                 <ChevronRight className="size-7" strokeWidth={3} />
-              </button>
+              </a>
               
               <button className="bg-white text-black border-5 border-black px-10 py-5 text-xl lg:text-2xl font-['Anton',sans-serif] uppercase shadow-[6px_6px_0px_0px_#000000] hover:shadow-[8px_8px_0px_0px_#000000] hover:translate-x-[-2px] hover:translate-y-[-2px] active:shadow-none active:translate-x-[6px] active:translate-y-[6px] transition-all rounded-xl">
                 Watch Demo

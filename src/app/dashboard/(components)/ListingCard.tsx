@@ -18,17 +18,17 @@ export default function ListingCard({
   link,
 }: ListingCardProps) {
   return (
-    <div className="bg-[#FADF0B] p-6 border-5 border-black rounded-xl shadow-[6px_6px_0px_0px_#000000] transition-all flex flex-col items-center text-center cursor-pointer">
+    <div className="flex cursor-pointer flex-col items-center rounded-xl border-5 border-black bg-[#FADF0B] p-6 text-center shadow-[6px_6px_0px_0px_#000000] transition-all hover:translate-x-[-1px] hover:translate-y-[-1px] hover:shadow-[8px_8px_0px_0px_#000000] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none">
 
       {/* Price */}
-      <div className="bg-[#90EE90] border-5 border-black px-6 py-3 mb-6 shadow-[4px_4px_0px_0px_#000000] rounded-md">
+      <div className="mb-6 rounded-xl border-5 border-black bg-[#90EE90] px-6 py-3 shadow-[4px_4px_0px_0px_#000000] transition-all hover:translate-x-[-1px] hover:translate-y-[-1px] hover:shadow-[6px_6px_0px_0px_#000000]">
         <span className="font-['Anton',sans-serif] text-3xl text-black uppercase">
           ${price.toLocaleString()}
         </span>
       </div>
 
       {/* Image */}
-      <div className="w-full h-44 bg-white border-5 border-black mb-6 overflow-hidden rounded-md">
+      <div className="mb-6 h-44 w-full overflow-hidden rounded-xl border-5 border-black bg-white">
         <img
           src={image}
           alt={title}
@@ -48,7 +48,7 @@ export default function ListingCard({
 
       {/* CTA */}
       <Link href={link}>
-        <div className="bg-[#3300FF] text-white border-5 border-black px-6 py-3 shadow-[4px_4px_0px_0px_#000000] rounded-md hover:shadow-[8px_8px_0px_0px_#000000] hover:translate-x-[-2px] hover:translate-y-[-2px] active:shadow-none active:translate-x-[6px] active:translate-y-[6px] transition-all">
+        <div className="rounded-xl border-5 border-black bg-[#3300FF] px-6 py-3 text-white shadow-[4px_4px_0px_0px_#000000] transition-all hover:translate-x-[-1px] hover:translate-y-[-1px] hover:shadow-[6px_6px_0px_0px_#000000] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none">
           <span className="font-['Anton',sans-serif] text-base uppercase text-center">
             VIEW LISTING
           </span>

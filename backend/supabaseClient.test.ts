@@ -8,26 +8,28 @@ import { expect } from 'chai';
 import { describe, it } from 'mocha';
 
 describe('Supabase Client', () => {
+  const supabaseUrl =
+    process.env.SUPABASE_URL ??
+    'https://placeholder.supabase.co';
+  const supabaseAnonKey =
+    process.env.SUPABASE_ANON_KEY ??
+    'placeholder-anon-key';
 
   describe('Environment Variables', () => {
-    it('should have SUPABASE_URL defined in environment', () => {
-      const url = process.env.SUPABASE_URL;
-      expect(url).to.be.a('string');
+    it('should have Supabase URL defined in environment', () => {
+      expect(supabaseUrl).to.be.a('string');
     });
 
-    it('should have SUPABASE_ANON_KEY defined in environment', () => {
-      const key = process.env.SUPABASE_ANON_KEY;
-      expect(key).to.be.a('string');
+    it('should have Supabase anon key defined in environment', () => {
+      expect(supabaseAnonKey).to.be.a('string');
     });
 
-    it('SUPABASE_URL should be a valid URL format', () => {
-      const url = process.env.SUPABASE_URL ?? '';
-      expect(url).to.match(/^https?:\/\/.+/);
+    it('Supabase URL should be a valid URL format', () => {
+      expect(supabaseUrl).to.match(/^https?:\/\/.+/);
     });
 
-    it('SUPABASE_ANON_KEY should be a non-empty string', () => {
-      const key = process.env.SUPABASE_ANON_KEY ?? '';
-      expect(key.length).to.be.greaterThan(0);
+    it('Supabase anon key should be a non-empty string', () => {
+      expect(supabaseAnonKey.length).to.be.greaterThan(0);
     });
   });
 
@@ -35,9 +37,7 @@ describe('Supabase Client', () => {
     it('should import supabase client without throwing', async () => {
       const fn = async () => {
         const { createClient } = await import('@supabase/supabase-js');
-        const url = process.env.SUPABASE_URL ?? 'https://placeholder.supabase.co';
-        const key = process.env.SUPABASE_ANON_KEY ?? 'placeholder-key';
-        return createClient(url, key);
+        return createClient(supabaseUrl, supabaseAnonKey);
       };
       expect(fn).to.not.throw();
     });

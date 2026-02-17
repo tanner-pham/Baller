@@ -15,7 +15,15 @@ function mockGPTVisionSuccess() {
           conditionScore: 0.85,
           conditionLabel: 'Like New',
           reasoning: 'Minor scuffs on corners, screen appears pristine',
-          wearIndicators: ['minor corner scuffs', 'light scratches on back']
+          wearIndicators: ['minor corner scuffs', 'light scratches on back'],
+          modelAccuracy: '92',
+          topReasons: [
+            'Visible wear is limited to cosmetic scuffs.',
+            'Comparable listings in similar condition cluster in this range.',
+          ],
+          suggestedPrice: '8500',
+          suggestedOffer: '8000',
+          negotiationTip: 'Offer immediate pickup and point out minor cosmetic wear.'
         })
       }
     }]
@@ -48,8 +56,13 @@ async function simulateAssessCondition(imageUrl: string, mockResponse: ReturnTyp
       assessment: {
         conditionScore: assessment.conditionScore,
         conditionLabel: assessment.conditionLabel,
+        modelAccuracy: assessment.modelAccuracy,
         reasoning: assessment.reasoning,
-        wearIndicators: assessment.wearIndicators || []
+        wearIndicators: assessment.wearIndicators || [],
+        topReasons: assessment.topReasons || [],
+        suggestedPrice: assessment.suggestedPrice,
+        suggestedOffer: assessment.suggestedOffer,
+        negotiationTip: assessment.negotiationTip
       }
     }
   };
@@ -95,6 +108,20 @@ describe('POST /api/assess-condition', () => {
 
       expect(result.body.assessment.wearIndicators).to.be.an('array');
       expect(result.body.assessment.wearIndicators.length).to.be.greaterThan(0);
+    });
+
+    it('should return pricing recommendation fields for dashboard', async () => {
+      const imageUrl = 'https://example.com/macbook.jpg';
+      const mockResponse = mockGPTVisionSuccess();
+      const result = await simulateAssessCondition(imageUrl, mockResponse);
+
+      expect(result.body.assessment.suggestedPrice).to.equal('8500');
+      expect(result.body.assessment.suggestedOffer).to.equal('8000');
+      expect(result.body.assessment.negotiationTip).to.be.a('string');
+      expect(result.body.assessment.negotiationTip.length).to.be.greaterThan(0);
+      expect(result.body.assessment.modelAccuracy).to.equal('92');
+      expect(result.body.assessment.topReasons).to.be.an('array');
+      expect(result.body.assessment.topReasons.length).to.be.greaterThan(0);
     });
   });
 
