@@ -13,6 +13,7 @@ import {
 export function Navigation() {
   const router = useRouter();
   const pathname = usePathname();
+  const isDashboardRoute = pathname?.startsWith('/dashboard');
   const [user, setUser] = useState<User | null>(null);
   const [isLoadingAuth, setIsLoadingAuth] = useState(isSupabaseBrowserConfigured());
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -87,12 +88,14 @@ export function Navigation() {
           </div>
         ) : user ? (
           <div className="inline-flex items-center gap-3">
-            <Link
-              href="/dashboard"
-              className="inline-flex items-center rounded-md border-4 border-black bg-[#90EE90] px-4 py-2 font-['Anton',sans-serif] text-sm uppercase shadow-[4px_4px_0px_0px_#000000] transition-all hover:translate-x-[-1px] hover:translate-y-[-1px] hover:shadow-[6px_6px_0px_0px_#000000] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none"
-            >
-              Dashboard
-            </Link>
+            {!isDashboardRoute && (
+              <Link
+                href="/dashboard"
+                className="inline-flex items-center rounded-md border-4 border-black bg-[#90EE90] px-4 py-2 font-['Anton',sans-serif] text-sm uppercase shadow-[4px_4px_0px_0px_#000000] transition-all hover:translate-x-[-1px] hover:translate-y-[-1px] hover:shadow-[6px_6px_0px_0px_#000000] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none"
+              >
+                Dashboard
+              </Link>
+            )}
             <button
               type="button"
               onClick={handleLogout}
