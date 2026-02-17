@@ -2,7 +2,7 @@
 
 import { MapPin, User } from 'lucide-react';
 
-interface CurrentListingProps {
+export interface CurrentListingProps {
   image: string;
   price: string;
   title: string;

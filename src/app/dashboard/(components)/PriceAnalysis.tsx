@@ -1,4 +1,4 @@
-interface PricingAnalysisProps {
+export interface PricingAnalysisProps {
   suggestedOffer: string;
   modelAccuracy: string;
   marketValue: string;

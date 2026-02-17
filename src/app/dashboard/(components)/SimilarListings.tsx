@@ -3,7 +3,7 @@
 import React from 'react';
 import ListingCard from './ListingCard';
 
-interface ListingCardType {
+export interface SimilarListing {
   title: string;
   location: string;
   price: number;
@@ -14,7 +14,7 @@ interface ListingCardType {
 export function SimilarListings({
   listings,
 }: {
-  listings: ListingCardType[];
+  listings: SimilarListing[];
 }) {
   return (
     <section className="border-b-4 border-black bg-[#3300FF] p-15">

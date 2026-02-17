@@ -32,6 +32,9 @@ Utilizing machine learning models and market trends, Baller cross-references and
    - `Auth > Providers`: enable Email provider.
    - `Auth > Email`: keep email confirmations disabled for now.
    - `Auth > URL Configuration`: set `Site URL` to `http://localhost:3000` for local dev.
+4. For Marketplace API lookups, set:
+   - `RAPIDAPI_KEY`
+   - `RAPIDAPI_HOST` (default: `facebook-marketplace1.p.rapidapi.com`)
 
 Auth flow in the app:
 - `/auth` supports email/password sign up and login.
