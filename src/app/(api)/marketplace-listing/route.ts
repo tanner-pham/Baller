@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import type {
   RapidApiMarketplaceListing,
   RapidApiMarketplaceWrapper,
-} from '../../../types/rapidApiMarketplace';
+} from '../../../../types/rapidApiMarketplace';
 
 interface NormalizedSimilarListing {
   title: string;
@@ -147,6 +147,7 @@ export async function GET(request: NextRequest) {
       request.nextUrl.searchParams.get('itemId');
 
     if (!listingIdentifier) {
+      console.error('Marketplace listing request missing required listing identifier');
       return NextResponse.json({ error: 'itemId or listingUrl is required' }, { status: 400 });
     }
 
@@ -154,6 +155,7 @@ export async function GET(request: NextRequest) {
     const rapidApiHost = process.env.RAPIDAPI_HOST ?? 'facebook-marketplace1.p.rapidapi.com';
 
     if (!rapidApiKey) {
+      console.error('Marketplace listing request missing RAPIDAPI_KEY');
       return NextResponse.json({ error: 'Missing RAPIDAPI_KEY' }, { status: 500 });
     }
 
@@ -172,6 +174,10 @@ export async function GET(request: NextRequest) {
     const responseText = await response.text();
 
     if (!response.ok) {
+      console.error('Marketplace listing RapidAPI request failed', {
+        status: response.status,
+        details: responseText,
+      });
       return NextResponse.json(
         {
           error: `RapidAPI request failed with status ${response.status}`,
@@ -185,7 +191,11 @@ export async function GET(request: NextRequest) {
 
     try {
       parsedResponse = JSON.parse(responseText);
-    } catch {
+    } catch (error) {
+      console.error('Marketplace listing RapidAPI returned non-JSON response', {
+        error,
+        details: responseText,
+      });
       return NextResponse.json(
         { error: 'RapidAPI returned non-JSON response', details: responseText },
         { status: 502 },
@@ -195,6 +205,9 @@ export async function GET(request: NextRequest) {
     const listingPayload = extractListingPayload(parsedResponse);
 
     if (!listingPayload) {
+      console.error('Marketplace listing RapidAPI payload missing listing object', {
+        raw: parsedResponse,
+      });
       return NextResponse.json(
         { error: 'RapidAPI payload did not include a listing object', raw: parsedResponse },
         { status: 502 },

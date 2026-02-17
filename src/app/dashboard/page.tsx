@@ -14,6 +14,7 @@ interface SearchHistoryEntry {
   itemId: string;
   url: string;
   searchedAt: string;
+  listingTitle: string;
 }
 
 interface MarketplaceListingApiData {
@@ -30,6 +31,22 @@ interface MarketplaceListingApiData {
 interface MarketplaceListingApiResponse {
   success: boolean;
   listing?: MarketplaceListingApiData;
+  error?: string;
+}
+
+interface ConditionAssessmentData {
+  conditionScore?: number;
+  conditionLabel?: string;
+  modelAccuracy?: string;
+  topReasons?: string[];
+  suggestedPrice?: string;
+  suggestedOffer?: string;
+  negotiationTip?: string;
+}
+
+interface ConditionAssessmentApiResponse {
+  success: boolean;
+  assessment?: ConditionAssessmentData;
   error?: string;
 }
 
@@ -166,12 +183,22 @@ function readSearchHistoryFromStorage(userId: string): SearchHistoryEntry[] {
       return [];
     }
 
-    return parsedValue.filter(
-      (entry) =>
-        typeof entry?.itemId === 'string' &&
-        typeof entry?.url === 'string' &&
-        typeof entry?.searchedAt === 'string',
-    );
+    return parsedValue
+      .filter(
+        (entry) =>
+          typeof entry?.itemId === 'string' &&
+          typeof entry?.url === 'string' &&
+          typeof entry?.searchedAt === 'string',
+      )
+      .map((entry) => ({
+        itemId: entry.itemId,
+        url: entry.url,
+        searchedAt: entry.searchedAt,
+        listingTitle:
+          typeof entry?.listingTitle === 'string' && entry.listingTitle.trim().length > 0
+            ? entry.listingTitle
+            : `Item ${entry.itemId}`,
+      }));
   } catch {
     return [];
   }
@@ -192,6 +219,9 @@ export default function DashboardPage() {
   const [isListingLoading, setIsListingLoading] = useState(false);
   const [listingLoadError, setListingLoadError] = useState('');
   const [marketplaceListing, setMarketplaceListing] = useState<MarketplaceListingApiData | null>(
+    null,
+  );
+  const [conditionAssessment, setConditionAssessment] = useState<ConditionAssessmentData | null>(
     null,
   );
   const [searchHistory, setSearchHistory] = useState<SearchHistoryEntry[]>([]);
@@ -235,13 +265,93 @@ export default function DashboardPage() {
     image: marketplaceListing?.image ?? currentListingData.image,
     sellerName: marketplaceListing?.sellerName ?? currentListingData.sellerName,
     postedTime: marketplaceListing?.postedTime ?? currentListingData.postedTime,
+    conditionScore: conditionAssessment?.conditionScore,
+    conditionLabel: conditionAssessment?.conditionLabel,
   };
   const resolvedPricingAnalysisData: PricingAnalysisProps = {
     ...pricingAnalysisData,
+    suggestedOffer: conditionAssessment?.suggestedOffer ?? pricingAnalysisData.suggestedOffer,
+    modelAccuracy: conditionAssessment?.modelAccuracy ?? pricingAnalysisData.modelAccuracy,
+    topReasons:
+      conditionAssessment?.topReasons && conditionAssessment.topReasons.length > 0
+        ? conditionAssessment.topReasons
+        : pricingAnalysisData.topReasons,
+    negotiationTip: conditionAssessment?.negotiationTip ?? pricingAnalysisData.negotiationTip,
     marketValue: marketplaceListing?.price
       ? marketplaceListing.price.replace(/^\$/, '')
       : pricingAnalysisData.marketValue,
   };
+
+  useEffect(() => {
+    if (!parsedListing) {
+      setConditionAssessment(null);
+    }
+  }, [parsedListing]);
+
+  useEffect(() => {
+    if (!isAuthenticated || !marketplaceListing?.image) {
+      setConditionAssessment(null);
+      return;
+    }
+
+    const abortController = new AbortController();
+    let isMounted = true;
+
+    const analyzeCondition = async () => {
+      try {
+        const response = await fetch('/api/assess-condition', {
+          method: 'POST',
+          signal: abortController.signal,
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            imageUrl: marketplaceListing.image,
+            description: [marketplaceListing.title, marketplaceListing.description]
+              .filter(Boolean)
+              .join(' | '),
+          }),
+        });
+
+        const payload = (await response.json()) as ConditionAssessmentApiResponse;
+
+        if (!isMounted || !response.ok || !payload.success) {
+          console.error('Condition assessment API failed on dashboard', {
+            responseOk: response.ok,
+            status: response.status,
+            payload,
+          });
+          setConditionAssessment(null);
+          return;
+        }
+
+        setConditionAssessment(payload.assessment ?? null);
+      } catch (error) {
+        if (!isMounted || abortController.signal.aborted) {
+          return;
+        }
+
+        console.error('Condition assessment load failed:', error);
+        setConditionAssessment(null);
+      }
+    };
+
+    analyzeCondition().catch(() => {
+      if (isMounted) {
+        setConditionAssessment(null);
+      }
+    });
+
+    return () => {
+      isMounted = false;
+      abortController.abort();
+    };
+  }, [isAuthenticated, marketplaceListing?.image, marketplaceListing?.description, marketplaceListing?.title]);
+
+  const similarListingsSource =
+    marketplaceListing?.similarListings && marketplaceListing.similarListings.length > 0
+      ? marketplaceListing.similarListings
+      : defaultSimilarListings;
 
   useEffect(() => {
     const supabase = getSupabaseBrowserClient();
@@ -331,6 +441,11 @@ export default function DashboardPage() {
         }
 
         if (!response.ok || !payload.success) {
+          console.error('Marketplace listing API failed on dashboard', {
+            responseOk: response.ok,
+            status: response.status,
+            payload,
+          });
           setListingLoadError(payload.error ?? 'Failed to load listing information.');
           setMarketplaceListing(null);
           return;
@@ -342,6 +457,7 @@ export default function DashboardPage() {
           return;
         }
 
+        console.error('Marketplace listing load failed:', error);
         const message =
           error instanceof Error ? error.message : 'Failed to load listing information.';
         setListingLoadError(message);
@@ -355,6 +471,7 @@ export default function DashboardPage() {
 
     loadMarketplaceListing().catch(() => {
       if (isMounted) {
+        console.error('Marketplace listing load promise rejected unexpectedly');
         setIsListingLoading(false);
         setListingLoadError('Failed to load listing information.');
       }
@@ -373,6 +490,14 @@ export default function DashboardPage() {
 
     const addCurrentSearchToHistory = async () => {
       setSearchHistory((previousHistory) => {
+        const existingEntry = previousHistory.find(
+          (historyEntry) => historyEntry.url === parsedListing.normalizedUrl,
+        );
+        const resolvedListingTitle =
+          marketplaceListing?.title?.trim() ||
+          existingEntry?.listingTitle ||
+          `Item ${parsedListing.itemId}`;
+
         const deduplicatedHistory = previousHistory.filter(
           (historyEntry) => historyEntry.url !== parsedListing.normalizedUrl,
         );
@@ -382,6 +507,7 @@ export default function DashboardPage() {
             itemId: parsedListing.itemId,
             url: parsedListing.normalizedUrl,
             searchedAt: new Date().toISOString(),
+            listingTitle: resolvedListingTitle,
           },
           ...deduplicatedHistory,
         ].slice(0, 25);
@@ -394,7 +520,7 @@ export default function DashboardPage() {
     addCurrentSearchToHistory().catch(() => {
       // no-op: local storage write failure should not block dashboard use
     });
-  }, [parsedListing, userId]);
+  }, [marketplaceListing?.title, parsedListing, userId]);
 
   const handleSelectPreviousSearch = (entry: SearchHistoryEntry) => {
     const searchQuery = new URLSearchParams({
@@ -442,11 +568,9 @@ export default function DashboardPage() {
   // Keep listing URL parsing shared with Hero and ready for dashboard-side link input.
   const fallbackListingLink = 'https://www.facebook.com/marketplace/item/123456789012345/';
   const listingLink = parsedListing?.normalizedUrl ?? fallbackListingLink;
-  const similarListingsSource =
-    marketplaceListing?.similarListings && marketplaceListing.similarListings.length > 0
-      ? marketplaceListing.similarListings
-      : defaultSimilarListings;
-  const listingsWithValidatedLinks = similarListingsSource.map((listing) => ({
+  const resolvedSimilarListings =
+    Array.isArray(similarListingsSource) ? similarListingsSource : defaultSimilarListings;
+  const listingsWithValidatedLinks = resolvedSimilarListings.map((listing) => ({
     ...listing,
     link: listing.link || listingLink,
   }));
@@ -509,7 +633,7 @@ export default function DashboardPage() {
                     className="w-full rounded-xl border-4 border-black bg-[#90EE90] p-3 text-left shadow-[4px_4px_0px_0px_#000000] transition-all hover:translate-x-[-1px] hover:translate-y-[-1px] hover:shadow-[6px_6px_0px_0px_#000000]"
                   >
                     <p className="font-['Anton',sans-serif] text-base uppercase text-black">
-                      Item {entry.itemId}
+                      {entry.listingTitle}
                     </p>
                     <p className="mt-1 break-all font-['Space_Grotesk',sans-serif] text-xs font-semibold text-gray-700">
                       {entry.url}

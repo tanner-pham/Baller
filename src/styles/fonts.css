@@ -1,17 +1,2 @@
-/* Bebas Neue - Punchy neo-brutalist headline font */
-@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap');
-
-/* Anton - Bold impact font */
-@import url('https://fonts.googleapis.com/css2?family=Anton&display=swap');
-
-/* Black Ops One - Ultra-bold display font */
-@import url('https://fonts.googleapis.com/css2?family=Black+Ops+One&display=swap');
-
-/* Lexend Exa - Neo-brutalist headline font */
-@import url('https://fonts.googleapis.com/css2?family=Lexend+Exa:wght@400;600;700;800;900&display=swap');
-
-/* Space Grotesk - Bold neo-brutalist alternative */
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&display=swap');
-
-/* Public Sans - Supporting text font */
-@import url('https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;600;700&display=swap');
+/* External Google Font imports removed to keep local/dev builds network-independent.
+   Components already include fallback stacks (e.g. sans-serif), so UI remains usable offline. */

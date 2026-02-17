@@ -14,7 +14,7 @@ export function PricingAnalysis({
   negotiationTip,
 }: PricingAnalysisProps) {
   const cardStyle =
-    "border-4 border-black shadow-[6px_6px_0px_0px_#000000] transition-all duration-200 rounded-md";
+    "rounded-xl border-4 border-black shadow-[6px_6px_0px_0px_#000000] transition-all duration-200 hover:translate-x-[-1px] hover:translate-y-[-1px] hover:shadow-[8px_8px_0px_0px_#000000]";
 
   return (
     <div className="border-b-4 border-black bg-[#FADF0B] p-15">
@@ -75,7 +75,7 @@ export function PricingAnalysis({
       <div className="flex flex-col md:flex-row items-stretch gap-6 mx-auto w-full max-w-6xl items-center justify-between">
 
         <button
-          className={`${cardStyle} bg-[#3300FF] text-white px-10 text-lg font-['Anton',sans-serif] flex items-center justify-center hover:shadow-[8px_8px_0px_0px_#000000] hover:translate-x-[-2px] hover:translate-y-[-2px] active:shadow-none active:translate-x-[6px] active:translate-y-[6px] transition-all`}
+          className={`${cardStyle} bg-[#3300FF] text-white px-10 text-lg font-['Anton',sans-serif] flex items-center justify-center active:shadow-none active:translate-x-[6px] active:translate-y-[6px]`}
         >
           Learn More
         </button>
@@ -85,7 +85,7 @@ export function PricingAnalysis({
             NEGOTIATION TIP
           </h3>
 
-          <div className={`${cardStyle} bg-white p-8 rounded-md`}>
+          <div className={`${cardStyle} bg-white p-8`}>
             <p className="font-['Space_Grotesk',sans-serif] font-semibold text-gray-700 text-center text-base">
               {negotiationTip}
             </p>

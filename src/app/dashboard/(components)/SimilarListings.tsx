@@ -23,7 +23,7 @@ export function SimilarListings({
         
 
         {/* Cards Frame */}
-        <div className="border-5 border-black bg-white p-8 pb-20 rounded-xl shadow-[8px_8px_0px_0px_#000000] relative">
+        <div className="relative rounded-xl border-5 border-black bg-white p-8 pb-20 shadow-[8px_8px_0px_0px_#000000]">
 
           <h1
             className="font-['Anton',sans-serif] text-6xl lg:text-7xl mb-4 text-black text-center pb-7"
@@ -45,7 +45,7 @@ export function SimilarListings({
 
           {/* Swipe Indicator */}
           <div className="absolute bottom-6 right-7">
-            <div className="bg-[#FF69B4] border-5 border-black px-6 py-3 rounded-md shadow-[4px_4px_0px_0px_#000000]">
+            <div className="rounded-xl border-5 border-black bg-[#FF69B4] px-6 py-3 shadow-[4px_4px_0px_0px_#000000] transition-all hover:translate-x-[-1px] hover:translate-y-[-1px] hover:shadow-[6px_6px_0px_0px_#000000]">
               <span className="font-['Anton',sans-serif] text-base uppercase text-center text-black">
                 SWIPE →
               </span>
