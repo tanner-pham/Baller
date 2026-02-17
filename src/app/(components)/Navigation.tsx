@@ -3,12 +3,13 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { Loader2, LogOut, Menu, X } from 'lucide-react';
+import { ChevronRight, Loader2, LogOut, Menu, X } from 'lucide-react';
 import type { User } from '@supabase/supabase-js';
 import {
   getSupabaseBrowserClient,
   isSupabaseBrowserConfigured,
 } from '../../lib/supabaseBrowserClient';
+import { parseFacebookMarketplaceListingUrl } from '../../lib/facebookMarketplaceListing';
 
 interface NavigationProps {
   showHistoryToggle?: boolean;
@@ -29,6 +30,9 @@ export function Navigation({
   const [user, setUser] = useState<User | null>(null);
   const [isLoadingAuth, setIsLoadingAuth] = useState(isSupabaseBrowserConfigured());
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [dashboardSearchUrl, setDashboardSearchUrl] = useState('');
+  const parsedDashboardListing = parseFacebookMarketplaceListingUrl(dashboardSearchUrl);
+  const isValidDashboardListingUrl = parsedDashboardListing !== null;
 
   useEffect(() => {
     const supabase = getSupabaseBrowserClient();
@@ -86,6 +90,19 @@ export function Navigation({
     router.refresh();
   };
 
+  const handleDashboardSearch = () => {
+    if (!parsedDashboardListing) {
+      return;
+    }
+
+    const searchQuery = new URLSearchParams({
+      listingUrl: parsedDashboardListing.normalizedUrl,
+      itemId: parsedDashboardListing.itemId,
+    });
+
+    router.push(`/dashboard?${searchQuery.toString()}`);
+  };
+
   return (
     <nav className="border-b-4 border-black bg-[#FFFFFF] px-6 py-4">
       <div className="mx-auto flex w-full max-w-6xl items-center justify-between">
@@ -115,7 +132,50 @@ export function Navigation({
             Loading
           </div>
         ) : user ? (
-          <div className="inline-flex items-center gap-3">
+          <div className={`ml-auto items-center gap-3 ${dashboardNav ? 'flex w-full max-w-3xl justify-end' : 'inline-flex'}`}>
+            {dashboardNav && (
+              <>
+                <div className="w-full max-w-2xl overflow-hidden rounded-xl border-4 border-black bg-white shadow-[6px_6px_0px_0px_#000000]">
+                  <input
+                    type="text"
+                    value={dashboardSearchUrl}
+                    onChange={(event) => setDashboardSearchUrl(event.target.value)}
+                    onKeyDown={(event) =>
+                      event.key === 'Enter' && isValidDashboardListingUrl && handleDashboardSearch()
+                    }
+                    placeholder="Search another Facebook Marketplace listing"
+                    className="w-full px-5 py-3 font-['Space_Grotesk',sans-serif] text-sm font-semibold outline-none placeholder:text-gray-400"
+                  />
+                </div>
+
+                <div className="relative inline-block group">
+                  <button
+                    type="button"
+                    onClick={handleDashboardSearch}
+                    disabled={!isValidDashboardListingUrl}
+                    aria-label="Analyze listing"
+                    className={`inline-flex items-center rounded-xl border-4 border-black p-3 shadow-[4px_4px_0px_0px_#000000] transition-all ${
+                      isValidDashboardListingUrl
+                        ? 'bg-[#FADF0B] hover:translate-x-[-1px] hover:translate-y-[-1px] hover:shadow-[6px_6px_0px_0px_#000000] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none'
+                        : 'bg-gray-300 text-gray-600 cursor-not-allowed'
+                    }`}
+                  >
+                    <ChevronRight className="size-5" strokeWidth={3} />
+                  </button>
+
+                  {!isValidDashboardListingUrl && (
+                    <div className="pointer-events-none absolute top-full right-0 mt-2 z-50 opacity-0 transition-opacity group-hover:opacity-100">
+                      <div className="rounded-md border-4 border-black bg-white px-3 py-2 shadow-[4px_4px_0px_0px_#000000]">
+                        <p className="whitespace-nowrap font-['Space_Grotesk',sans-serif] text-sm font-semibold text-black">
+                          Insert valid Facebook Marketplace listing
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
+
             {showHistoryToggle && onToggleHistory && !dashboardNav && (
               <button
                 type="button"

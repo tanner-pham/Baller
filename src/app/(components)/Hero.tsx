@@ -44,7 +44,7 @@ export function Hero() {
 
           {/* URL Input */}
           <div className="space-y-4 max-w-3xl mx-auto">
-            <div className="bg-white border-5 border-black shadow-[8px_8px_0px_0px_#000000] rounded-full overflow-hidden">
+            <div className="bg-white border-5 border-black shadow-[8px_8px_0px_0px_#000000] rounded-xl overflow-hidden">
               <input
                 type="text"
                 value={url}
