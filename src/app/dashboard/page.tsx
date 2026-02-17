@@ -59,6 +59,7 @@ export default function DashboardPage() {
     setSearchUrl(url);
     // Here you would typically fetch data based on the URL
     // For now, it just stores the URL and you can extend this later
+    window.location.reload();
   };
 
   return (
