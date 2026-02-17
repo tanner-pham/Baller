@@ -25,8 +25,8 @@ Utilizing machine learning models and market trends, Baller cross-references and
 
 1. Copy `.env.example` to `.env.local`.
 2. Fill in:
-   - `NEXT_PUBLIC_SUPABASE_URL`
-   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+   - `SUPABASE_URL`
+   - `SUPABASE_ANON_KEY`
    - `SUPABASE_SERVICE_ROLE_KEY` (server-only)
 3. In Supabase dashboard:
    - `Auth > Providers`: enable Email provider.

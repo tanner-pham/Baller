@@ -84,7 +84,7 @@ export default function AuthPage() {
 
     if (!supabase) {
       setErrorMessage(
-        'Supabase is not configured. Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY to .env.local.',
+        'Supabase is not configured. Add SUPABASE_URL and SUPABASE_ANON_KEY to .env.local.',
       );
       return;
     }
@@ -177,7 +177,7 @@ export default function AuthPage() {
           {!isSupabaseConfigured && (
             <div className="mb-6 rounded-xl border-4 border-black bg-[#FF69B4] p-4 shadow-[4px_4px_0px_0px_#000000]">
               <p className="font-['Space_Grotesk',sans-serif] text-sm font-bold text-black">
-                Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY in `.env.local`.
+                Missing SUPABASE_URL or SUPABASE_ANON_KEY in `.env.local`.
               </p>
             </div>
           )}
