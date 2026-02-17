@@ -18,23 +18,25 @@ export function SearchBar({ onSearch }: SearchBarProps) {
   };
 
   return (
-    <div className="bg-white border-b-2 border-gray-200 px-6 py-8">
+    <div className="bg-white border-b-5 border-black px-6 py-8">
       <div className="mx-auto max-w-6xl">
         <h2 className="font-['Bebas_Neue',sans-serif] text-2xl tracking-wide text-[#030213] mb-4">
           Search Another Listing
         </h2>
-        <div className="flex items-center bg-[#F5F5F0] border-3 border-[#030213] rounded-lg overflow-hidden shadow-sm w-full">
-          <input
-            type="text"
-            value={url}
-            onChange={(e) => setUrl(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-            placeholder="Paste Facebook Marketplace listing URL"
-            className="flex-1 px-6 py-4 text-base font-['Space_Grotesk',sans-serif] outline-none bg-[#F5F5F0] placeholder:text-gray-500"
-          />
+        <div className="flex items-center gap-4 max-w-2xl">
+          <div className="flex-1 bg-white border-5 border-black shadow-[6px_6px_0px_0px_#000000] rounded-full overflow-hidden">
+            <input
+              type="text"
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+              placeholder="Paste Facebook Marketplace listing URL"
+              className="w-full px-6 py-3 text-sm font-['Space_Grotesk',sans-serif] font-semibold outline-none placeholder:text-gray-500"
+            />
+          </div>
           <button
             onClick={handleSearch}
-            className="bg-[#030213] border-3 border-white p-3 text-white hover:bg-opacity-75 hover:scale-105 transition-all flex items-center justify-center rounded-lg cursor-pointer"
+            className="bg-[#FADF0B] border-5 border-black px-6 py-3 font-['Anton',sans-serif] uppercase shadow-[4px_4px_0px_0px_#000000] hover:shadow-[6px_6px_0px_0px_#000000] hover:translate-x-[-2px] hover:translate-y-[-2px] active:shadow-none active:translate-x-[4px] active:translate-y-[4px] transition-all flex items-center justify-center rounded-lg cursor-pointer"
           >
             <Search className="size-5" strokeWidth={2.5} />
           </button>
