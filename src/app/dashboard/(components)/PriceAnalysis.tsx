@@ -13,6 +13,21 @@ export function PricingAnalysis({
   topReasons,
   negotiationTip,
 }: PricingAnalysisProps) {
+  const trimmedSuggestedOffer = suggestedOffer.trim();
+  const trimmedModelAccuracy = modelAccuracy.trim();
+  const suggestedOfferDisplay =
+    trimmedSuggestedOffer.length === 0
+      ? 'N/A'
+      : /^\d+([.,]\d+)?$/.test(trimmedSuggestedOffer)
+        ? `$${trimmedSuggestedOffer}`
+        : trimmedSuggestedOffer;
+  const modelAccuracyDisplay =
+    trimmedModelAccuracy.length === 0
+      ? 'N/A'
+      : /^\d+([.,]\d+)?$/.test(trimmedModelAccuracy)
+        ? `${trimmedModelAccuracy}%`
+        : trimmedModelAccuracy;
+
   const cardStyle =
     "rounded-xl border-5 border-black shadow-[6px_6px_0px_0px_#000000] transition-all duration-200 hover:translate-x-[-1px] hover:translate-y-[-1px] hover:shadow-[8px_8px_0px_0px_#000000] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none";
 
@@ -25,7 +40,7 @@ export function PricingAnalysis({
             Suggested Offer
           </h3>
           <p className="font-['Space_Grotesk',sans-serif] font-semibold text-gray-700 text-center text-3xl">
-            ${suggestedOffer}
+            {suggestedOfferDisplay}
           </p>
 
         </div>
@@ -35,7 +50,7 @@ export function PricingAnalysis({
             Model Accuracy
           </h3>
           <p className="font-['Space_Grotesk',sans-serif] font-semibold text-gray-700 text-center text-3xl">
-            {modelAccuracy}%
+            {modelAccuracyDisplay}
           </p>
         </div>
 

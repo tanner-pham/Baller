@@ -52,6 +52,7 @@ interface ConditionAssessmentApiResponse {
 
 const LISTING_REQUEST_TIMEOUT_MS = 12000;
 const CONDITION_REQUEST_TIMEOUT_MS = 12000;
+const EMPTY_IMAGE_PLACEHOLDER = 'data:image/gif;base64,R0lGODlhAQABAAAAACw=';
 
 async function readJsonResponse<T>(
   response: Response,
@@ -111,28 +112,21 @@ const defaultSimilarListings: SimilarListing[] = [
 ];
 
 const defaultCurrentListing: CurrentListingProps = {
-  image: '/images/macbook.jpg',
-  price: '$200',
-  title: '2018 Apple MacBook Pro 15"',
-  description:
-    '2018 Apple MacBook Pro 15" with 6-core 2.2 GHz Intel i7, 16 GB RAM, 256 GB SSD, and 15.4" display, in near-pristine condition with no visible damage and will be factory reset before sale.',
-  postedTime: '2 hours ago',
-  location: 'Sammamish, WA',
-  sellerName: 'John Doe',
+  image: EMPTY_IMAGE_PLACEHOLDER,
+  price: '',
+  title: '',
+  description: '',
+  postedTime: '',
+  location: '',
+  sellerName: '',
 };
 
 const defaultPricingAnalysis: PricingAnalysisProps = {
-  suggestedOffer: '180',
-  modelAccuracy: '90',
-  marketValue: '230',
-  topReasons: [
-    "Battery health/cycle count isn't listed, and battery replacement can be a real cost",
-    "A 2018 laptop is 6-7 years old, and even in great condition it's closer to end-of-support years than newer models",
-    '256 GB is usable but relatively small by today standards',
-    'Similar Intel 2018 15" listings vary a lot; you’re offering a fair midpoint that reflects that range',
-  ],
-  negotiationTip:
-    `Make it easy to say yes. Pair a reasonable offer with a clear, low-friction close: "Would you take $180? I can meet today, I'm ready to pay immediately, and I can come to a spot that's convenient for you"`,
+  suggestedOffer: '',
+  modelAccuracy: '',
+  marketValue: '',
+  topReasons: [],
+  negotiationTip: '',
 };
 
 function DashboardLoadingSkeleton() {
@@ -273,27 +267,73 @@ export default function DashboardPage() {
     negotiationTip:
       searchParams.get('negotiationTip') ?? defaultPricingAnalysis.negotiationTip,
   };
+  const hasListingError = Boolean(parsedListing && !isListingLoading && listingLoadError);
+  const hasConditionError = Boolean(parsedListing && !isConditionLoading && conditionLoadError);
+  const fallbackListingErrorText = hasListingError
+    ? listingLoadError
+    : 'Listing details are currently unavailable.';
+  const fallbackConditionErrorText = hasConditionError
+    ? conditionLoadError
+    : 'Condition analysis is currently unavailable.';
   const resolvedCurrentListingData: CurrentListingProps = {
     ...currentListingData,
-    title: marketplaceListing?.title ?? currentListingData.title,
-    description: marketplaceListing?.description ?? currentListingData.description,
-    price: marketplaceListing?.price ?? currentListingData.price,
-    location: marketplaceListing?.location ?? currentListingData.location,
-    image: marketplaceListing?.image ?? currentListingData.image,
-    sellerName: marketplaceListing?.sellerName ?? currentListingData.sellerName,
-    postedTime: marketplaceListing?.postedTime ?? currentListingData.postedTime,
+    title:
+      marketplaceListing?.title ||
+      currentListingData.title ||
+      (hasListingError ? 'Unable to load listing' : ''),
+    description:
+      marketplaceListing?.description ||
+      currentListingData.description ||
+      (hasListingError ? fallbackListingErrorText : ''),
+    price:
+      marketplaceListing?.price ||
+      currentListingData.price ||
+      (hasListingError ? 'Unavailable' : ''),
+    location:
+      marketplaceListing?.location ||
+      currentListingData.location ||
+      (hasListingError ? 'Unavailable' : ''),
+    image: marketplaceListing?.image || currentListingData.image || EMPTY_IMAGE_PLACEHOLDER,
+    sellerName:
+      marketplaceListing?.sellerName ||
+      currentListingData.sellerName ||
+      (hasListingError ? 'Unavailable' : ''),
+    postedTime:
+      marketplaceListing?.postedTime ||
+      currentListingData.postedTime ||
+      (hasListingError ? 'Unavailable' : ''),
     conditionScore: conditionAssessment?.conditionScore,
     conditionLabel: conditionAssessment?.conditionLabel,
   };
+  const fallbackTopReasons =
+    conditionAssessment?.topReasons && conditionAssessment.topReasons.length > 0
+      ? conditionAssessment.topReasons
+      : pricingAnalysisData.topReasons.length > 0
+        ? pricingAnalysisData.topReasons
+        : hasConditionError
+          ? [fallbackConditionErrorText]
+          : hasListingError
+            ? [fallbackListingErrorText]
+            : ['No pricing rationale available yet.'];
   const resolvedPricingAnalysisData: PricingAnalysisProps = {
     ...pricingAnalysisData,
-    suggestedOffer: conditionAssessment?.suggestedOffer ?? pricingAnalysisData.suggestedOffer,
-    modelAccuracy: conditionAssessment?.modelAccuracy ?? pricingAnalysisData.modelAccuracy,
-    topReasons:
-      conditionAssessment?.topReasons && conditionAssessment.topReasons.length > 0
-        ? conditionAssessment.topReasons
-        : pricingAnalysisData.topReasons,
-    negotiationTip: conditionAssessment?.negotiationTip ?? pricingAnalysisData.negotiationTip,
+    suggestedOffer:
+      conditionAssessment?.suggestedOffer ||
+      pricingAnalysisData.suggestedOffer ||
+      (hasConditionError || hasListingError ? 'N/A' : ''),
+    modelAccuracy:
+      conditionAssessment?.modelAccuracy ||
+      pricingAnalysisData.modelAccuracy ||
+      (hasConditionError ? 'N/A' : ''),
+    topReasons: fallbackTopReasons,
+    negotiationTip:
+      conditionAssessment?.negotiationTip ||
+      pricingAnalysisData.negotiationTip ||
+      (hasConditionError
+        ? fallbackConditionErrorText
+        : hasListingError
+          ? fallbackListingErrorText
+          : ''),
     marketValue: marketplaceListing?.price
       ? marketplaceListing.price.replace(/^\$/, '')
       : pricingAnalysisData.marketValue,
@@ -646,6 +686,7 @@ export default function DashboardPage() {
     link: listing.link || listingLink,
   }));
   const isDashboardLoading = isListingLoading || (Boolean(parsedListing) && isConditionLoading);
+  const shouldShowEmptyState = !parsedListing && !isDashboardLoading;
 
   return (
     <main className="size-full overflow-y-auto bg-[#F5F5F0]">
@@ -755,6 +796,15 @@ export default function DashboardPage() {
 
       {isDashboardLoading ? (
         <DashboardLoadingSkeleton />
+      ) : shouldShowEmptyState ? (
+        <section className="mx-auto mt-10 w-full max-w-6xl px-4">
+          <div className="rounded-md border-4 border-black bg-white px-5 py-4 shadow-[4px_4px_0px_0px_#000000]">
+            <p className="font-['Space_Grotesk',sans-serif] text-sm font-bold text-black">
+              No listing loaded yet. Open the menu to load a previous listing, or paste a new
+              Facebook Marketplace link in the top bar.
+            </p>
+          </div>
+        </section>
       ) : (
         <>
           <div className="mt-8">
