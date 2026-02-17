@@ -1,8 +1,13 @@
+"use client";
+
+import { useEffect, useMemo, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { SimilarListings } from './(components)/SimilarListings';
 import { CurrentListing } from './(components)/CurrentListing';
 import { PricingAnalysis } from './(components)/PriceAnalysis';
 import { Navigation } from '../(components)/Navigation';
 import { parseFacebookMarketplaceListingUrl } from '../../lib/facebookMarketplaceListing';
+import { getSupabaseBrowserClient } from '../../lib/supabaseBrowserClient';
 
 const dummyListings = [
   {
@@ -49,21 +54,81 @@ const dummyListings = [
   },
 ];
 
-interface DashboardPageProps {
-  searchParams: Promise<{
-    listingUrl?: string | string[];
-    itemId?: string | string[];
-  }>;
-}
+export default function DashboardPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [isSessionReady, setIsSessionReady] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const listingUrlParam = searchParams.get('listingUrl') ?? '';
+  const parsedListing = useMemo(
+    () => parseFacebookMarketplaceListingUrl(listingUrlParam),
+    [listingUrlParam],
+  );
 
-export default async function DashboardPage({ searchParams }: DashboardPageProps) {
-  const resolvedSearchParams = await searchParams;
-  const listingUrlParam = Array.isArray(resolvedSearchParams.listingUrl)
-    ? resolvedSearchParams.listingUrl[0]
-    : resolvedSearchParams.listingUrl;
+  useEffect(() => {
+    const supabase = getSupabaseBrowserClient();
+
+    if (!supabase) {
+      router.replace('/auth');
+      return;
+    }
+
+    let isMounted = true;
+
+    const checkSession = async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (!isMounted) {
+        return;
+      }
+
+      if (!session) {
+        setIsAuthenticated(false);
+        router.replace('/auth');
+        return;
+      }
+
+      setIsAuthenticated(true);
+      setIsSessionReady(true);
+    };
+
+    checkSession();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!session) {
+        setIsAuthenticated(false);
+        router.replace('/auth');
+        return;
+      }
+
+      setIsAuthenticated(true);
+      setIsSessionReady(true);
+    });
+
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
+  }, [router]);
+
+  if (!isSessionReady || !isAuthenticated) {
+    return (
+      <main className="size-full overflow-y-auto bg-[#F5F5F0]">
+        <Navigation />
+        <div className="mx-auto max-w-6xl px-4 py-16">
+          <div className="inline-flex items-center rounded-xl border-5 border-black bg-white px-6 py-4 font-['Anton',sans-serif] text-2xl uppercase shadow-[6px_6px_0px_0px_#000000]">
+            Checking Session
+          </div>
+        </div>
+      </main>
+    );
+  }
 
   // Keep listing URL parsing shared with Hero and ready for dashboard-side link input.
-  const parsedListing = parseFacebookMarketplaceListingUrl(listingUrlParam ?? '');
   const fallbackListingLink = 'https://www.facebook.com/marketplace/item/123456789012345/';
   const listingLink = parsedListing?.normalizedUrl ?? fallbackListingLink;
   const listingsWithValidatedLinks = dummyListings.map((listing) => ({
