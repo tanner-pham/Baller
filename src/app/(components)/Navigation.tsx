@@ -1,16 +1,16 @@
 export function Navigation() {
   return (
-    <nav className="border-b-4 border-black bg-[#FFFFFF] px-6 py-4">
+    <nav className="bg-[#F5F5F0] px-6 py-6 shadow-sm">
       <div className="mx-auto flex w-full max-w-6xl items-center justify-between">
         <a
           href="/"
-          className="font-['Bebas_Neue',sans-serif] text-3xl tracking-wide cursor-pointer hover:opacity-80 transition-opacity"
+          className="font-['Bebas_Neue',sans-serif] text-4xl tracking-widest cursor-pointer hover:opacity-70 transition-opacity text-[#030213]"
         >
           BALLER
         </a>
         <a
           href="/dashboard"
-          className="rounded-md border-2 border-black bg-white px-4 py-2 font-semibold"
+          className="rounded-md border-2 border-[#030213] bg-[#030213] px-6 py-2 font-semibold text-white hover:bg-opacity-90 transition-all"
         >
           Dashboard
         </a>
