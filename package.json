@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "jest --testPathPatterns='app/.*\\.test\\.(tsx|ts)$' --passWithNoTests --coverage",
+    "test": "jest --config jest.config.ts --passWithNoTests --coverage",
     "test:backend": "mocha --require tsx 'backend/**/*.test.ts' 'src/app/**/route.test.ts' --exit",
     "test:all": "npm run test && npm run test:backend"
   },

@@ -1,20 +1,16 @@
 "use client";
 
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
-import type { FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { AlertCircle, ArrowLeft, Loader2, Lock, Mail, User } from 'lucide-react';
-import {
-  getSupabaseBrowserClient,
-  isSupabaseBrowserConfigured,
-} from '../../lib/supabaseBrowserClient';
+import { useAuthSession } from '../../lib/auth/useAuthSession';
 
 type AuthMode = 'login' | 'signup';
 
 export default function AuthPage() {
   const router = useRouter();
-  const isSupabaseConfigured = isSupabaseBrowserConfigured();
+  const { user, isLoading, isConfigured, supabase } = useAuthSession();
   const [mode, setMode] = useState<AuthMode>('login');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -22,49 +18,18 @@ export default function AuthPage() {
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isCheckingSession, setIsCheckingSession] = useState(isSupabaseConfigured);
 
   useEffect(() => {
-    const supabase = getSupabaseBrowserClient();
-
-    if (!supabase) {
-      return;
+    // Logged-in users should never stay on the auth page.
+    if (user) {
+      router.replace('/dashboard');
     }
+  }, [router, user]);
 
-    let isMounted = true;
-
-    const checkExistingSession = async () => {
-      const { data } = await supabase.auth.getSession();
-
-      if (!isMounted) {
-        return;
-      }
-
-      if (data.session) {
-        router.replace('/dashboard');
-        return;
-      }
-
-      setIsCheckingSession(false);
-    };
-
-    checkExistingSession();
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session) {
-        router.replace('/dashboard');
-      }
-    });
-
-    return () => {
-      isMounted = false;
-      subscription.unsubscribe();
-    };
-  }, [router]);
-
-  const handleDummySubmit = (event: FormEvent<HTMLFormElement>) => {
+  /**
+   * Handles login/signup submission and keeps user-facing messaging consistent.
+   */
+  const handleAuthSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     setErrorMessage('');
@@ -80,8 +45,6 @@ export default function AuthPage() {
       return;
     }
 
-    const supabase = getSupabaseBrowserClient();
-
     if (!supabase) {
       setErrorMessage(
         'Supabase is not configured. Add SUPABASE_URL and SUPABASE_ANON_KEY to .env.local.',
@@ -89,7 +52,7 @@ export default function AuthPage() {
       return;
     }
 
-    const runAuth = async () => {
+    const runAuthRequest = async () => {
       setIsSubmitting(true);
 
       if (mode === 'signup') {
@@ -135,15 +98,17 @@ export default function AuthPage() {
       router.replace('/dashboard');
     };
 
-    runAuth().catch((error: unknown) => {
+    runAuthRequest().catch((caughtError: unknown) => {
       const message =
-        error instanceof Error ? error.message : 'Authentication failed. Please try again.';
+        caughtError instanceof Error
+          ? caughtError.message
+          : 'Authentication failed. Please try again.';
       setErrorMessage(message);
       setIsSubmitting(false);
     });
   };
 
-  if (isCheckingSession) {
+  if (isLoading) {
     return (
       <main className="min-h-screen bg-[#F5F5F0]">
         <div className="mx-auto flex min-h-screen w-full max-w-xl items-center justify-center px-4 py-10">
@@ -174,7 +139,7 @@ export default function AuthPage() {
             BALLER
           </h1>
 
-          {!isSupabaseConfigured && (
+          {!isConfigured && (
             <div className="mb-6 rounded-xl border-4 border-black bg-[#FF69B4] p-4 shadow-[4px_4px_0px_0px_#000000]">
               <p className="font-['Space_Grotesk',sans-serif] text-sm font-bold text-black">
                 Missing SUPABASE_URL or SUPABASE_ANON_KEY in `.env.local`.
@@ -188,7 +153,9 @@ export default function AuthPage() {
               onClick={() => setMode('login')}
               disabled={isSubmitting}
               className={`rounded-full px-5 py-2 font-['Anton',sans-serif] text-sm uppercase transition-all ${
-                mode === 'login' ? 'bg-[#3300FF] text-white shadow-[3px_3px_0px_0px_#000000]' : 'text-black'
+                mode === 'login'
+                  ? 'bg-[#3300FF] text-white shadow-[3px_3px_0px_0px_#000000]'
+                  : 'text-black'
               }`}
             >
               Log In
@@ -198,14 +165,16 @@ export default function AuthPage() {
               onClick={() => setMode('signup')}
               disabled={isSubmitting}
               className={`rounded-full px-5 py-2 font-['Anton',sans-serif] text-sm uppercase transition-all ${
-                mode === 'signup' ? 'bg-[#FF69B4] text-black shadow-[3px_3px_0px_0px_#000000]' : 'text-black'
+                mode === 'signup'
+                  ? 'bg-[#FF69B4] text-black shadow-[3px_3px_0px_0px_#000000]'
+                  : 'text-black'
               }`}
             >
               Sign Up
             </button>
           </div>
 
-          <form onSubmit={handleDummySubmit} className="space-y-4">
+          <form onSubmit={handleAuthSubmit} className="space-y-4">
             {mode === 'signup' && (
               <label className="block">
                 <span className="mb-2 block font-['Anton',sans-serif] text-sm uppercase">Name</span>
@@ -272,7 +241,7 @@ export default function AuthPage() {
 
             <button
               type="submit"
-              disabled={isSubmitting || !isSupabaseConfigured}
+              disabled={isSubmitting || !isConfigured}
               className="mt-2 inline-flex w-full items-center justify-center rounded-full border-5 border-black bg-[#3300FF] px-6 py-4 font-['Anton',sans-serif] text-lg uppercase text-white shadow-[6px_6px_0px_0px_#000000] transition-all hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[8px_8px_0px_0px_#000000] active:translate-x-[6px] active:translate-y-[6px] active:shadow-none"
             >
               {isSubmitting ? (

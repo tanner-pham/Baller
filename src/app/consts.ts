@@ -1,3 +1,8 @@
+/**
+ * Shared UI style constants for progressive design-system consolidation.
+ * This module is intentionally retained even when some exports are not yet consumed.
+ */
+
 /* =========================
     Common Fonts + Text
 ========================= */

@@ -1,6 +1,5 @@
 'use client';
 
-import React from 'react';
 import ListingCard from './ListingCard';
 
 export interface SimilarListing {
@@ -11,42 +10,33 @@ export interface SimilarListing {
   link: string;
 }
 
-export function SimilarListings({
-  listings,
-}: {
+interface SimilarListingsProps {
   listings: SimilarListing[];
-}) {
+}
+
+export function SimilarListings({ listings }: SimilarListingsProps) {
   return (
     <section className="border-b-4 border-black bg-[#3300FF] p-15">
       <div className="mx-auto w-full max-w-6xl">
-        {/* Title */}
-        
-
-        {/* Cards Frame */}
         <div className="relative rounded-xl border-5 border-black bg-white p-8 pb-20 shadow-[8px_8px_0px_0px_#000000]">
-
-          <h1
-            className="font-['Anton',sans-serif] text-6xl lg:text-7xl mb-4 text-black text-center pb-7"
-          >
+          <h1 className="mb-4 pb-7 text-center text-6xl text-black font-['Anton',sans-serif] lg:text-7xl">
             SIMILAR LISTINGS
           </h1>
-          
-          {/* Cards Row */}
-          <div className="flex gap-8 snap-x snap-mandatory overflow-x-auto no-scrollbar mb-6">
-            {listings.map((listing, index) => (
+
+          <div className="mb-6 flex snap-x snap-mandatory gap-8 overflow-x-auto no-scrollbar">
+            {listings.map((listing) => (
               <div
-                key={index}
-                className="flex-shrink-0 w-[calc((100% - 3*2rem)/4)] snap-start"
+                key={`${listing.link}-${listing.title}`}
+                className="w-[calc((100%_-_3*2rem)/4)] flex-shrink-0 snap-start"
               >
                 <ListingCard {...listing} />
               </div>
             ))}
           </div>
 
-          {/* Swipe Indicator */}
           <div className="absolute bottom-6 right-7">
             <div className="rounded-xl border-5 border-black bg-[#FF69B4] px-6 py-3 shadow-[4px_4px_0px_0px_#000000] transition-all hover:translate-x-[-1px] hover:translate-y-[-1px] hover:shadow-[6px_6px_0px_0px_#000000]">
-              <span className="font-['Anton',sans-serif] text-base uppercase text-center text-black">
+              <span className="text-center text-base uppercase text-black font-['Anton',sans-serif]">
                 SWIPE →
               </span>
             </div>

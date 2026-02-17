@@ -1,15 +1,11 @@
 "use client";
 
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import { ChevronRight, Loader2, LogOut, Menu, X } from 'lucide-react';
-import type { User } from '@supabase/supabase-js';
-import {
-  getSupabaseBrowserClient,
-  isSupabaseBrowserConfigured,
-} from '../../lib/supabaseBrowserClient';
 import { parseFacebookMarketplaceListingUrl } from '../../lib/facebookMarketplaceListing';
+import { useAuthSession } from '../../lib/auth/useAuthSession';
 
 interface NavigationProps {
   showHistoryToggle?: boolean;
@@ -27,62 +23,40 @@ export function Navigation({
   const router = useRouter();
   const pathname = usePathname();
   const isDashboardRoute = pathname?.startsWith('/dashboard');
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoadingAuth, setIsLoadingAuth] = useState(isSupabaseBrowserConfigured());
+  const shouldShowDashboardSearch = Boolean(dashboardNav && isDashboardRoute);
+  const { user, isLoading, isConfigured, signOut } = useAuthSession();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [dashboardSearchUrl, setDashboardSearchUrl] = useState('');
   const parsedDashboardListing = parseFacebookMarketplaceListingUrl(dashboardSearchUrl);
   const isValidDashboardListingUrl = parsedDashboardListing !== null;
 
   useEffect(() => {
-    const supabase = getSupabaseBrowserClient();
-
-    if (!supabase) {
+    if (!isDashboardRoute) {
       return;
     }
 
-    let isMounted = true;
+    // Clear stale search input when switching dashboard sub-routes.
+    setDashboardSearchUrl('');
+  }, [isDashboardRoute, pathname]);
 
-    const loadUser = async () => {
-      const { data } = await supabase.auth.getUser();
-
-      if (!isMounted) {
-        return;
-      }
-
-      setUser(data.user ?? null);
-      setIsLoadingAuth(false);
-    };
-
-    loadUser();
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-      setIsLoadingAuth(false);
-    });
-
-    return () => {
-      isMounted = false;
-      subscription.unsubscribe();
-    };
-  }, []);
-
+  /**
+   * Signs out the current user and routes based on the active page.
+   */
   const handleLogout = async () => {
-    const supabase = getSupabaseBrowserClient();
-
-    if (!supabase) {
+    if (!isConfigured) {
       router.push('/auth');
       return;
     }
 
     setIsLoggingOut(true);
-    await supabase.auth.signOut();
-    setUser(null);
-    setIsLoggingOut(false);
 
-    if (pathname?.startsWith('/dashboard')) {
+    try {
+      await signOut();
+    } finally {
+      setIsLoggingOut(false);
+    }
+
+    if (isDashboardRoute) {
       router.replace('/auth');
       return;
     }
@@ -90,6 +64,9 @@ export function Navigation({
     router.refresh();
   };
 
+  /**
+   * Routes to dashboard using a normalized listing URL and extracted item id.
+   */
   const handleDashboardSearch = () => {
     if (!parsedDashboardListing) {
       return;
@@ -104,7 +81,7 @@ export function Navigation({
   };
 
   return (
-    <nav className="bg-[#F5F5F0] px-6 py-6 shadow-sm">
+    <nav className="bg-[#F5F5F0] px-6 py-6 shadow-[0px_6px_0px_0px_#000000]">
       <div className="mx-auto flex w-full max-w-6xl items-center justify-between">
         <div className="inline-flex items-center gap-3">
           {dashboardNav && onToggleHistory && (
@@ -121,19 +98,21 @@ export function Navigation({
               )}
             </button>
           )}
-          <span className="font-['Bebas_Neue',sans-serif] text-3xl tracking-wide">
-            BALLER
-          </span>
+          <span className="font-['Bebas_Neue',sans-serif] text-3xl tracking-wide">BALLER</span>
         </div>
 
-        {isLoadingAuth ? (
+        {isLoading ? (
           <div className="inline-flex items-center gap-2 rounded-md border-4 border-black bg-[#FADF0B] px-4 py-2 font-['Anton',sans-serif] text-sm uppercase shadow-[4px_4px_0px_0px_#000000]">
             <Loader2 className="size-4 animate-spin" />
             Loading
           </div>
-        ) : user ? (
-          <div className={`ml-auto items-center gap-3 ${dashboardNav ? 'flex w-full max-w-3xl justify-end' : 'inline-flex'}`}>
-            {dashboardNav && (
+        ) : user || shouldShowDashboardSearch ? (
+          <div
+            className={`ml-auto items-center gap-3 ${
+              shouldShowDashboardSearch ? 'flex w-full max-w-3xl justify-end' : 'inline-flex'
+            }`}
+          >
+            {shouldShowDashboardSearch && (
               <>
                 <div className="w-full max-w-2xl overflow-hidden rounded-xl border-4 border-black bg-white shadow-[6px_6px_0px_0px_#000000]">
                   <input
@@ -148,7 +127,7 @@ export function Navigation({
                   />
                 </div>
 
-                <div className="relative inline-block group">
+                <div className="group relative inline-block">
                   <button
                     type="button"
                     onClick={handleDashboardSearch}
@@ -157,14 +136,14 @@ export function Navigation({
                     className={`inline-flex items-center rounded-xl border-4 border-black p-3 shadow-[4px_4px_0px_0px_#000000] transition-all ${
                       isValidDashboardListingUrl
                         ? 'bg-[#FADF0B] hover:translate-x-[-1px] hover:translate-y-[-1px] hover:shadow-[6px_6px_0px_0px_#000000] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none'
-                        : 'bg-gray-300 text-gray-600 cursor-not-allowed'
+                        : 'cursor-not-allowed bg-gray-300 text-gray-600'
                     }`}
                   >
                     <ChevronRight className="size-5" strokeWidth={3} />
                   </button>
 
                   {!isValidDashboardListingUrl && (
-                    <div className="pointer-events-none absolute top-full right-0 mt-2 z-50 opacity-0 transition-opacity group-hover:opacity-100">
+                    <div className="pointer-events-none absolute right-0 top-full z-50 mt-2 opacity-0 transition-opacity group-hover:opacity-100">
                       <div className="rounded-md border-4 border-black bg-white px-3 py-2 shadow-[4px_4px_0px_0px_#000000]">
                         <p className="whitespace-nowrap font-['Space_Grotesk',sans-serif] text-sm font-semibold text-black">
                           Insert valid Facebook Marketplace listing
@@ -176,38 +155,55 @@ export function Navigation({
               </>
             )}
 
-            {showHistoryToggle && onToggleHistory && !dashboardNav && (
-              <button
-                type="button"
-                onClick={onToggleHistory}
-                className="inline-flex items-center gap-2 rounded-md border-4 border-black bg-[#FADF0B] px-4 py-2 font-['Anton',sans-serif] text-sm uppercase shadow-[4px_4px_0px_0px_#000000] transition-all hover:translate-x-[-1px] hover:translate-y-[-1px] hover:shadow-[6px_6px_0px_0px_#000000] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none"
-              >
-                {isHistoryOpen ? <X className="size-4" strokeWidth={2.5} /> : <Menu className="size-4" strokeWidth={2.5} />}
-                Search History
-              </button>
-            )}
-            {!isDashboardRoute && (
-              <Link
-                href="/dashboard"
-                className="inline-flex items-center rounded-md border-4 border-black bg-[#90EE90] px-4 py-2 font-['Anton',sans-serif] text-sm uppercase shadow-[4px_4px_0px_0px_#000000] transition-all hover:translate-x-[-1px] hover:translate-y-[-1px] hover:shadow-[6px_6px_0px_0px_#000000] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none"
-              >
-                Dashboard
-              </Link>
-            )}
-            {!dashboardNav && (
-              <button
-                type="button"
-                onClick={handleLogout}
-                disabled={isLoggingOut}
-                className="inline-flex items-center gap-2 rounded-md border-4 border-black bg-[#FF69B4] px-4 py-2 font-['Anton',sans-serif] text-sm uppercase shadow-[4px_4px_0px_0px_#000000] transition-all hover:translate-x-[-1px] hover:translate-y-[-1px] hover:shadow-[6px_6px_0px_0px_#000000] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none disabled:cursor-not-allowed disabled:opacity-70"
-              >
-                {isLoggingOut ? (
-                  <Loader2 className="size-4 animate-spin" />
-                ) : (
-                  <LogOut className="size-4" strokeWidth={2.5} />
+            {user ? (
+              <>
+                {showHistoryToggle && onToggleHistory && !dashboardNav && (
+                  <button
+                    type="button"
+                    onClick={onToggleHistory}
+                    className="inline-flex items-center gap-2 rounded-md border-4 border-black bg-[#FADF0B] px-4 py-2 font-['Anton',sans-serif] text-sm uppercase shadow-[4px_4px_0px_0px_#000000] transition-all hover:translate-x-[-1px] hover:translate-y-[-1px] hover:shadow-[6px_6px_0px_0px_#000000] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none"
+                  >
+                    {isHistoryOpen ? (
+                      <X className="size-4" strokeWidth={2.5} />
+                    ) : (
+                      <Menu className="size-4" strokeWidth={2.5} />
+                    )}
+                    Search History
+                  </button>
                 )}
-                Log Out
-              </button>
+
+                {!isDashboardRoute && (
+                  <Link
+                    href="/dashboard"
+                    className="inline-flex items-center rounded-md border-4 border-black bg-[#90EE90] px-4 py-2 font-['Anton',sans-serif] text-sm uppercase shadow-[4px_4px_0px_0px_#000000] transition-all hover:translate-x-[-1px] hover:translate-y-[-1px] hover:shadow-[6px_6px_0px_0px_#000000] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none"
+                  >
+                    Dashboard
+                  </Link>
+                )}
+
+                {!dashboardNav && (
+                  <button
+                    type="button"
+                    onClick={handleLogout}
+                    disabled={isLoggingOut}
+                    className="inline-flex items-center gap-2 rounded-md border-4 border-black bg-[#FF69B4] px-4 py-2 font-['Anton',sans-serif] text-sm uppercase shadow-[4px_4px_0px_0px_#000000] transition-all hover:translate-x-[-1px] hover:translate-y-[-1px] hover:shadow-[6px_6px_0px_0px_#000000] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none disabled:cursor-not-allowed disabled:opacity-70"
+                  >
+                    {isLoggingOut ? (
+                      <Loader2 className="size-4 animate-spin" />
+                    ) : (
+                      <LogOut className="size-4" strokeWidth={2.5} />
+                    )}
+                    Log Out
+                  </button>
+                )}
+              </>
+            ) : (
+              <Link
+                href="/auth"
+                className="inline-flex items-center rounded-md border-4 border-black bg-[#FADF0B] px-4 py-2 font-['Anton',sans-serif] text-sm uppercase shadow-[4px_4px_0px_0px_#000000] transition-all hover:translate-x-[-1px] hover:translate-y-[-1px] hover:shadow-[6px_6px_0px_0px_#000000] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none"
+              >
+                Log In / Sign Up
+              </Link>
             )}
           </div>
         ) : (

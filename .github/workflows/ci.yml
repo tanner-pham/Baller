@@ -27,7 +27,7 @@ jobs:
         run: npm run lint
 
       - name: Run Jest (frontend)
-        run: npx jest --testPathPatterns="app/.*\.test\.(tsx|ts)$" --passWithNoTests
+        run: npm run test
 
   backend-tests:
     name: Backend Tests (Mocha)
@@ -49,4 +49,4 @@ jobs:
         run: npm ci
 
       - name: Run Mocha (backend)
-        run: npx mocha --require tsx 'backend/**/*.test.ts' 'app/api/**/*.test.ts' --exit
+        run: npm run test:backend

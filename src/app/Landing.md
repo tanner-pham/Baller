@@ -1,97 +1,49 @@
 # Landing Page: Current State
 
-Last updated: 2026-02-09
+Last updated: 2026-02-17
 
 ## Overview
-This document captures the current implementation state of the landing page for Baller, how it is organized, what is working, and what is intentionally still placeholder.
 
-## Tech Stack
-- Next.js App Router (`next@16.1.4`)
-- React (`react@19.2.3`)
-- Tailwind CSS v4 (via `@tailwindcss/postcss`)
-- TypeScript
-- `lucide-react` for icons
+This document captures the current landing page implementation and how it connects to dashboard analysis flow.
 
-## Routing and File Organization
-- Landing route: `src/app/page.tsx` (`/`)
-- Dashboard route: `src/app/dashboard/page.tsx` (`/dashboard`) currently placeholder
-- Root layout: `src/app/layout.tsx`
-- Landing sections are split into route-grouped components in `src/app/(components)/`
-- Style files are centralized under `src/styles/`
+## Active Landing Flow
 
-Current landing composition in `src/app/page.tsx`:
-- `Navigation`
-- `Hero`
-- `HowItWorks`
-- `Features`
-- `FinalCTA`
-- `Footer`
+1. User opens `/`.
+2. `Hero` accepts a Facebook Marketplace URL.
+3. URL is normalized by `parseFacebookMarketplaceListingUrl`.
+4. User is routed to `/dashboard?listingUrl=...&itemId=...`.
 
-## Section-Level Status
+## Route and Component Structure
 
-### Navigation (`src/app/(components)/Navigation.tsx`)
-- Brand label ("BALLER")
-- Dashboard link to `/dashboard`
+- Route entry: `src/app/page.tsx`
+- Navigation: `src/app/(components)/Navigation.tsx`
+- Hero input/CTA: `src/app/(components)/Hero.tsx`
+- Marketing sections:
+  - `src/app/(components)/HowItWorks.tsx`
+  - `src/app/(components)/Features.tsx`
+  - `src/app/(components)/FinalCTA.tsx`
+- Footer/resources: `src/app/(components)/Footer.tsx`
 
-### Hero (`src/app/(components)/Hero.tsx`)
-- URL input field
-- "Analyze Now" button
-- Uses client-side state
-- Current action is placeholder (`alert(...)`)
+## Styling Notes
 
-### How It Works (`src/app/(components)/HowItWorks.tsx`)
-- 3-step explanation cards
-- Section anchor id: `#how-it-works`
-
-### Features (`src/app/(components)/Features.tsx`)
-- Feature cards and iconography
-- Section anchor id: `#features`
-
-### Final CTA (`src/app/(components)/FinalCTA.tsx`)
-- Primary and secondary CTA buttons
-- Section anchor id: `#learn-more`
-- Buttons currently render as visual placeholders (no wired action)
-
-### Footer (`src/app/(components)/Footer.tsx`)
-- Product anchor links:
-  - `#how-it-works`
-  - `#features`
-  - `#learn-more`
-- External resource links:
-  - Living document (Google Doc)
-  - GitHub repository
-
-## Styling System
-- Global styles are loaded via `src/app/layout.tsx` -> `src/app/globals.css`
-- `src/app/globals.css` imports:
+- Global CSS is imported in `src/app/globals.css`.
+- Core style sources:
   - `src/styles/fonts.css`
   - `src/styles/tailwind.css`
   - `src/styles/theme.css`
-- Utility classes and component styling are mostly applied directly in JSX
-- Color usage currently relies on hardcoded hex values in class names and inline styles
+  - `src/styles/similarListings.css`
+- Shared future style constants are retained in `src/app/consts.ts`.
 
-## Known Deficiencies (Current, Intentional)
-- Most buttons link to nothing at the moment; they are placeholders for now.
-- Background assets are not imported from Figma yet; solid colors are used for now.
+## Auth and Navigation Behavior
 
-## Additional Gaps and Risks
-- CTA behavior is inconsistent:
-  - Some links are wired (footer anchors, external resources, dashboard nav)
-  - Some are visual-only (Final CTA buttons)
-- Hero submission is mock behavior only (alert), not connected to backend/API.
-- `/dashboard` exists but is still placeholder content.
-- No analytics/event tracking yet for key CTA interactions.
+- Auth/session state is driven by `src/lib/auth/useAuthSession.ts`.
+- Navigation conditionally renders auth actions and dashboard controls.
+- Dashboard entry remains available from the top nav and hero action.
+- Dashboard supports guest preview for listing analysis.
+- Login is required for account-specific history features.
 
-## Recommended Next Steps
-1. Wire all CTA buttons to intended routes or actions.
-2. Replace solid-color backgrounds with exported Figma assets/tokens.
-3. Connect Hero analyze flow to a real API route and result page.
-4. Define a shared design token strategy (colors, spacing, typography) to reduce hardcoded values.
-5. Add basic tracking (clicks, conversions, section engagement).
+## Validation Checklist
 
-## Quick Validation Checklist
-- `npm run lint` passes
-- `npx tsc --noEmit` passes
-- Verify footer anchors scroll correctly
-- Verify external links open in new tabs
-- Verify `/dashboard` navigation works
+- `npm run lint`
+- `npx tsc --noEmit`
+- `npm run test:all`
