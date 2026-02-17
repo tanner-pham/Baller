@@ -1,6 +1,10 @@
+"use client";
+
+import { useState } from 'react';
 import { SimilarListings } from './(components)/SimilarListings';
 import { CurrentListing } from './(components)/CurrentListing';
 import { PricingAnalysis } from './(components)/PriceAnalysis';
+import { SearchBar } from './(components)/SearchBar';
 import { Navigation } from '../(components)/Navigation';
 
 const dummyListings = [
@@ -49,9 +53,19 @@ const dummyListings = [
 ];
 
 export default function DashboardPage() {
+  const [searchUrl, setSearchUrl] = useState('');
+
+  const handleSearch = (url: string) => {
+    setSearchUrl(url);
+    // Here you would typically fetch data based on the URL
+    // For now, it just stores the URL and you can extend this later
+    window.location.reload();
+  };
+
   return (
     <main className="size-full overflow-y-auto bg-[#F5F5F0]">
       <Navigation />
+      <SearchBar onSearch={handleSearch} />
       <div className="mt-8">
         <CurrentListing
           image="/images/macbook.jpg"
