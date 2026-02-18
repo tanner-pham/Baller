@@ -2,6 +2,33 @@
 
 Baller is a Next.js app that helps users evaluate Facebook Marketplace listings with pricing context and AI-assisted condition insights.
 
+## Beta Release (v0.1.0)
+
+**Git Tag:** `beta-release`
+
+### Operational Use Case
+
+**Use Case: Condition Assessment and Pricing Analysis**
+
+Users can analyze Facebook Marketplace listings to receive:
+- AI-powered condition assessment (GPT-4o-mini vision analysis)
+- Pricing recommendations based on condition scoring
+- Dashboard view with pricing rationale and negotiation tips
+
+**How it works:**
+1. User navigates to `/dashboard`
+2. System fetches listing data from Facebook Marketplace API (via RapidAPI)
+3. Backend calls GPT-4o-mini to assess item condition from images (0.0-1.0 score)
+4. Dashboard displays condition badge, pricing analysis, and similar listings
+5. Results are cached for 48 hours to reduce API costs
+
+**Components Tested:**
+- Frontend (Next.js dashboard UI)
+- Backend API (`/api/assess-condition`, `/api/marketplace-listing`)
+- Database (Supabase caching layer)
+- External APIs (OpenAI GPT-4o-mini, RapidAPI Marketplace)
+- CI/CD (GitHub Actions with Jest + Mocha)
+
 ## Core Features
 
 - Parse and normalize Facebook Marketplace listing URLs.
@@ -38,6 +65,120 @@ See folder-level docs for file-by-file maps:
 - `src/styles/README.md`
 - `src/types/README.md`
 - `backend/README.md`
+
+## Environment Setup
+
+### Prerequisites
+- Node.js v20 or higher
+- npm v10 or higher
+- Git
+
+### Installation
+
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/tanner-pham/Baller.git
+   cd Baller
+   ```
+
+2. **Install dependencies:**
+   ```bash
+   npm ci
+   ```
+
+3. **Configure environment variables:**
+   
+   Copy `.env.example` to `.env.local`:
+   ```bash
+   cp .env.example .env.local
+   ```
+   
+   Then configure the following required variables in `.env.local`:
+   - `SUPABASE_URL` - Your Supabase project URL
+   - `SUPABASE_ANON_KEY` - Supabase anonymous/public key
+   - `SUPABASE_SERVICE_ROLE_KEY` - Supabase service role key (server-only)
+   - `OPENAI_API_KEY` - OpenAI API key for GPT-4o-mini
+   - `RAPIDAPI_KEY` - RapidAPI key for Facebook Marketplace access
+   - `RAPIDAPI_HOST` - (optional, defaults to `facebook-marketplace1.p.rapidapi.com`)
+
+   **Getting API Keys:**
+   - Supabase: https://supabase.com/dashboard (create project → Settings → API)
+   - OpenAI: https://platform.openai.com/api-keys
+   - RapidAPI: https://rapidapi.com/datacrawler/api/facebook-marketplace1
+
+## Building the System
+
+### Development Build
+```bash
+npm run dev
+```
+The app will be available at http://localhost:3000
+
+### Production Build
+```bash
+npm run build
+npm start
+```
+
+## Testing the System
+
+### Run All Tests
+```bash
+npm run test:all
+```
+
+### Frontend Tests Only (Jest)
+```bash
+npm test
+```
+- Runs Jest tests with coverage reporting
+- Coverage threshold: 80% (configured in `jest.config.ts`)
+- Tests UI components using React Testing Library
+
+### Backend Tests Only (Mocha + Chai)
+```bash
+npm run test:backend
+```
+- Runs Mocha/Chai tests for API routes and backend logic
+- Tests condition assessment API mocking
+- Tests Supabase client configuration
+
+### Linting
+```bash
+npm run lint
+```
+
+### Type Checking
+```bash
+npx tsc --noEmit
+```
+
+### Test Coverage
+Coverage reports are automatically generated when running `npm test`. View detailed coverage at `coverage/lcov-report/index.html` after running tests.
+
+## Running the System
+
+### Local Development
+```bash
+npm run dev
+```
+Then navigate to:
+- Landing page: http://localhost:3000
+- Dashboard: http://localhost:3000/dashboard
+- Auth: http://localhost:3000/auth
+
+### Running with Mock Data
+The dashboard works with placeholder data if you don't have all API keys configured. To test the full flow:
+1. Set up all environment variables (see Environment Setup)
+2. Run `npm run dev`
+3. Navigate to `/dashboard`
+4. The system will automatically fetch and analyze a demo listing
+
+### Continuous Integration
+Tests run automatically on:
+- Every push to any branch
+- Every pull request to `main`
+- View CI status: https://github.com/tanner-pham/Baller/actions
 
 ## Environment Setup
 
