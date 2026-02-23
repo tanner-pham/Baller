@@ -42,7 +42,7 @@ export function useConditionAssessment({
     if (
       !hasListing ||
       isListingLoading ||
-      !listing?.image ||
+      !listing?.images?.length ||
       (listingId && listing.itemId && listing.itemId !== listingId)
     ) {
       setAssessment(null);
@@ -86,10 +86,12 @@ export function useConditionAssessment({
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            imageUrl: listing.image,
+            imageUrl: listing.images?.[0], // TODO: consider multiple images in future iterations
             description: descriptionContext,
             listedPrice: listing.price,
             listingId,
+            images: listing.images,
+            postedTime: listing.postedTime,
           }),
         });
 
@@ -158,7 +160,7 @@ export function useConditionAssessment({
     hasListing,
     isListingLoading,
     listing?.description,
-    listing?.image,
+    listing?.images,
     listing?.itemId,
     listing?.price,
     listing?.title,

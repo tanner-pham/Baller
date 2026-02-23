@@ -115,7 +115,7 @@ export default function DashboardClient() {
   });
 
   const currentListingData: CurrentListingProps = {
-    image: searchParams.get('image') ?? DEFAULT_CURRENT_LISTING.image,
+    image: (activeMarketplaceListing?.images?.[0] ?? searchParams.get('image')) || DEFAULT_CURRENT_LISTING.image,
     price: searchParams.get('price') ?? DEFAULT_CURRENT_LISTING.price,
     title: searchParams.get('title') ?? DEFAULT_CURRENT_LISTING.title,
     description: searchParams.get('description') ?? DEFAULT_CURRENT_LISTING.description,
@@ -168,7 +168,7 @@ export default function DashboardClient() {
       activeMarketplaceListing?.location ||
       currentListingData.location ||
       (hasListingError ? 'Unavailable' : ''),
-    image: activeMarketplaceListing?.image || currentListingData.image || EMPTY_IMAGE_PLACEHOLDER,
+    image: activeMarketplaceListing?.images?.[0] || currentListingData.image || EMPTY_IMAGE_PLACEHOLDER,
     sellerName:
       activeMarketplaceListing?.sellerName ||
       currentListingData.sellerName ||

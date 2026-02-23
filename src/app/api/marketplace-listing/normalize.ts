@@ -85,7 +85,7 @@ export function normalizeListingResponse(
     description: listing.redacted_description?.text ?? undefined,
     price: normalizePrice(listing),
     location: listing.location_text?.text ?? undefined,
-    image: listing.images?.[0],
+    images: listing.images,
     sellerName: listing.marketplace_listing_seller?.name ?? 'Seller unavailable',
     postedTime: normalizePostedTime(listing.creation_time),
     similarListings: normalizeSimilarListings(listing),
