@@ -1,7 +1,7 @@
 import { CONDITION_LABELS, type ParsedAssessment } from './types';
 
 /**
- * Calculates modelAccuracy score (0-100) based on image count, description quality, and listing age.
+ * Calculates modelAccuracy score (0-98) based on image count, description quality, and listing age.
  * More images, longer descriptions, and fresher listings increase confidence in the assessment.
  */
 export function calculateModelAccuracy(
