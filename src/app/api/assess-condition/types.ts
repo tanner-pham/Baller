@@ -5,7 +5,6 @@ export interface ParsedAssessment {
   conditionLabel: (typeof CONDITION_LABELS)[number];
   reasoning: string;
   wearIndicators: string[];
-  modelAccuracy: string;
   topReasons: string[];
   suggestedPrice: string;
   suggestedOffer: string;

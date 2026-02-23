@@ -1,6 +1,53 @@
 import { CONDITION_LABELS, type ParsedAssessment } from './types';
 
 /**
+ * Calculates modelAccuracy score (0-100) based on image count, description quality, and listing age.
+ * More images, longer descriptions, and fresher listings increase confidence in the assessment.
+ */
+export function calculateModelAccuracy(
+  images?: string[],
+  description?: string,
+  postedTime?: string,
+): number {
+  let score = 30; // baseline score
+
+  // Add points for number of images (max 30 points)
+  const imageCount = Array.isArray(images) ? images.filter((img) => img && img.trim()).length : 0;
+  const imageScore = Math.min(30, imageCount * 10);
+  score += imageScore;
+
+  // Add points for description length (max 30 points)
+  const descriptionLength = description ? description.trim().length : 0;
+  let descriptionScore = 0;
+  if (descriptionLength > 300) {
+    descriptionScore = 30;
+  } else if (descriptionLength > 150) {
+    descriptionScore = 20;
+  } else if (descriptionLength > 50) {
+    descriptionScore = 15;
+  }
+  score += descriptionScore;
+
+  // If listing is created within 6 months, increase score by 10 points.
+  if (postedTime) {
+    try {
+      const postedDate = new Date(postedTime);
+      const now = new Date();
+      const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 6, now.getDate());
+
+      if (postedDate >= sixMonthsAgo && postedDate <= now) {
+        score += 10;
+      }
+    } catch {
+      // If date parsing fails, skip the bonus
+    }
+  }
+
+  // Cap at 98 to allow room for uncertainty
+  return Math.min(98, score);
+}
+
+/**
  * Narrowly checks OpenAI errors by code without depending on SDK internals.
  */
 export function isOpenAIErrorWithCode(error: unknown, code: string): boolean {
@@ -40,6 +87,7 @@ function normalizeMoneyString(value: unknown, fallback: string): string {
 
 /**
  * Ensures model confidence is represented as an integer string between 0 and 100.
+ * @deprecated modelAccuracy is now calculated client-side based on images and description length
  */
 function normalizeAccuracyString(value: unknown, fallback: string): string {
   const numericValue = Number(value);
@@ -89,7 +137,6 @@ export function parseAssessmentResponse(rawContent: string): ParsedAssessment {
     wearIndicators: Array.isArray(parsed.wearIndicators)
       ? parsed.wearIndicators.filter((item): item is string => typeof item === 'string')
       : [],
-    modelAccuracy: normalizeAccuracyString(parsed.modelAccuracy, '85'),
     topReasons:
       normalizedTopReasons.length > 0
         ? normalizedTopReasons

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
 import { fetchImageAsDataUrl } from './image';
-import { isOpenAIErrorWithCode, parseAssessmentResponse } from './normalize';
+import { isOpenAIErrorWithCode, parseAssessmentResponse, calculateModelAccuracy } from './normalize';
 import { buildAssessmentPrompt } from './prompt';
 import { isCacheFresh } from '../../../lib/server/cacheTtl';
 import {
@@ -91,11 +91,17 @@ export async function POST(request: NextRequest) {
       description?: unknown;
       listingId?: unknown;
       listedPrice?: unknown;
+      images?: unknown;
+      postedTime?: unknown;
     };
 
     const imageUrl = typeof body.imageUrl === 'string' ? body.imageUrl.trim() : '';
     const description = typeof body.description === 'string' ? body.description : undefined;
     const listedPrice = typeof body.listedPrice === 'string' ? body.listedPrice : undefined;
+    const images = Array.isArray(body.images)
+      ? body.images.filter((img): img is string => typeof img === 'string')
+      : undefined;
+    const postedTime = typeof body.postedTime === 'string' ? body.postedTime : undefined;
     requestListedPrice = listedPrice;
     const listingId =
       typeof body.listingId === 'string' && body.listingId.trim().length > 0
@@ -263,11 +269,13 @@ Image could not be accessed. Use description/context only and be conservative.`,
 
     const assessment = parseAssessmentResponse(content);
 
+    const modelAccuracy = Math.round(calculateModelAccuracy(images, description, postedTime)).toString();
+
     const responseAssessment = clampAssessmentToListedPrice(
       {
         conditionScore: assessment.conditionScore,
         conditionLabel: assessment.conditionLabel,
-        modelAccuracy: assessment.modelAccuracy,
+        modelAccuracy,
         reasoning: assessment.reasoning,
         wearIndicators: assessment.wearIndicators || [],
         topReasons: assessment.topReasons,
