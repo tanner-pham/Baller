@@ -18,6 +18,7 @@ import {
 import { useConditionAssessment } from './hooks/useConditionAssessment';
 import { useDashboardSession } from './hooks/useDashboardSession';
 import { useMarketplaceListing } from './hooks/useMarketplaceListing';
+import { useSimilarListings } from './hooks/useSimilarListings';
 import { useSearchHistory } from './hooks/useSearchHistory';
 import type { SearchHistoryEntry } from './types';
 
@@ -106,6 +107,17 @@ export default function DashboardClient() {
     hasListing: Boolean(parsedListing),
     isListingLoading,
     listing: activeMarketplaceListing,
+  });
+
+  const {
+    listings: asyncSimilarListings,
+    status: similarListingsStatus,
+    warning: similarListingsWarning,
+    error: similarListingsError,
+  } = useSimilarListings({
+    listingId: parsedListing?.itemId ?? null,
+    hasListing: Boolean(parsedListing),
+    isListingLoading,
   });
 
   const { searchHistory } = useSearchHistory({
@@ -217,9 +229,21 @@ export default function DashboardClient() {
   };
 
   const similarListingsSource =
-    activeMarketplaceListing?.similarListings && activeMarketplaceListing.similarListings.length > 0
-      ? activeMarketplaceListing.similarListings
-      : DEFAULT_SIMILAR_LISTINGS;
+    asyncSimilarListings && asyncSimilarListings.length > 0
+      ? asyncSimilarListings
+      : activeMarketplaceListing?.similarListings && activeMarketplaceListing.similarListings.length > 0
+        ? activeMarketplaceListing.similarListings
+        : DEFAULT_SIMILAR_LISTINGS;
+  const shouldShowSimilarListingsWarning = Boolean(
+    parsedListing &&
+      similarListingsStatus === 'stale' &&
+      similarListingsWarning.trim().length > 0,
+  );
+  const shouldShowSimilarListingsError = Boolean(
+    parsedListing &&
+      similarListingsStatus === 'error' &&
+      similarListingsError.trim().length > 0,
+  );
   const emptyStateMessage = isAuthenticated
     ? 'No listing loaded yet. Open the menu to load a previous listing, or paste a new Facebook Marketplace link in the top bar.'
     : 'No listing loaded yet. Paste a Facebook Marketplace link in the top bar to start. Log in to unlock search history.';
@@ -385,6 +409,22 @@ export default function DashboardClient() {
         <div className="mx-auto mt-4 w-full max-w-6xl rounded-md border-4 border-black bg-[#FADF0B] px-4 py-3 shadow-[4px_4px_0px_0px_#000000]">
           <p className="font-['Space_Grotesk',sans-serif] text-sm font-bold text-black">
             {conditionLoadError}
+          </p>
+        </div>
+      )}
+
+      {shouldShowSimilarListingsWarning && (
+        <div className="mx-auto mt-4 w-full max-w-6xl rounded-md border-4 border-black bg-[#FADF0B] px-4 py-3 shadow-[4px_4px_0px_0px_#000000]">
+          <p className="font-['Space_Grotesk',sans-serif] text-sm font-bold text-black">
+            {similarListingsWarning}
+          </p>
+        </div>
+      )}
+
+      {shouldShowSimilarListingsError && (
+        <div className="mx-auto mt-4 w-full max-w-6xl rounded-md border-4 border-black bg-[#FF69B4] px-4 py-3 shadow-[4px_4px_0px_0px_#000000]">
+          <p className="font-['Space_Grotesk',sans-serif] text-sm font-bold text-black">
+            {similarListingsError}
           </p>
         </div>
       )}

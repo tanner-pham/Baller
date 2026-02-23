@@ -9,7 +9,10 @@
     "lint": "eslint",
     "test": "jest --config jest.config.ts --passWithNoTests --coverage",
     "test:backend": "mocha --require tsx 'backend/**/*.test.ts' 'src/app/**/route.test.ts' --exit",
-    "test:all": "npm run test && npm run test:backend"
+    "test:all": "npm run test && npm run test:backend",
+    "scraper:api": "npm --prefix services/scraper run api",
+    "scraper:worker": "npm --prefix services/scraper run worker",
+    "scraper:build": "npm --prefix services/scraper run build"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.95.3",

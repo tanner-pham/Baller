@@ -29,6 +29,17 @@ export interface MarketplaceListingApiResponse {
   error?: string;
 }
 
+export type SimilarListingsStatus = 'pending' | 'ready' | 'stale' | 'error';
+
+export interface SimilarListingsApiResponse {
+  success: boolean;
+  status: SimilarListingsStatus;
+  retryAfterMs?: number;
+  warning?: string;
+  similarListings?: SimilarListing[];
+  error?: string;
+}
+
 export interface ConditionAssessmentData {
   conditionScore?: number;
   conditionLabel?: string;

@@ -11,6 +11,12 @@ Shared utilities used by both route handlers and client components.
 | `src/lib/server/cacheTtl.ts` | Shared 48h cache freshness helper utilities. | `CACHE_TTL_HOURS`, `isCacheFresh` | server runtime |
 | `src/lib/server/listingCacheRepository.ts` | Service-role repository for listing cache reads/writes. | `getListingCacheEntry`, `upsertListingCacheEntry` | `src/lib/supabaseServerClient.ts` |
 | `src/lib/server/conditionCacheRepository.ts` | Service-role repository for condition cache reads/writes. | `getConditionCacheEntry`, `upsertConditionCacheEntry` | `src/lib/supabaseServerClient.ts` |
+| `src/lib/server/similarListingsTtl.ts` | Similar-listings cache TTL helpers (default 12h). | `getSimilarCacheTtlHours`, `computeSimilarCacheExpiry`, `isSimilarCacheFresh` | server runtime |
+| `src/lib/server/similarListingsQuery.ts` | Deterministic search-query + hash builder for similar-listing jobs. | `buildSimilarSearchQuery` | `crypto`, marketplace listing types |
+| `src/lib/server/similarListingJobsRepository.ts` | Service-role repository for async similar-listing job rows. | `getSimilarListingJobEntry`, `upsertSimilarListingJobEntry` | `src/lib/supabaseServerClient.ts` |
+| `src/lib/server/similarListingsCacheRepository.ts` | Service-role repository for async similar-listing cache rows. | `getSimilarListingsCacheEntry`, `upsertSimilarListingsCacheEntry` | `src/lib/supabaseServerClient.ts` |
+| `src/lib/server/scraperProvider.ts` | Environment-driven scraper provider resolver (`internal` vs `rapidapi`). | `resolveScraperProvider` | server runtime |
+| `src/lib/server/scraperClient.ts` | Internal scraper HTTP client for listing fetch + similar job enqueue. | `fetchListingFromInternalScraper`, `enqueueSimilarListingsFromInternalScraper` | fetch, server env |
 
 ## Notes
 

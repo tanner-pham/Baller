@@ -17,22 +17,23 @@ Users can analyze Facebook Marketplace listings to receive:
 
 **How it works:**
 1. User navigates to `/dashboard`
-2. System fetches listing data from Facebook Marketplace API (via RapidAPI)
+2. System fetches listing data from either internal scraper service or RapidAPI fallback (`SCRAPER_PROVIDER`)
 3. Backend calls GPT-4o-mini to assess item condition from images (0.0-1.0 score)
 4. Dashboard displays condition badge, pricing analysis, and similar listings
 5. Results are cached for 48 hours to reduce API costs
 
 **Components Tested:**
 - Frontend (Next.js dashboard UI)
-- Backend API (`/api/assess-condition`, `/api/marketplace-listing`)
-- Database (Supabase caching layer)
-- External APIs (OpenAI GPT-4o-mini, RapidAPI Marketplace)
+- Backend API (`/api/assess-condition`, `/api/marketplace-listing`, `/api/similar-listings`)
+- Database (Supabase caching + async similar-listing job layer)
+- External APIs (OpenAI GPT-4o-mini, internal scraper service, RapidAPI fallback)
 - CI/CD (GitHub Actions with Jest + Mocha)
 
 ## Core Features
 
 - Parse and normalize Facebook Marketplace listing URLs.
-- Fetch listing details from RapidAPI (`/api/marketplace-listing`).
+- Fetch listing details from internal scraper service with RapidAPI fallback (`/api/marketplace-listing`).
+- Fetch async similar-listings status/payload (`/api/similar-listings`).
 - Run condition assessment with OpenAI (`/api/assess-condition`).
 - Show pricing rationale, negotiation guidance, and similar listings in `/dashboard`.
 - Reuse listing/condition computations with a 48-hour shared DB cache.
@@ -98,13 +99,17 @@ See folder-level docs for file-by-file maps:
    - `SUPABASE_ANON_KEY` - Supabase anonymous/public key
    - `SUPABASE_SERVICE_ROLE_KEY` - Supabase service role key (server-only)
    - `OPENAI_API_KEY` - OpenAI API key for GPT-4o-mini
-   - `RAPIDAPI_KEY` - RapidAPI key for Facebook Marketplace access
+   - `SCRAPER_PROVIDER` - `internal` or `rapidapi` (defaults to `rapidapi`)
+   - `SCRAPER_BASE_URL` - internal scraper service base URL (required when `SCRAPER_PROVIDER=internal`)
+   - `SCRAPER_INTERNAL_TOKEN` - shared bearer token for internal scraper calls
+   - `SIMILAR_CACHE_TTL_HOURS` - (optional, defaults to `12`)
+   - `RAPIDAPI_KEY` - RapidAPI key for fallback mode
    - `RAPIDAPI_HOST` - (optional, defaults to `facebook-marketplace1.p.rapidapi.com`)
 
    **Getting API Keys:**
    - Supabase: https://supabase.com/dashboard (create project → Settings → API)
    - OpenAI: https://platform.openai.com/api-keys
-   - RapidAPI: https://rapidapi.com/datacrawler/api/facebook-marketplace1
+   - RapidAPI (fallback): https://rapidapi.com/datacrawler/api/facebook-marketplace1
 
 ## Building the System
 
@@ -188,14 +193,31 @@ Tests run automatically on:
    - `SUPABASE_ANON_KEY`
    - `SUPABASE_SERVICE_ROLE_KEY` (server-only)
    - `OPENAI_API_KEY`
-   - `RAPIDAPI_KEY`
-   - `RAPIDAPI_HOST` (optional, defaults to `facebook-marketplace1.p.rapidapi.com`)
+   - `SCRAPER_PROVIDER`
+   - `SCRAPER_BASE_URL` and `SCRAPER_INTERNAL_TOKEN` (for internal scraper mode)
+   - `SIMILAR_CACHE_TTL_HOURS` (optional)
+   - `RAPIDAPI_KEY` and `RAPIDAPI_HOST` (for fallback mode)
 
 ## Local Development
 
 ```bash
 npm ci
 npm run dev
+```
+
+### Internal Scraper Service (Optional for `SCRAPER_PROVIDER=internal`)
+
+```bash
+cd services/scraper
+npm install
+npm run api
+```
+
+In a second terminal:
+
+```bash
+cd services/scraper
+npm run worker
 ```
 
 ## Quality and Test Commands

@@ -24,10 +24,11 @@ This folder contains App Router pages, API route handlers, and UI components.
 | `src/app/api/assess-condition/normalize.ts` | Normalizes and validates model JSON payload. | `parseAssessmentResponse`, `isOpenAIErrorWithCode` | `types.ts` |
 | `src/app/api/assess-condition/types.ts` | Condition assessment type contracts. | `CONDITION_LABELS`, `ParsedAssessment` | n/a |
 | `src/app/api/assess-condition/route.test.ts` | Mocha/Chai behavior tests for response shapes and error handling. | tests only | mocha/chai |
-| `src/app/api/marketplace-listing/route.ts` | Marketplace listing API endpoint backed by RapidAPI with 48h DB cache + stale fallback. | `GET` | `extract.ts`, `normalize.ts`, server cache helpers |
+| `src/app/api/marketplace-listing/route.ts` | Marketplace listing API endpoint with provider-switching (`internal` scraper or RapidAPI fallback), 48h DB cache + stale fallback. | `GET` | `extract.ts`, `normalize.ts`, server cache helpers, scraper client |
 | `src/app/api/marketplace-listing/extract.ts` | Extracts listing object from multiple RapidAPI wrapper shapes. | `extractListingPayload` | `src/types/rapidApiMarketplace.ts` |
 | `src/app/api/marketplace-listing/normalize.ts` | Normalizes RapidAPI listing fields for dashboard consumption. | `normalizeListingResponse` | `types.ts`, `src/types/rapidApiMarketplace.ts` |
 | `src/app/api/marketplace-listing/types.ts` | Internal normalized response types. | `NormalizedMarketplaceListing`, `NormalizedSimilarListing` | n/a |
+| `src/app/api/similar-listings/route.ts` | Async similar-listings API endpoint returning `pending/ready/stale/error` states backed by job + cache tables. | `GET` | listing cache, similar cache/job repos, scraper client |
 
 ## Shared Landing Components
 
@@ -49,6 +50,7 @@ This folder contains App Router pages, API route handlers, and UI components.
 | `src/app/dashboard/types.ts` | Dashboard data contracts for API payloads/history state. | type interfaces | `SimilarListing` |
 | `src/app/dashboard/hooks/useDashboardSession.ts` | Dashboard auth/session state provider (no route redirect side effects). | `useDashboardSession` | `src/lib/auth/useAuthSession.ts` |
 | `src/app/dashboard/hooks/useMarketplaceListing.ts` | Listing fetch state machine with timeout/error handling. | `useMarketplaceListing` | dashboard HTTP helper |
+| `src/app/dashboard/hooks/useSimilarListings.ts` | Polls async similar-listings route until ready/stale/error. | `useSimilarListings` | dashboard HTTP helper |
 | `src/app/dashboard/hooks/useConditionAssessment.ts` | Condition assessment fetch state machine with fallback behavior. | `useConditionAssessment` | dashboard HTTP helper |
 | `src/app/dashboard/hooks/useSearchHistory.ts` | Authenticated-only DB history sync and per-user upsert logic. | `useSearchHistory` | Supabase browser client + RLS |
 | `src/app/dashboard/utils/http.ts` | Shared safe JSON reader for dashboard fetch calls. | `readJsonResponse` | n/a |

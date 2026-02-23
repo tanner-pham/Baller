@@ -14,6 +14,8 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     // Project-generated artifacts:
     "coverage/**",
+    // Service package has its own toolchain.
+    "services/scraper/**",
   ]),
 ]);
 

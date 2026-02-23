@@ -6,6 +6,7 @@ interface ListingCacheRow {
   listing_id: string;
   normalized_url: string;
   listing_payload: unknown;
+  source_provider: string;
   computed_at: string;
 }
 
@@ -13,6 +14,7 @@ export interface ListingCacheEntry<TPayload = unknown> {
   listingId: string;
   normalizedUrl: string;
   listingPayload: TPayload;
+  sourceProvider: string;
   computedAt: string;
 }
 
@@ -20,6 +22,7 @@ interface UpsertListingCacheInput<TPayload = unknown> {
   listingId: string;
   normalizedUrl: string;
   listingPayload: TPayload;
+  sourceProvider?: string;
   computedAt?: string;
 }
 
@@ -33,7 +36,7 @@ export async function getListingCacheEntry<TPayload = unknown>(
 
   const { data, error } = await supabase
     .from('listing_cache')
-    .select('listing_id, normalized_url, listing_payload, computed_at')
+    .select('listing_id, normalized_url, listing_payload, source_provider, computed_at')
     .eq('listing_id', listingId)
     .limit(1)
     .maybeSingle();
@@ -52,6 +55,7 @@ export async function getListingCacheEntry<TPayload = unknown>(
     listingId: row.listing_id,
     normalizedUrl: row.normalized_url,
     listingPayload: row.listing_payload as TPayload,
+    sourceProvider: row.source_provider || 'rapidapi',
     computedAt: row.computed_at,
   };
 }
@@ -69,6 +73,7 @@ export async function upsertListingCacheEntry<TPayload = unknown>(
       listing_id: input.listingId,
       normalized_url: input.normalizedUrl,
       listing_payload: input.listingPayload,
+      source_provider: input.sourceProvider ?? 'rapidapi',
       computed_at: input.computedAt ?? new Date().toISOString(),
     },
     { onConflict: 'listing_id' },
