@@ -69,7 +69,7 @@ function clampAssessmentToListedPrice(
 
   return {
     ...assessment,
-    suggestedOffer: Math.round(listedPriceAmount).toString(),
+    suggestedOffer: Math.round(listedPriceAmount).toLocaleString('en-US'),
   };
 }
 
@@ -279,8 +279,8 @@ Image could not be accessed. Use description/context only and be conservative.`,
         reasoning: assessment.reasoning,
         wearIndicators: assessment.wearIndicators || [],
         topReasons: assessment.topReasons,
-        suggestedPrice: assessment.suggestedPrice,
-        suggestedOffer: assessment.suggestedOffer,
+        suggestedPrice: Number(assessment.suggestedPrice).toLocaleString('en-US'),
+        suggestedOffer: Number(assessment.suggestedOffer).toLocaleString('en-US'),
         negotiationTip: assessment.negotiationTip,
       },
       listedPrice,

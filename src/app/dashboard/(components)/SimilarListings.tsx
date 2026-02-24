@@ -35,7 +35,7 @@ export function SimilarListings({ listings }: SimilarListingsProps) {
           </div>
 
           <div className="absolute bottom-6 right-7">
-            <div className="rounded-xl border-5 border-black bg-[#FF69B4] px-6 py-3 shadow-[4px_4px_0px_0px_#000000] transition-all hover:translate-x-[-1px] hover:translate-y-[-1px] hover:shadow-[6px_6px_0px_0px_#000000]">
+            <div className="rounded-xl border-5 border-black bg-[#FF69B4] px-6 py-3 shadow-[4px_4px_0px_0px_#000000] transition-all">
               <span className="text-center text-base uppercase text-black font-['Anton',sans-serif]">
                 SWIPE →
               </span>
