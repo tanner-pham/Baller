@@ -9,6 +9,18 @@ interface SimilarListing {
   link: string;
   similarityScore: number;
 }
+interface RapidApiListingItem {
+  id?: string;
+  itemId?: string;
+  title?: string;
+  name?: string;
+  price?: string;
+  location?: string;
+  image?: string;
+  thumbnail?: string;
+  images?: string[];
+  url?: string;
+}
 
 /**
  * Simple text similarity using word overlap (Jaccard similarity)
@@ -74,7 +86,7 @@ export async function GET(request: NextRequest) {
 
     // Calculate similarity scores and filter
     const similarListings: SimilarListing[] = listings
-      .map((item: any) => ({
+      .map((item: RapidApiListingItem) => ({
         itemId: item.id || item.itemId || '',
         title: item.title || item.name || '',
         price: parseFloat(item.price?.replace(/[^0-9.]/g, '') || '0'),
