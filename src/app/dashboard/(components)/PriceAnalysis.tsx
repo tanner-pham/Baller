@@ -35,7 +35,7 @@ export function PricingAnalysis({
   const marketValueDisplay = formatStatValue(marketValue, '$');
 
   const cardStyle =
-    'rounded-xl border-5 border-black shadow-[6px_6px_0px_0px_#000000] transition-all duration-200 hover:translate-x-[-1px] hover:translate-y-[-1px] hover:shadow-[8px_8px_0px_0px_#000000] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none';
+    'rounded-xl border-5 border-black shadow-[6px_6px_0px_0px_#000000] transition-all duration-200';
 
   return (
     <div className="border-b-4 border-black bg-[#FADF0B] p-15">

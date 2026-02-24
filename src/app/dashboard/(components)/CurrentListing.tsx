@@ -26,8 +26,8 @@ export function CurrentListing({
   conditionLabel,
 }: CurrentListingProps) {
   return (
-    <div className="border-b-4 border-black bg-[#90EE90] p-15">
-      <div className="mx-auto flex h-[500px] w-full max-w-6xl items-stretch justify-between gap-20 rounded-xl border-5 border-black bg-white p-6 shadow-[8px_8px_0px_0px_#000000]">
+    <div className="border-b-4 border-t-4 border-black bg-[#90EE90] p-15">
+      <div className="mx-auto flex w-full max-w-6xl items-stretch justify-between gap-20 rounded-xl border-5 border-black bg-white p-6 shadow-[8px_8px_0px_0px_#000000]">
         <div className="flex-[1] overflow-hidden rounded-xl border-5 border-black">
           <img src={image} alt={title} className="h-full w-full object-cover" />
         </div>
@@ -46,7 +46,7 @@ export function CurrentListing({
                 {title}
               </h1>
 
-              <div className="rounded-xl border-5 border-black bg-[#FF69B4] px-4 py-2 shadow-[4px_4px_0px_0px_#000000] transition-all hover:translate-x-[-1px] hover:translate-y-[-1px] hover:shadow-[6px_6px_0px_0px_#000000] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none">
+              <div className="rounded-xl border-5 border-black bg-[#FF69B4] px-4 py-2 shadow-[4px_4px_0px_0px_#000000] transition-all">
                 <span className="text-3xl text-black font-['Anton',sans-serif]">{price}</span>
               </div>
             </div>
@@ -58,14 +58,14 @@ export function CurrentListing({
             )}
 
             <div className="mb-4 flex flex-wrap gap-3">
-              <div className="flex items-center gap-2 rounded-xl border-5 border-black bg-[#FADF0B] px-3 py-2 shadow-[4px_4px_0px_0px_#000000] transition-all hover:translate-x-[-1px] hover:translate-y-[-1px] hover:shadow-[6px_6px_0px_0px_#000000]">
+              <div className="flex items-center gap-2 rounded-xl border-5 border-black bg-[#FADF0B] px-3 py-2 shadow-[4px_4px_0px_0px_#000000] transition-all">
                 <MapPin className="size-4" strokeWidth={3} />
                 <span className="text-center font-semibold text-gray-700 font-['Space_Grotesk',sans-serif]">
                   {location}
                 </span>
               </div>
 
-              <div className="rounded-xl border-5 border-black bg-[#FF6600] px-3 py-2 shadow-[4px_4px_0px_0px_#000000] transition-all hover:translate-x-[-1px] hover:translate-y-[-1px] hover:shadow-[6px_6px_0px_0px_#000000]">
+              <div className="rounded-xl border-5 border-black bg-[#FF6600] px-3 py-2 shadow-[4px_4px_0px_0px_#000000] transition-all">
                 <span className="text-center font-semibold text-white font-['Space_Grotesk',sans-serif]">
                   {postedTime}
                 </span>
@@ -73,7 +73,7 @@ export function CurrentListing({
 
               {conditionScore !== undefined && conditionLabel && (
                 <div
-                  className={`inline-flex items-center rounded-xl border-5 border-black px-3 py-2 shadow-[4px_4px_0px_0px_#000000] transition-all hover:translate-x-[-1px] hover:translate-y-[-1px] hover:shadow-[6px_6px_0px_0px_#000000] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none ${
+                  className={`inline-flex items-center rounded-xl border-5 border-black px-3 py-2 shadow-[4px_4px_0px_0px_#000000] transition-all ${
                     conditionScore >= 0.8
                       ? 'bg-[#00FF00]'
                       : conditionScore >= 0.6
@@ -92,7 +92,7 @@ export function CurrentListing({
           </div>
 
           <div className="border-t-5 border-black pt-8">
-            <div className="inline-flex items-center gap-2 rounded-xl border-5 border-black bg-[#3300FF] px-4 py-2 shadow-[4px_4px_0px_0px_#000000] transition-all hover:translate-x-[-1px] hover:translate-y-[-1px] hover:shadow-[6px_6px_0px_0px_#000000] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none">
+            <div className="inline-flex items-center gap-2 rounded-xl border-5 border-black bg-[#3300FF] px-4 py-2 shadow-[4px_4px_0px_0px_#000000] transition-all">
               <User className="size-4 text-white" strokeWidth={3} />
               <span className="text-center font-semibold text-white font-['Space_Grotesk',sans-serif]">
                 {sellerName}

@@ -44,7 +44,7 @@ export function HowItWorks() {
           {STEPS.map((step) => (
             <div
               key={step.number}
-              className="relative rounded-2xl border-5 border-black bg-white p-8 shadow-[6px_6px_0px_0px_#000000] transition-all hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[8px_8px_0px_0px_#000000]"
+              className="relative rounded-2xl border-5 border-black bg-white p-8 shadow-[6px_6px_0px_0px_#000000] transition-all"
             >
               <div
                 className="absolute -left-4 -top-4 flex size-12 items-center justify-center rounded-full border-5 border-black text-2xl font-['Anton',sans-serif]"

@@ -401,7 +401,7 @@ export default function DashboardClient() {
         </section>
       ) : (
         <>
-          <div className="mt-8">
+          <div>
             <CurrentListing {...resolvedCurrentListingData} />
           </div>
           <PricingAnalysis {...resolvedPricingAnalysisData} />
