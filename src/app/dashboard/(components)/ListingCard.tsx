@@ -31,7 +31,6 @@ export default function ListingCard({
         <img
           src={image}
           alt={title}
-          fill
           className="object-cover"
         />
       </div>
