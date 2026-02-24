@@ -1,6 +1,4 @@
 'use client';
-
-import Image from "next/image";
 import Link from 'next/link';
 
 interface ListingCardProps {
@@ -30,7 +28,7 @@ export default function ListingCard({
 
       {/* Image */}
       <div className="mb-6 h-44 w-full overflow-hidden rounded-xl border-5 border-black bg-white">
-        <Image
+        <img
           src={image}
           alt={title}
           fill

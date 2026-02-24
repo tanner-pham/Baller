@@ -1,5 +1,4 @@
 "use client";
-import Image from "next/image";
 import { MapPin, User } from 'lucide-react';
 
 export interface CurrentListingProps {
@@ -29,7 +28,7 @@ export function CurrentListing({
     <div className="border-b-4 border-t-4 border-black bg-[#90EE90] p-15">
       <div className="mx-auto flex w-full max-w-6xl items-stretch justify-between gap-20 rounded-xl border-5 border-black bg-white p-6 shadow-[8px_8px_0px_0px_#000000]">
         <div className="flex-[1] overflow-hidden rounded-xl border-5 border-black">
-          <Image
+          <img
             src={image}
             alt={title}
             width={500}
