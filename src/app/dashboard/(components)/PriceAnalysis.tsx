@@ -36,43 +36,45 @@ export function PricingAnalysis({
 
   const cardStyle =
     'rounded-xl border-5 border-black shadow-[6px_6px_0px_0px_#000000] transition-all duration-200';
+  const valueStyle =
+  "flex h-[56px] items-center justify-center text-4xl leading-none font-semibold text-gray-700 font-['Space_Grotesk',sans-serif] whitespace-nowrap tabular-nums";
 
   return (
     <div className="border-b-4 border-black bg-[#FADF0B] p-15">
       <div className="mx-auto mb-12 grid w-full max-w-6xl grid-cols-1 items-center justify-between gap-8 md:grid-cols-3">
-        <div
-          className={`${cardStyle} flex min-h-[180px] flex-col justify-center bg-[#90EE90] p-8 text-center`}
-        >
-          <h3 className="mb-3 text-center text-3xl text-black font-['Anton',sans-serif]">
-            Suggested Offer
-          </h3>
-          <p className="text-center text-3xl font-semibold text-gray-700 font-['Space_Grotesk',sans-serif]">
-            {suggestedOfferDisplay}
-          </p>
-        </div>
+          <div
+            className={`${cardStyle} ${valueStyle} flex min-h-[180px] flex-col justify-center bg-[#90EE90] p-8 text-center`}
+          >
+            <h3 className="mb-3 text-center text-3xl text-black font-['Anton',sans-serif]">
+              Suggested Offer
+            </h3>
+            <p className="text-center text-3xl font-semibold text-gray-700 font-['Space_Grotesk',sans-serif]">
+              {suggestedOfferDisplay}
+            </p>
+          </div>
 
-        <div
-          className={`${cardStyle} flex min-h-[180px] flex-col justify-center bg-[#FF69B4] p-8 text-center`}
-        >
-          <h3 className="mb-3 text-center text-3xl text-black font-['Anton',sans-serif]">
-            Model Accuracy
-          </h3>
-          <p className="text-center text-3xl font-semibold text-gray-700 font-['Space_Grotesk',sans-serif]">
-            {modelAccuracyDisplay}
-          </p>
-        </div>
+          <div
+            className={`${cardStyle} ${valueStyle} flex min-h-[180px] flex-col justify-center bg-[#FF69B4] p-8 text-center`}
+          >
+            <h3 className="mb-3 text-center text-3xl text-black font-['Anton',sans-serif]">
+              Model Accuracy
+            </h3>
+            <p className="text-center text-3xl font-semibold text-gray-700 font-['Space_Grotesk',sans-serif]">
+              {modelAccuracyDisplay}
+            </p>
+          </div>
 
-        <div
-          className={`${cardStyle} flex min-h-[180px] flex-col justify-center bg-[#FF6600] p-8 text-center`}
-          data-market-value={marketValue}
-        >
-          <h3 className="mb-3 text-center text-3xl text-black font-['Anton',sans-serif]">
-            Market Value
-          </h3>
-          <p className="text-center text-3xl font-semibold text-gray-700 font-['Space_Grotesk',sans-serif]">
-            {marketValueDisplay}
-          </p>
-        </div>
+          <div
+            className={`${cardStyle} ${valueStyle} flex min-h-[180px] flex-col justify-center bg-[#FF6600] p-8 text-center`}
+            data-market-value={marketValue}
+          >
+            <h3 className="mb-3 text-center text-3xl text-black font-['Anton',sans-serif]">
+              Market Value
+            </h3>
+            <p className="text-center text-3xl font-semibold text-gray-700 font-['Space_Grotesk',sans-serif]">
+              {marketValueDisplay}
+            </p>
+          </div>
       </div>
 
       <h2 className="mb-3 text-center text-3xl text-black font-['Anton',sans-serif]">WHY THIS PRICE?</h2>
