@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: "Open an issue (choose a template)"
+    url: "https://github.com/tanner-pham/Baller/issues/new/choose"
+    about: "Create a bug report or feature request using our templates."
+  - name: "Baller — README"
+    url: "https://github.com/tanner-pham/Baller/#readme"
+    about: "Project overview and reporting guidelines."
