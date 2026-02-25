@@ -7,61 +7,62 @@
     Common Fonts + Text
 ========================= */
 
-const anton = "font-['Anton',sans-serif]";
-const space = "font-['Space_Grotesk',sans-serif]";
-const bebas = "font-['Bebas_Neue',sans-serif]";
+
+export const anton = "font-['Anton',sans-serif]";
+export const space = "font-['Space_Grotesk',sans-serif]";
+export const bebas = "font-['Bebas_Neue',sans-serif]";
 
 export const largeBoldFont = `${anton} text-6xl lg:text-7xl mb-4 text-black`;
 export const boldFontCentered = `${largeBoldFont} text-center pb-7`;
 
 // Common section subtext (used in HowItWorks + Features)
-const sectionSubText =
+export const sectionSubText =
   `${space} text-xl font-bold text-gray-700 max-w-2xl mx-auto`;
 
 /* =========================
     Common Layout + Shapes
 ========================= */
 
-const container = "container mx-auto px-4";
-const maxW4 = "max-w-4xl mx-auto";
-const maxW5 = "max-w-5xl mx-auto";
-const maxW6 = "max-w-6xl mx-auto";
-const maxW6Full = "mx-auto w-full max-w-6xl";
+export const container = "container mx-auto px-4";
+export const maxW4 = "max-w-4xl mx-auto";
+export const maxW5 = "max-w-5xl mx-auto";
+export const maxW6 = "max-w-6xl mx-auto";
+export const maxW6Full = "mx-auto w-full max-w-6xl";
 
-const roundedMd = "rounded-md";
-const roundedXl = "rounded-xl";
-const rounded2xl = "rounded-2xl";
-const rounded3xl = "rounded-3xl";
-const roundedFull = "rounded-full";
+export const roundedMd = "rounded-md";
+export const roundedXl = "rounded-xl";
+export const rounded2xl = "rounded-2xl";
+export const rounded3xl = "rounded-3xl";
+export const roundedFull = "rounded-full";
 
 /* =========================
     Common Borders + Shadows
 ========================= */
 
-const b2 = "border-2 border-black";
-const b4 = "border-4 border-black";
-const b5 = "border-5 border-black";
+export const b2 = "border-2 border-black";
+export const b4 = "border-4 border-black";
+export const b5 = "border-5 border-black";
 
-const shadow4 = "shadow-[4px_4px_0px_0px_#000000]";
-const shadow6 = "shadow-[6px_6px_0px_0px_#000000]";
-const shadow8 = "shadow-[8px_8px_0px_0px_#000000]";
-const shadow10 = "shadow-[10px_10px_0px_0px_#000000]";
+export const shadow4 = "shadow-[4px_4px_0px_0px_#000000]";
+export const shadow6 = "shadow-[6px_6px_0px_0px_#000000]";
+export const shadow8 = "shadow-[8px_8px_0px_0px_#000000]";
+export const shadow10 = "shadow-[10px_10px_0px_0px_#000000]";
 
-const hoverLift = `hover:${shadow8} hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all`;
-const press = `active:shadow-none active:translate-x-[6px] active:translate-y-[6px]`;
-const pressable = `${hoverLift} ${press}`;
+export const hoverLift = `hover:${shadow8} hover:translate-x-[-2px] hover:translate-y-[-2px] transition-all`;
+export const press = `active:shadow-none active:translate-x-[6px] active:translate-y-[6px]`;
+export const pressable = `${hoverLift} ${press}`;
 
-const cardBase = `bg-white ${b5}`;
-const cardHover2xl = `${cardBase} p-8 ${shadow6} ${hoverLift} ${rounded2xl}`;
-const badgeBase = `${b5} ${roundedMd} ${shadow4}`;
+export const cardBase = `bg-white ${b5}`;
+export const cardHover2xl = `${cardBase} p-8 ${shadow6} ${hoverLift} ${rounded2xl}`;
+export const badgeBase = `${b5} ${roundedMd} ${shadow4}`;
 
 /* =========================
     Common Sections
 ========================= */
 
-const sectionBase = "relative overflow-hidden";
-const sectionBorderB5 = "border-b-5 border-black";
-const sectionBorderB4P15 = "border-b-4 border-black p-15";
+export const sectionBase = "relative overflow-hidden";
+export const sectionBorderB5 = "border-b-5 border-black";
+export const sectionBorderB4P15 = "border-b-4 border-black p-15";
 
 // Large landing sections (HowItWorks / Features / FinalCTA)
 const sectionLg = `${sectionBase} py-20 lg:py-32 ${sectionBorderB5}`;
@@ -330,3 +331,4 @@ export const similarListingsSwipeIndicatorBox =
   `bg-[#FF69B4] px-6 py-3 ${badgeBase}`;
 export const similarListingsSwipeIndicatorText =
   `${anton} text-base uppercase text-center text-black`;
+
