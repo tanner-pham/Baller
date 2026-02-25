@@ -31,6 +31,7 @@ export function CurrentListing({
             alt={title}
             width={500}
             height={500}
+            referrerPolicy="no-referrer"
             className="h-full w-full object-cover"
           />
         </div>
@@ -39,7 +40,7 @@ export function CurrentListing({
           <div>
             <div className="mb-3 flex items-start justify-between gap-4">
               <h1
-                className="line-clamp-2 break-words text-[clamp(2rem,6vw,6rem)] leading-[0.9] tracking-tight text-white font-['Bebas_Neue',sans-serif]"
+                className="line-clamp-3 break-words text-[clamp(1.5rem,4vw,4.5rem)] leading-[0.9] tracking-tight text-white font-['Bebas_Neue',sans-serif]"
                 style={{
                   textShadow:
                     '6px 6px 0px #000000, -2px -2px 0px #000000, 2px -2px 0px #000000, -2px 2px 0px #000000',
