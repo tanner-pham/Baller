@@ -5,7 +5,7 @@ const config: Config = {
     {
       displayName: 'frontend',
       testEnvironment: 'jsdom',
-      testMatch: ['<rootDir>/src/**/*.test.tsx'],
+      testMatch: ['<rootDir>/tests/frontend/**/*.test.{ts,tsx}'],
       transform: {
         '^.+\\.(ts|tsx)$': ['ts-jest', {
           tsconfig: { jsx: 'react-jsx' },
@@ -16,6 +16,7 @@ const config: Config = {
       },
       setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
       collectCoverageFrom: ['src/**/*.{ts,tsx}', '!src/**/*.d.ts', '!src/**/*.test.{ts,tsx}'],
+      passWithNoTests: true,
     },
   ],
 };

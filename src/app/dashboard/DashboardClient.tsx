@@ -28,6 +28,7 @@ import { useConditionAssessment } from './hooks/useConditionAssessment';
 import { useDashboardSession } from './hooks/useDashboardSession';
 import { useMarketplaceListing } from './hooks/useMarketplaceListing';
 import { useSearchHistory } from './hooks/useSearchHistory';
+import { useSimilarListings } from './hooks/useSimilarListings';
 import type { SearchHistoryEntry } from './types';
 
 export default function DashboardClient() {
@@ -65,11 +66,6 @@ export default function DashboardClient() {
     parsedListing,
     listingTitle: activeMarketplaceListing?.title,
   });
-
-  // FALLBACK LOGIC: Use URL params if API data is "unknown" or loading
-  const displayTitle = activeMarketplaceListing?.title || searchParams.get('title') || "Marketplace Listing";
-  const displayPrice = activeMarketplaceListing?.price || searchParams.get('price') || "Price Hidden";
-  const displayImage = activeMarketplaceListing?.images?.[0] || searchParams.get('image') || DEFAULT_CURRENT_LISTING.image;
 
   const handleSelectPreviousSearch = (entry: SearchHistoryEntry) => {
     const searchQuery = new URLSearchParams({ listingUrl: entry.url, itemId: entry.itemId });

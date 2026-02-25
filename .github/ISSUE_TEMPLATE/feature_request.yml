@@ -1,0 +1,42 @@
+name: "Feature request"
+description: "Suggest an improvement or new feature for Baller"
+title: "[Feature]: "
+labels:
+  - enhancement
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the suggestion! Clear use-cases help us prioritize.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem / motivation
+      description: What problem does this solve?
+      placeholder: Describe the need or pain point.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: What would you like to see built?
+      placeholder: Describe your proposed feature or improvement.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Any alternative solutions or workarounds?
+      placeholder: Describe alternatives you considered.
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional context
+      description: Mockups, links, examples, etc.
+      placeholder: Add any relevant context here.
