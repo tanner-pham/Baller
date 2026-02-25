@@ -1,14 +1,13 @@
 "use client";
-import { MapPin, User } from 'lucide-react';
+import { MapPin } from 'lucide-react';
 
 export interface CurrentListingProps {
   image: string;
   price: string;
   title: string;
   description?: string;
-  postedTime: string;
+  listingDate: string;
   location: string;
-  sellerName: string;
   conditionScore?: number;
   conditionLabel?: string;
 }
@@ -18,9 +17,8 @@ export function CurrentListing({
   price,
   title,
   description,
-  postedTime,
+  listingDate,
   location,
-  sellerName,
   conditionScore,
   conditionLabel,
 }: CurrentListingProps) {
@@ -72,7 +70,7 @@ export function CurrentListing({
 
               <div className="rounded-xl border-5 border-black bg-[#FF6600] px-3 py-2 shadow-[4px_4px_0px_0px_#000000] transition-all">
                 <span className="text-center font-semibold text-white font-['Space_Grotesk',sans-serif]">
-                  {postedTime}
+                  {listingDate}
                 </span>
               </div>
 
@@ -96,14 +94,6 @@ export function CurrentListing({
             </div>
           </div>
 
-          <div className="border-t-5 border-black pt-8">
-            <div className="inline-flex items-center gap-2 rounded-xl border-5 border-black bg-[#3300FF] px-4 py-2 shadow-[4px_4px_0px_0px_#000000] transition-all">
-              <User className="size-4 text-white" strokeWidth={3} />
-              <span className="text-center font-semibold text-white font-['Space_Grotesk',sans-serif]">
-                {sellerName}
-              </span>
-            </div>
-          </div>
         </div>
       </div>
     </div>

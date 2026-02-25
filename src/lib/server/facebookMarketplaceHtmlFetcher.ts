@@ -1,4 +1,7 @@
-type FetchTransport = 'http' | 'playwright';
+import path from 'node:path';
+import type { Page, Route } from 'playwright-core';
+
+type FetchTransport = 'http' | 'playwright-local' | 'playwright-browserless';
 
 export interface HtmlValidationFailure {
   reason: string;
@@ -28,7 +31,7 @@ export interface MarketplaceHtmlFetchResult {
   capturedGraphqlPayloadCount: number;
   capturedGraphqlPayloadMatchingItemIdCount: number;
   usedInjectedSessionState: boolean;
-  playwrightConnectionMode?: 'cdp' | 'playwright';
+  playwrightConnectionMode?: 'cdp' | 'playwright' | 'local';
 }
 
 export interface FetchMarketplaceHtmlWithFallbackOptions {
@@ -37,7 +40,12 @@ export interface FetchMarketplaceHtmlWithFallbackOptions {
   bootstrapUrl?: string;
   timeoutMs?: number;
   bootstrapTimeoutMs?: number;
-  mode?: 'auto' | 'http' | 'playwright';
+  mode?:
+    | 'auto'
+    | 'http'
+    | 'playwright'
+    | 'playwright-local'
+    | 'playwright-browserless';
   validators?: HtmlContentValidator[];
 }
 
@@ -45,7 +53,43 @@ const DEFAULT_FETCH_TIMEOUT_MS = 12000;
 const DEFAULT_BOOTSTRAP_TIMEOUT_MS = 6000;
 const MAX_ERROR_DETAILS_CHARS = 500;
 const DEFAULT_USER_AGENT =
-  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36';
+  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36';
+const DEFAULT_LOCAL_PLAYWRIGHT_USER_DATA_DIR = '.browser-data';
+const DEFAULT_LOCAL_PLAYWRIGHT_HEADLESS = true;
+const LOCAL_PLAYWRIGHT_NAVIGATION_TIMEOUT_MS = 10000;
+const LOCAL_PLAYWRIGHT_READINESS_TIMEOUT_MS = 6000;
+const LOCAL_PLAYWRIGHT_NAVIGATION_GRACE_MS = 1200;
+const LOCAL_PLAYWRIGHT_BLOCKED_RESOURCES = [
+  '**/tr/**',
+  '**/logging/**',
+  '**/ajax/bz**',
+  '**google-analytics**',
+  '**googletagmanager**',
+  '**doubleclick**',
+];
+const AUTO_DISMISS_SCRIPT = `
+  (() => {
+    const SELECTORS = [
+      '[role="dialog"] [aria-label="Close"]',
+      '[data-cookiebanner="accept_button"]',
+      '[aria-label="Not now"]',
+      '[aria-label="Decline optional cookies"]'
+    ];
+    function tryDismiss() {
+      for (const selector of SELECTORS) {
+        const element = document.querySelector(selector);
+        if (element) {
+          element.click();
+          return;
+        }
+      }
+    }
+    tryDismiss();
+    if (document.body) {
+      new MutationObserver(tryDismiss).observe(document.body, { childList: true, subtree: true });
+    }
+  })();
+`;
 
 export class MarketplaceHtmlFetchError extends Error {
   status: number;
@@ -144,6 +188,44 @@ function normalizeBrowserlessWebSocketUrl(rawUrl: string): string {
   }
 
   return rawUrl;
+}
+
+function parseBooleanEnv(rawValue: string | undefined): boolean | null {
+  if (!rawValue) {
+    return null;
+  }
+
+  const normalizedValue = rawValue.trim().toLowerCase();
+
+  if (normalizedValue === 'true') {
+    return true;
+  }
+
+  if (normalizedValue === 'false') {
+    return false;
+  }
+
+  return null;
+}
+
+function resolveLocalPlaywrightHeadless(): boolean {
+  const parsedHeadless = parseBooleanEnv(process.env.MARKETPLACE_PLAYWRIGHT_HEADLESS);
+
+  if (parsedHeadless !== null) {
+    return parsedHeadless;
+  }
+
+  return DEFAULT_LOCAL_PLAYWRIGHT_HEADLESS;
+}
+
+function resolveLocalPlaywrightUserDataDir(): string {
+  const configuredUserDataDir = process.env.MARKETPLACE_PLAYWRIGHT_USER_DATA_DIR?.trim();
+
+  if (configuredUserDataDir) {
+    return path.resolve(configuredUserDataDir);
+  }
+
+  return path.resolve(process.cwd(), DEFAULT_LOCAL_PLAYWRIGHT_USER_DATA_DIR);
 }
 
 function shouldEnablePlaywrightBootstrap(): boolean {
@@ -404,24 +486,33 @@ function resolveFetchTransport(mode: FetchMarketplaceHtmlWithFallbackOptions['mo
   const modeFromEnv = process.env.MARKETPLACE_HTML_FETCH_MODE?.trim().toLowerCase();
   const resolvedMode = (mode ?? modeFromEnv ?? 'auto').toLowerCase();
   const hasBrowserlessWsUrl = Boolean(process.env.BROWSERLESS_WS_URL?.trim());
+  const preferLocalPlaywright = parseBooleanEnv(process.env.MARKETPLACE_USE_LOCAL_PLAYWRIGHT);
 
   if (resolvedMode === 'http') {
     return 'http';
   }
 
-  if (resolvedMode === 'playwright') {
+  if (resolvedMode === 'playwright' || resolvedMode === 'playwright-local') {
+    return 'playwright-local';
+  }
+
+  if (resolvedMode === 'playwright-browserless') {
     if (!hasBrowserlessWsUrl) {
       throw new MarketplaceHtmlFetchError(
-        'MARKETPLACE_HTML_FETCH_MODE=playwright requires BROWSERLESS_WS_URL.',
+        'playwright-browserless mode requires BROWSERLESS_WS_URL.',
         500,
       );
     }
 
-    return 'playwright';
+    return 'playwright-browserless';
   }
 
   if (resolvedMode === 'auto') {
-    return hasBrowserlessWsUrl ? 'playwright' : 'http';
+    if (preferLocalPlaywright === true) {
+      return 'playwright-local';
+    }
+
+    return hasBrowserlessWsUrl ? 'playwright-browserless' : 'http';
   }
 
   throw new MarketplaceHtmlFetchError(
@@ -523,6 +614,227 @@ async function fetchHtmlViaHttp(input: {
   } finally {
     clearTimeout(timeoutId);
   }
+}
+
+let localPlaywrightProfileLock: Promise<void> = Promise.resolve();
+
+async function withLocalPlaywrightProfileLock<T>(operation: () => Promise<T>): Promise<T> {
+  const previousLock = localPlaywrightProfileLock;
+  let releaseLock: () => void = () => undefined;
+
+  localPlaywrightProfileLock = new Promise<void>((resolve) => {
+    releaseLock = resolve;
+  });
+
+  await previousLock;
+
+  try {
+    return await operation();
+  } finally {
+    releaseLock();
+  }
+}
+
+function resolveLocalPlaywrightChannel(): string | null {
+  const configuredChannel = process.env.MARKETPLACE_PLAYWRIGHT_CHANNEL?.trim();
+
+  if (configuredChannel) {
+    if (configuredChannel.toLowerCase() === 'none') {
+      return null;
+    }
+
+    return configuredChannel;
+  }
+
+  return 'chrome';
+}
+
+function resolveLocalPlaywrightExecutablePath(): string | null {
+  const executablePath = process.env.MARKETPLACE_PLAYWRIGHT_EXECUTABLE_PATH?.trim();
+  return executablePath ? path.resolve(executablePath) : null;
+}
+
+async function setupLocalPlaywrightPage(page: Page): Promise<void> {
+  for (const resourcePattern of LOCAL_PLAYWRIGHT_BLOCKED_RESOURCES) {
+    await page.route(resourcePattern, (route: Route) => {
+      route.abort();
+    });
+  }
+
+  page.on('domcontentloaded', () => {
+    void page.evaluate(AUTO_DISMISS_SCRIPT).catch(() => undefined);
+  });
+}
+
+async function fetchHtmlViaLocalPlaywright(input: {
+  url: string;
+  timeoutMs: number;
+  manualCookieHeader: string | null;
+  storageState: unknown | null;
+}): Promise<{
+  html: string;
+  status: number;
+  usedPlaywrightBootstrap: boolean;
+  dismissedPlaywrightLoginInterstitial: boolean;
+  capturedGraphqlPayloadCount: number;
+  capturedGraphqlPayloadMatchingItemIdCount: number;
+  usedInjectedSessionState: boolean;
+  playwrightConnectionMode: 'local';
+}> {
+  return await withLocalPlaywrightProfileLock(async () => {
+    try {
+      const { chromium } = await import('playwright-core');
+      const userDataDir = resolveLocalPlaywrightUserDataDir();
+      const headless = resolveLocalPlaywrightHeadless();
+      const executablePath = resolveLocalPlaywrightExecutablePath();
+      const channel = resolveLocalPlaywrightChannel();
+      const context = await chromium.launchPersistentContext(userDataDir, {
+        headless,
+        viewport: { width: 1280, height: 800 },
+        userAgent: DEFAULT_USER_AGENT,
+        bypassCSP: true,
+        ...(input.storageState ? { storageState: input.storageState as never } : {}),
+        ...(executablePath ? { executablePath } : {}),
+        ...(!executablePath && channel ? { channel } : {}),
+        args: [
+          '--disable-blink-features=AutomationControlled',
+          '--disable-web-security',
+          '--disable-features=IsolateOrigins,site-per-process',
+          ...(headless ? ['--disable-gpu', '--no-sandbox'] : []),
+        ],
+      });
+
+      try {
+        if (input.manualCookieHeader) {
+          const cookiePairs = parseCookieHeaderPairs(input.manualCookieHeader);
+
+          if (cookiePairs.length > 0) {
+            const facebookUrls = ['https://www.facebook.com', 'https://m.facebook.com'];
+            const cookies = facebookUrls.flatMap((facebookUrl) =>
+              cookiePairs.map((cookiePair) => ({
+                name: cookiePair.name,
+                value: cookiePair.value,
+                url: facebookUrl,
+              })),
+            );
+
+            await context.addCookies(cookies).catch(() => undefined);
+          }
+        }
+
+        const page = context.pages()[0] ?? (await context.newPage());
+        await setupLocalPlaywrightPage(page);
+
+        const navigationTimeoutMs = Math.max(
+          1500,
+          Math.min(input.timeoutMs, LOCAL_PLAYWRIGHT_NAVIGATION_TIMEOUT_MS),
+        );
+        let responseStatus: number | null = null;
+        let navigationErrorMessage: string | null = null;
+        const navigationPromise = page
+          .goto(input.url, {
+            waitUntil: 'commit',
+            timeout: navigationTimeoutMs,
+          })
+          .then((navigationResponse) => {
+            responseStatus =
+              navigationResponse && typeof navigationResponse.status === 'function'
+                ? navigationResponse.status()
+                : null;
+            return navigationResponse;
+          })
+          .catch((navigationError) => {
+            navigationErrorMessage =
+              navigationError instanceof Error ? navigationError.message : 'unknown navigation error';
+            return null;
+          });
+
+        await Promise.race([
+          navigationPromise,
+          page.waitForTimeout(Math.min(LOCAL_PLAYWRIGHT_NAVIGATION_GRACE_MS, navigationTimeoutMs)),
+        ]);
+
+        try {
+          await page.waitForFunction(
+            () => {
+              const meta = document.querySelector('meta[property="og:title"]');
+
+              if (meta && meta.getAttribute('content')) {
+                return true;
+              }
+
+              if (document.querySelector('h1')) {
+                return true;
+              }
+
+              return false;
+            },
+            {
+              timeout: Math.max(
+                1000,
+                Math.min(input.timeoutMs, LOCAL_PLAYWRIGHT_READINESS_TIMEOUT_MS),
+              ),
+            },
+          );
+        } catch {
+          // Best-effort readiness check; continue with HTML capture.
+        }
+
+        await Promise.race([navigationPromise, page.waitForTimeout(250)]);
+
+        const html = await page.content();
+        const status = responseStatus ?? 200;
+
+        if (!html || html.trim().length === 0) {
+          if (navigationErrorMessage) {
+            const isTimeoutError = looksLikeTimeoutErrorMessage(navigationErrorMessage);
+            throw new MarketplaceHtmlFetchError(
+              isTimeoutError
+                ? 'Marketplace page navigation timed out.'
+                : `Marketplace Playwright navigation failed: ${navigationErrorMessage}`,
+              isTimeoutError ? 504 : 502,
+            );
+          }
+
+          throw new MarketplaceHtmlFetchError('Marketplace HTML response was empty', 502);
+        }
+
+        if (status >= 400) {
+          throw new MarketplaceHtmlFetchError(
+            `Marketplace HTML request failed with status ${status}`,
+            normalizeUpstreamStatus(status),
+            trimErrorDetails(html),
+          );
+        }
+
+        return {
+          html,
+          status,
+          usedPlaywrightBootstrap: false,
+          dismissedPlaywrightLoginInterstitial: false,
+          capturedGraphqlPayloadCount: 0,
+          capturedGraphqlPayloadMatchingItemIdCount: 0,
+          usedInjectedSessionState: Boolean(input.manualCookieHeader || input.storageState),
+          playwrightConnectionMode: 'local',
+        };
+      } finally {
+        await context.close();
+      }
+    } catch (caughtError) {
+      if (caughtError instanceof MarketplaceHtmlFetchError) {
+        throw caughtError;
+      }
+
+      const message =
+        caughtError instanceof Error ? caughtError.message : 'Marketplace Playwright request failed.';
+      const isTimeoutError = looksLikeTimeoutErrorMessage(message);
+
+      throw new MarketplaceHtmlFetchError(
+        isTimeoutError ? 'Marketplace HTML request timed out.' : message,
+        isTimeoutError ? 504 : 502,
+      );
+    }
+  });
 }
 
 async function fetchHtmlViaPlaywright(input: {
@@ -851,19 +1163,37 @@ export async function fetchMarketplaceHtmlWithFallback(
   let capturedGraphqlPayloadCount = 0;
   let capturedGraphqlPayloadMatchingItemIdCount = 0;
   let usedInjectedSessionState = false;
-  let playwrightConnectionMode: 'cdp' | 'playwright' | undefined;
+  let playwrightConnectionMode: 'cdp' | 'playwright' | 'local' | undefined;
   const bootstrapEnabledByDefault = shouldEnablePlaywrightBootstrap();
+  const startTimeMs = Date.now();
 
   for (const candidateUrl of attemptedUrls) {
+    const elapsedMs = Date.now() - startTimeMs;
+    const remainingMs = timeoutMs - elapsedMs;
+
+    if (remainingMs <= 0) {
+      const timeoutError = new MarketplaceHtmlFetchError('Marketplace HTML request timed out.', 504);
+      attempts.push({
+        url: candidateUrl,
+        status: timeoutError.status,
+        reason: timeoutError.message,
+        transport,
+      });
+      lastError = timeoutError;
+      break;
+    }
+
+    const attemptTimeoutMs = Math.max(1500, Math.min(timeoutMs, remainingMs));
+
     try {
       const result =
-        transport === 'playwright'
+        transport === 'playwright-browserless'
           ? await (async () => {
               const firstResult = await fetchHtmlViaPlaywright({
                 url: candidateUrl,
                 referer: options.referer,
                 bootstrapUrl: bootstrapEnabledByDefault ? options.bootstrapUrl : undefined,
-                timeoutMs,
+                timeoutMs: attemptTimeoutMs,
                 cookieHeader: mergedCookieHeader,
                 manualCookieHeader,
                 storageState,
@@ -880,7 +1210,7 @@ export async function fetchMarketplaceHtmlWithFallback(
                   url: candidateUrl,
                   referer: options.referer,
                   bootstrapUrl: options.bootstrapUrl,
-                  timeoutMs,
+                  timeoutMs: attemptTimeoutMs,
                   cookieHeader: mergedCookieHeader,
                   manualCookieHeader,
                   storageState,
@@ -889,15 +1219,22 @@ export async function fetchMarketplaceHtmlWithFallback(
 
               return firstResult;
             })()
-          : {
-              ...(await fetchHtmlViaHttp({
+          : transport === 'playwright-local'
+            ? await fetchHtmlViaLocalPlaywright({
                 url: candidateUrl,
-                referer: options.referer,
-                timeoutMs,
-                cookieHeader: mergedCookieHeader,
-              })),
-              usedPlaywrightBootstrap: false,
-            };
+                timeoutMs: attemptTimeoutMs,
+                manualCookieHeader,
+                storageState,
+              })
+            : {
+                ...(await fetchHtmlViaHttp({
+                  url: candidateUrl,
+                  referer: options.referer,
+                  timeoutMs: attemptTimeoutMs,
+                  cookieHeader: mergedCookieHeader,
+                })),
+                usedPlaywrightBootstrap: false,
+              };
 
       if (result.usedPlaywrightBootstrap) {
         usedPlaywrightBootstrap = true;

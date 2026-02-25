@@ -1,34 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import type { NormalizedMarketplaceListing } from './types';
-import {
-  looksLikeFacebookAuthWall,
-  parseMarketplaceListingHtml,
-} from './parseHtml';
 import { parseFacebookMarketplaceListingUrl } from '../../../lib/facebookMarketplaceListing';
 import { isCacheFresh } from '../../../lib/server/cacheTtl';
-import {
-  fetchMarketplaceHtmlWithFallback,
-  MarketplaceHtmlFetchError,
-} from '../../../lib/server/facebookMarketplaceHtmlFetcher';
 import {
   getListingCacheEntry,
   upsertListingCacheEntry,
   type ListingCacheEntry,
 } from '../../../lib/server/listingCacheRepository';
-
-const DEFAULT_UPSTREAM_FETCH_TIMEOUT_MS = 15000;
-
-function getPositiveIntEnv(name: string): number | null {
-  const rawValue = process.env[name];
-
-  if (!rawValue) {
-    return null;
-  }
-
-  const parsedValue = Number.parseInt(rawValue, 10);
-
-  return Number.isFinite(parsedValue) && parsedValue > 0 ? parsedValue : null;
-}
+import { scrapeMarketplaceListing } from '../../../lib/server/scraper/scrapeMarketplace';
+import { MarketplaceHtmlError } from '../../../lib/server/scraper/browserManager';
 
 export const runtime = 'nodejs';
 
@@ -72,62 +52,6 @@ function getStaleFallbackResponse(
   );
 }
 
-function looksLikeFacebookGenericErrorPage(html: string): boolean {
-  const normalizedHtml = html.toLowerCase();
-
-  return (
-    normalizedHtml.includes('<title>error</title>') &&
-    normalizedHtml.includes('sorry, something went wrong')
-  );
-}
-
-function buildListingFetchCandidates(listingUrl: string, listingId: string | null): string[] {
-  const candidates: string[] = [];
-  const seen = new Set<string>();
-
-  const pushCandidate = (value: string | null | undefined): void => {
-    const trimmed = value?.trim();
-
-    if (!trimmed || seen.has(trimmed)) {
-      return;
-    }
-
-    seen.add(trimmed);
-    candidates.push(trimmed);
-  };
-
-  pushCandidate(listingUrl);
-
-  try {
-    const parsedUrl = new URL(listingUrl);
-    parsedUrl.hash = '';
-    pushCandidate(parsedUrl.toString());
-
-    const withoutQuery = new URL(parsedUrl.toString());
-    withoutQuery.search = '';
-    pushCandidate(withoutQuery.toString());
-
-    if (!withoutQuery.pathname.endsWith('/')) {
-      withoutQuery.pathname = `${withoutQuery.pathname}/`;
-      pushCandidate(withoutQuery.toString());
-    }
-
-    if (withoutQuery.hostname === 'www.facebook.com') {
-      const mobileVariant = new URL(withoutQuery.toString());
-      mobileVariant.hostname = 'm.facebook.com';
-      pushCandidate(mobileVariant.toString());
-    }
-  } catch {
-    // No-op: malformed URL candidate already handled by caller validations.
-  }
-
-  if (listingId) {
-    pushCandidate(`https://www.facebook.com/marketplace/item/${listingId}/`);
-    pushCandidate(`https://m.facebook.com/marketplace/item/${listingId}/`);
-  }
-
-  return candidates;
-}
 
 export async function GET(request: NextRequest) {
   try {
@@ -213,92 +137,17 @@ export async function GET(request: NextRequest) {
     }
 
     let normalizedListing: NormalizedMarketplaceListing;
-    let parserMetadata: unknown;
 
     try {
-      const upstreamHtml = await fetchMarketplaceHtmlWithFallback({
-        urls: buildListingFetchCandidates(listingUrl, listingId),
-        referer: 'https://www.facebook.com/marketplace/',
-        bootstrapUrl: 'https://www.facebook.com/marketplace/',
-        timeoutMs:
-          getPositiveIntEnv('MARKETPLACE_HTML_TIMEOUT_MS') ??
-          DEFAULT_UPSTREAM_FETCH_TIMEOUT_MS,
-        validators: [
-          (html) =>
-            looksLikeFacebookGenericErrorPage(html)
-              ? {
-                  reason: 'Marketplace HTML fetch returned a Facebook generic error page.',
-                  status: 502,
-                  details: html,
-                }
-              : null,
-        ],
-      });
-
-      let parsedListing: ReturnType<typeof parseMarketplaceListingHtml>;
-
-      try {
-        parsedListing = parseMarketplaceListingHtml({
-          html: upstreamHtml.html,
-          requestedItemId: listingId,
-        });
-      } catch (parseError) {
-        if (looksLikeFacebookAuthWall(upstreamHtml.html)) {
-          throw new MarketplaceHtmlFetchError(
-            'Marketplace HTML fetch returned Facebook login/interstitial content.',
-            502,
-            JSON.stringify(
-              {
-                sourceUrl: upstreamHtml.sourceUrl,
-                attemptedUrls: upstreamHtml.attemptedUrls,
-                attempts: upstreamHtml.attempts,
-                transport: upstreamHtml.transport,
-                usedBootstrapCookies: upstreamHtml.usedBootstrapCookies,
-                usedPlaywrightBootstrap: upstreamHtml.usedPlaywrightBootstrap,
-                dismissedPlaywrightLoginInterstitial:
-                  upstreamHtml.dismissedPlaywrightLoginInterstitial,
-                capturedGraphqlPayloadCount: upstreamHtml.capturedGraphqlPayloadCount,
-                capturedGraphqlPayloadMatchingItemIdCount:
-                  upstreamHtml.capturedGraphqlPayloadMatchingItemIdCount,
-                usedInjectedSessionState: upstreamHtml.usedInjectedSessionState,
-                playwrightConnectionMode: upstreamHtml.playwrightConnectionMode,
-              },
-              null,
-              2,
-            ),
-          );
-        }
-
-        throw parseError;
-      }
-
-      normalizedListing = parsedListing.listing;
-      parserMetadata = {
-        source: 'facebook-html',
-        upstreamStatus: upstreamHtml.status,
-        sourceUrl: upstreamHtml.sourceUrl,
-        attemptedUrls: upstreamHtml.attemptedUrls,
-        attempts: upstreamHtml.attempts,
-        transport: upstreamHtml.transport,
-        usedBootstrapCookies: upstreamHtml.usedBootstrapCookies,
-        usedPlaywrightBootstrap: upstreamHtml.usedPlaywrightBootstrap,
-        dismissedPlaywrightLoginInterstitial:
-          upstreamHtml.dismissedPlaywrightLoginInterstitial,
-        capturedGraphqlPayloadCount: upstreamHtml.capturedGraphqlPayloadCount,
-        capturedGraphqlPayloadMatchingItemIdCount:
-          upstreamHtml.capturedGraphqlPayloadMatchingItemIdCount,
-        usedInjectedSessionState: upstreamHtml.usedInjectedSessionState,
-        playwrightConnectionMode: upstreamHtml.playwrightConnectionMode,
-        parse: parsedListing.metadata,
-      };
+      normalizedListing = await scrapeMarketplaceListing(listingUrl, listingId);
     } catch (caughtError) {
       if (staleCache) {
         const reason =
-          caughtError instanceof MarketplaceHtmlFetchError
+          caughtError instanceof MarketplaceHtmlError
             ? `upstream-html-${caughtError.status}`
             : 'upstream-html-parse-failure';
 
-        console.info('Marketplace listing cache stale-fallback used due to upstream parse/fetch failure', {
+        console.info('Marketplace listing cache stale-fallback used due to upstream scrape failure', {
           listingId,
           reason,
           error: caughtError,
@@ -307,13 +156,9 @@ export async function GET(request: NextRequest) {
         return getStaleFallbackResponse(staleCache, reason);
       }
 
-      if (caughtError instanceof MarketplaceHtmlFetchError) {
+      if (caughtError instanceof MarketplaceHtmlError) {
         return NextResponse.json(
-          {
-            success: false,
-            error: caughtError.message,
-            details: caughtError.details,
-          },
+          { success: false, error: caughtError.message, details: caughtError.details },
           { status: caughtError.status },
         );
       }
@@ -349,7 +194,7 @@ export async function GET(request: NextRequest) {
       NextResponse.json({
         success: true,
         listing: normalizedListing,
-        raw: parserMetadata,
+        raw: { source: 'playwright-local', cache: cacheStatus },
       }),
       cacheStatus,
     );

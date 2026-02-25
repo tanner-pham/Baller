@@ -113,6 +113,43 @@ describe('Marketplace HTML parser', () => {
     ]);
   });
 
+  it('falls back to DOM extraction when JSON blocks are unavailable', () => {
+    const listingHtml = `
+      <html>
+        <head>
+          <meta property="og:title" content="Sony A7 III Camera" />
+          <meta property="og:description" content="Great condition mirrorless body." />
+          <meta property="product:price:amount" content="1200" />
+          <meta property="og:image" content="https://example.com/cover.jpg" />
+          <link rel="canonical" href="https://www.facebook.com/marketplace/item/555666777/" />
+        </head>
+        <body>
+          <h1>Sony A7 III Camera</h1>
+          <div>Listed in Seattle, Washington</div>
+          <div>Condition Used - Like New</div>
+          <a href="/marketplace/profile/abc123">Alex Seller</a>
+          <img alt="Product photo of Sony A7 III Camera" src="https://example.com/detail.jpg" />
+        </body>
+      </html>
+    `;
+
+    const parsed = parseMarketplaceListingHtml({
+      html: listingHtml,
+      requestedItemId: '555666777',
+    });
+
+    expect(parsed.listing.title).to.equal('Sony A7 III Camera');
+    expect(parsed.listing.description).to.equal('Great condition mirrorless body.');
+    expect(parsed.listing.price).to.equal('$1,200');
+    expect(parsed.listing.location).to.equal('Seattle, Washington');
+    expect(parsed.listing.sellerName).to.equal('Alex Seller');
+    expect(parsed.listing.condition).to.equal('used_like_new');
+    expect(parsed.listing.images).to.deep.equal([
+      'https://example.com/cover.jpg',
+      'https://example.com/detail.jpg',
+    ]);
+  });
+
   it('parses and deduplicates simple listings from search HTML', () => {
     const searchHtml = `
       <html>
@@ -194,6 +231,46 @@ describe('Marketplace HTML parser', () => {
       image: 'https://example.com/a.jpg',
       link: 'https://www.facebook.com/marketplace/item/111/',
     });
+  });
+
+  it('falls back to DOM extraction for simple listings when JSON is unavailable', () => {
+    const searchHtml = `
+      <html>
+        <body>
+          <a href="/marketplace/item/111/">
+            <img src="https://example.com/a.jpg" />
+            <span>Macbook Air</span>
+            <span>$500</span>
+            <span>Seattle, Washington</span>
+          </a>
+          <a href="/marketplace/item/222/">
+            <img src="https://example.com/b.jpg" />
+            <span>Macbook Pro</span>
+            <span>$900</span>
+            <span>Bellevue, Washington</span>
+          </a>
+        </body>
+      </html>
+    `;
+
+    const simpleListings = parseMarketplaceSearchHtml(searchHtml);
+
+    expect(simpleListings).to.deep.equal([
+      {
+        title: 'Macbook Air',
+        price: '$500',
+        location: 'Seattle, Washington',
+        image: 'https://example.com/a.jpg',
+        link: 'https://www.facebook.com/marketplace/item/111/',
+      },
+      {
+        title: 'Macbook Pro',
+        price: '$900',
+        location: 'Bellevue, Washington',
+        image: 'https://example.com/b.jpg',
+        link: 'https://www.facebook.com/marketplace/item/222/',
+      },
+    ]);
   });
 
   it('builds marketplace search URL with condition and price band', () => {

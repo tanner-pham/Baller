@@ -49,9 +49,8 @@ export const DEFAULT_CURRENT_LISTING: CurrentListingProps = {
   price: '',
   title: '',
   description: '',
-  postedTime: '',
+  listingDate: '',
   location: '',
-  sellerName: '',
 };
 
 export const DEFAULT_PRICING_ANALYSIS: PricingAnalysisProps = {

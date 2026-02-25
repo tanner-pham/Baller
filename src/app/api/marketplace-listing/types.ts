@@ -21,7 +21,7 @@ export interface NormalizedMarketplaceListing {
   location?: string;
   images?: string[];
   sellerName?: string;
-  postedTime?: string;
+  listingDate?: string;
   condition?: string;
   simpleListings?: NormalizedSimpleListing[];
   similarListings?: NormalizedSimilarListing[];

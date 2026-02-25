@@ -483,6 +483,293 @@ function parseListingPriceNumber(price: string | undefined): number | null {
   return parsed;
 }
 
+function stripScriptsAndStyles(html: string): string {
+  return html
+    .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, ' ')
+    .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, ' ');
+}
+
+function stripHtmlTags(value: string): string | undefined {
+  return normalizeWhitespace(decodeHtmlEntities(value.replace(/<[^>]+>/g, ' ')));
+}
+
+function extractTagAttribute(tag: string, attributeName: string): string | undefined {
+  const escapedAttributeName = attributeName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const attributeRegex = new RegExp(`${escapedAttributeName}\\s*=\\s*["']([^"']+)["']`, 'i');
+  const attributeMatch = tag.match(attributeRegex);
+
+  if (!attributeMatch?.[1]) {
+    return undefined;
+  }
+
+  return normalizeWhitespace(decodeHtmlEntities(attributeMatch[1]));
+}
+
+function extractMetaContent(html: string, key: string): string | undefined {
+  const normalizedKey = key.toLowerCase();
+  const metaTagRegex = /<meta\b[^>]*>/gi;
+  let metaTagMatch: RegExpExecArray | null;
+
+  while ((metaTagMatch = metaTagRegex.exec(html)) !== null) {
+    const metaTag = metaTagMatch[0];
+    const propertyValue = extractTagAttribute(metaTag, 'property')?.toLowerCase();
+    const nameValue = extractTagAttribute(metaTag, 'name')?.toLowerCase();
+
+    if (propertyValue !== normalizedKey && nameValue !== normalizedKey) {
+      continue;
+    }
+
+    const contentValue = extractTagAttribute(metaTag, 'content');
+
+    if (contentValue) {
+      return contentValue;
+    }
+  }
+
+  return undefined;
+}
+
+function extractCanonicalMarketplaceLinkFromHtml(html: string): string | undefined {
+  const linkTagRegex = /<link\b[^>]*>/gi;
+  let linkTagMatch: RegExpExecArray | null;
+
+  while ((linkTagMatch = linkTagRegex.exec(html)) !== null) {
+    const linkTag = linkTagMatch[0];
+    const rel = extractTagAttribute(linkTag, 'rel')?.toLowerCase();
+
+    if (!rel || !rel.split(/\s+/).includes('canonical')) {
+      continue;
+    }
+
+    const href = extractTagAttribute(linkTag, 'href');
+    const normalizedLink = normalizeMarketplaceLink(href);
+
+    if (normalizedLink && /\/marketplace\/item\/\d+/i.test(normalizedLink)) {
+      return normalizedLink;
+    }
+  }
+
+  const ogUrl = extractMetaContent(html, 'og:url');
+  const normalizedOgUrl = normalizeMarketplaceLink(ogUrl);
+
+  return normalizedOgUrl && /\/marketplace\/item\/\d+/i.test(normalizedOgUrl)
+    ? normalizedOgUrl
+    : undefined;
+}
+
+function extractFirstTagText(html: string, tagName: string): string | undefined {
+  const escapedTagName = tagName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const tagRegex = new RegExp(`<${escapedTagName}\\b[^>]*>([\\s\\S]*?)<\\/${escapedTagName}>`, 'i');
+  const tagMatch = html.match(tagRegex);
+
+  if (!tagMatch?.[1]) {
+    return undefined;
+  }
+
+  return stripHtmlTags(tagMatch[1]);
+}
+
+function extractPriceFromText(content: string): string | undefined {
+  const rawPriceMatch = content.match(/\$\s?\d[\d,]*(?:\.\d{2})?/);
+
+  if (rawPriceMatch?.[0]) {
+    return normalizeWhitespace(rawPriceMatch[0].replace(/\s+/g, ''));
+  }
+
+  if (/\bfree\b/i.test(content)) {
+    return 'Free';
+  }
+
+  return undefined;
+}
+
+function extractLocationFromText(content: string): string | undefined {
+  const locationPatterns = [
+    /(?:Listed|Available)\s+in\s+(.+?)(?:\s+(?:Seller|Condition|Description|Message|Save)\b|$)/i,
+    /(?:Location|Located)\s*[:\-]\s*(.+?)(?:\s+(?:Seller|Condition|Description|Message|Save)\b|$)/i,
+  ];
+
+  for (const locationPattern of locationPatterns) {
+    const locationMatch = content.match(locationPattern);
+    const location = normalizeWhitespace(locationMatch?.[1]);
+
+    if (location && location.length <= 120) {
+      return location;
+    }
+  }
+
+  return undefined;
+}
+
+function extractDescriptionFromText(content: string): string | undefined {
+  const descriptionMatch = content.match(
+    /Description\s+(.+?)(?:\s+(?:Seller details|Condition|Listed|Location|Message seller|Save)\b|$)/i,
+  );
+  const description = normalizeWhitespace(descriptionMatch?.[1]);
+
+  if (description && description.length >= 10) {
+    return description;
+  }
+
+  return undefined;
+}
+
+function extractPostedTimeFromText(content: string): string | undefined {
+  const postedTimeMatch = content.match(
+    /\b(Listed\s+(?:today|yesterday|\d+\s+(?:minute|hour|day|week|month|year)s?\s+ago))\b/i,
+  );
+  return normalizeWhitespace(postedTimeMatch?.[1]);
+}
+
+function extractConditionFromText(content: string): string | undefined {
+  const loweredContent = content.toLowerCase();
+  const conditionCandidates = ['used - like new', 'used - good', 'used - fair', 'new', 'used'];
+
+  for (const conditionCandidate of conditionCandidates) {
+    if (!loweredContent.includes(conditionCandidate)) {
+      continue;
+    }
+
+    const normalizedCondition = normalizeConditionValue(conditionCandidate);
+
+    if (normalizedCondition) {
+      return normalizedCondition;
+    }
+  }
+
+  return undefined;
+}
+
+function extractSellerNameFromHtml(html: string, textContent: string): string | undefined {
+  const profileLinkRegex =
+    /<a\b[^>]*href=["'][^"']*\/marketplace\/profile\/[^"']*["'][^>]*>([\s\S]*?)<\/a>/gi;
+  let profileLinkMatch: RegExpExecArray | null;
+
+  while ((profileLinkMatch = profileLinkRegex.exec(html)) !== null) {
+    const sellerName = stripHtmlTags(profileLinkMatch[1] ?? '');
+
+    if (!sellerName) {
+      continue;
+    }
+
+    const loweredSellerName = sellerName.toLowerCase();
+
+    if (
+      loweredSellerName.includes('log in') ||
+      loweredSellerName.includes('sign up') ||
+      loweredSellerName.includes('marketplace') ||
+      loweredSellerName.includes('facebook')
+    ) {
+      continue;
+    }
+
+    return sellerName;
+  }
+
+  const sellerTextMatch = textContent.match(
+    /Seller(?:\s+details)?\s+([A-Za-z][A-Za-z.'\-\s]{1,59})(?:\s+(?:Message|Save|Listed|Condition)\b|$)/i,
+  );
+  return normalizeWhitespace(sellerTextMatch?.[1]);
+}
+
+function extractImageUrisFromHtml(html: string): string[] {
+  const imageUris: string[] = [];
+  const seenUris = new Set<string>();
+  const ogImage = extractMetaContent(html, 'og:image');
+
+  if (ogImage) {
+    seenUris.add(ogImage);
+    imageUris.push(ogImage);
+  }
+
+  const imageTagRegex = /<img\b[^>]*\ssrc=["']([^"']+)["'][^>]*>/gi;
+  let imageTagMatch: RegExpExecArray | null;
+
+  while ((imageTagMatch = imageTagRegex.exec(html)) !== null) {
+    const source = normalizeWhitespace(decodeHtmlEntities(imageTagMatch[1]));
+
+    if (!source || seenUris.has(source)) {
+      continue;
+    }
+
+    if (!/^https?:\/\//i.test(source)) {
+      continue;
+    }
+
+    const loweredSource = source.toLowerCase();
+
+    if (
+      loweredSource.includes('emoji') ||
+      loweredSource.includes('avatar') ||
+      loweredSource.includes('profile') ||
+      loweredSource.includes('/p50x50/') ||
+      loweredSource.includes('/s50x50/') ||
+      loweredSource.includes('/c32.')
+    ) {
+      continue;
+    }
+
+    seenUris.add(source);
+    imageUris.push(source);
+
+    if (imageUris.length >= 40) {
+      break;
+    }
+  }
+
+  return imageUris;
+}
+
+function extractListingFromDomFallback(html: string): {
+  listing: NormalizedMarketplaceListing;
+  selectedListingId: string | null;
+} | null {
+  const contentWithoutScriptBlocks = stripScriptsAndStyles(html);
+  const plainTextContent = stripHtmlTags(contentWithoutScriptBlocks) ?? '';
+  const canonicalListingLink = extractCanonicalMarketplaceLinkFromHtml(html);
+  const selectedListingId = extractMarketplaceItemIdFromLink(canonicalListingLink);
+
+  const title =
+    extractMetaContent(html, 'og:title') ??
+    extractFirstTagText(contentWithoutScriptBlocks, 'h1');
+  const description =
+    extractMetaContent(html, 'og:description') ??
+    extractMetaContent(html, 'description') ??
+    extractDescriptionFromText(plainTextContent);
+  const metaPriceAmount = extractMetaContent(html, 'product:price:amount');
+  const parsedMetaPrice = metaPriceAmount
+    ? Number(metaPriceAmount.replace(/[^\d.]/g, ''))
+    : Number.NaN;
+  const metaPrice =
+    Number.isFinite(parsedMetaPrice) && parsedMetaPrice > 0
+      ? formatCurrencyAmount(parsedMetaPrice)
+      : undefined;
+  const price = metaPrice ?? extractPriceFromText(plainTextContent);
+  const location = extractLocationFromText(plainTextContent);
+  const images = extractImageUrisFromHtml(html);
+  const sellerName = extractSellerNameFromHtml(contentWithoutScriptBlocks, plainTextContent);
+  const postedTime = extractPostedTimeFromText(plainTextContent);
+  const condition = extractConditionFromText(plainTextContent);
+
+  if (!title && !price && !location && images.length === 0) {
+    return null;
+  }
+
+  return {
+    listing: {
+      title,
+      description,
+      price,
+      location,
+      images,
+      sellerName,
+      postedTime,
+      condition,
+    },
+    selectedListingId,
+  };
+}
+
 function buildSimpleListingFromCandidate(candidate: UnknownRecord): NormalizedSimpleListing | null {
   const id = getListingId(candidate);
   const title = getListingTitle(candidate);
@@ -510,6 +797,65 @@ function buildSimpleListingFromCandidate(candidate: UnknownRecord): NormalizedSi
   };
 }
 
+function extractSimpleListingsFromDomFallback(html: string): NormalizedSimpleListing[] {
+  const listings: NormalizedSimpleListing[] = [];
+  const seenLinks = new Set<string>();
+  const listingLinkRegex =
+    /<a\b[^>]*href=["']([^"']*\/marketplace\/item\/\d+[^"']*)["'][^>]*>([\s\S]*?)<\/a>/gi;
+  let listingLinkMatch: RegExpExecArray | null;
+
+  while ((listingLinkMatch = listingLinkRegex.exec(html)) !== null) {
+    const normalizedLink = normalizeMarketplaceLink(decodeHtmlEntities(listingLinkMatch[1]));
+
+    if (!normalizedLink || seenLinks.has(normalizedLink)) {
+      continue;
+    }
+
+    const listingFragment = listingLinkMatch[2] ?? '';
+    const spanTextValues = Array.from(listingFragment.matchAll(/<span\b[^>]*>([\s\S]*?)<\/span>/gi))
+      .map((spanMatch) => stripHtmlTags(spanMatch[1] ?? ''))
+      .filter((value): value is string => Boolean(value));
+    const price =
+      spanTextValues.find((value) => /^\$[\d,]+(?:\.\d{2})?$/.test(value)) ??
+      extractPriceFromText(stripHtmlTags(listingFragment) ?? '');
+    const title = spanTextValues.find(
+      (value) => value !== price && value.length > 2 && value.length < 160 && !value.startsWith('$'),
+    );
+    const locationCandidates = spanTextValues.filter(
+      (value) =>
+        value !== price &&
+        value !== title &&
+        value.length > 1 &&
+        value.length <= 100 &&
+        !/^\d+\s+(?:minutes?|hours?|days?)$/i.test(value),
+    );
+    const location =
+      locationCandidates.find((value) => value.includes(',') || /\bmi\b/i.test(value)) ??
+      locationCandidates[0];
+    const imageMatch = listingFragment.match(/<img\b[^>]*\ssrc=["']([^"']+)["']/i);
+    const image = imageMatch?.[1] ? normalizeWhitespace(decodeHtmlEntities(imageMatch[1])) : undefined;
+
+    if (!title || !price || !location || !image) {
+      continue;
+    }
+
+    seenLinks.add(normalizedLink);
+    listings.push({
+      title,
+      price,
+      location,
+      image,
+      link: normalizedLink,
+    });
+
+    if (listings.length >= MAX_SIMPLE_LISTINGS) {
+      break;
+    }
+  }
+
+  return listings;
+}
+
 /**
  * Extracts one normalized listing payload from listing-page HTML.
  */
@@ -520,6 +866,7 @@ export function parseMarketplaceListingHtml(input: {
   const parsedBlocks = parseScriptJsonBlocks(input.html);
   const candidates = extractListingCandidates(parsedBlocks);
   const galleryImages = extractGalleryImages(input.html);
+  const domFallback = extractListingFromDomFallback(input.html);
 
   const requestedItemId = normalizeWhitespace(input.requestedItemId ?? undefined) ?? null;
 
@@ -539,37 +886,72 @@ export function parseMarketplaceListingHtml(input: {
   ) ?? (requestedItemId ? undefined : candidates[0]);
 
   if (!selectedCandidate) {
-    throw new Error('Unable to parse listing payload from HTML.');
+    if (!domFallback) {
+      throw new Error('Unable to parse listing payload from HTML.');
+    }
+
+    if (
+      requestedItemId &&
+      domFallback.selectedListingId &&
+      domFallback.selectedListingId !== requestedItemId
+    ) {
+      throw new Error('Parsed listing payload did not match requested item id.');
+    }
+
+    const hasCoreFields =
+      Boolean(domFallback.listing.title) ||
+      Boolean(domFallback.listing.price) ||
+      Boolean(domFallback.listing.location);
+
+    if (!hasCoreFields) {
+      throw new Error('Parsed listing payload is missing core fields.');
+    }
+
+    return {
+      listing: domFallback.listing,
+      metadata: {
+        scriptBlocksParsed: parsedBlocks.length,
+        listingCandidates: candidates.length,
+        selectedListingId: domFallback.selectedListingId,
+        usedGalleryImages: galleryImages.length,
+      },
+    };
   }
 
   const primaryImage = getPrimaryListingImage(selectedCandidate);
   const listingPhotoUris = getAllListingPhotoUris(selectedCandidate);
+  const fallbackImages = domFallback?.listing.images ?? [];
   const images = Array.from(
     new Set(
       [
         normalizeWhitespace(primaryImage),
         ...listingPhotoUris,
         ...galleryImages,
+        ...fallbackImages,
       ].filter((image): image is string => Boolean(image)),
     ),
   );
 
   const listing: NormalizedMarketplaceListing = {
-    title: getListingTitle(selectedCandidate),
-    description: extractDescription(selectedCandidate),
-    price: getListingPrice(selectedCandidate),
-    location: getListingLocation(selectedCandidate),
+    title: getListingTitle(selectedCandidate) ?? domFallback?.listing.title,
+    description: extractDescription(selectedCandidate) ?? domFallback?.listing.description,
+    price: getListingPrice(selectedCandidate) ?? domFallback?.listing.price,
+    location: getListingLocation(selectedCandidate) ?? domFallback?.listing.location,
     images,
-    sellerName: extractSellerName(selectedCandidate),
-    postedTime: extractPostedTime(selectedCandidate),
-    condition: extractCondition(selectedCandidate, input.html),
+    sellerName: extractSellerName(selectedCandidate) ?? domFallback?.listing.sellerName,
+    postedTime: extractPostedTime(selectedCandidate) ?? domFallback?.listing.postedTime,
+    condition: extractCondition(selectedCandidate, input.html) ?? domFallback?.listing.condition,
   };
 
   if (!listing.title && !listing.price && !listing.location) {
     throw new Error('Parsed listing payload is missing core fields.');
   }
 
-  const selectedListingId = getListingId(selectedCandidate);
+  const selectedListingId =
+    getListingId(selectedCandidate) ??
+    extractMarketplaceItemIdFromLink(getMarketplaceListingLink(selectedCandidate)) ??
+    domFallback?.selectedListingId ??
+    null;
 
   if (requestedItemId && selectedListingId && selectedListingId !== requestedItemId) {
     throw new Error('Parsed listing payload did not match requested item id.');
@@ -606,7 +988,11 @@ export function parseMarketplaceSearchHtml(html: string): NormalizedSimpleListin
     simpleListings.push(listing);
   }
 
-  return simpleListings.slice(0, MAX_SIMPLE_LISTINGS);
+  if (simpleListings.length > 0) {
+    return simpleListings.slice(0, MAX_SIMPLE_LISTINGS);
+  }
+
+  return extractSimpleListingsFromDomFallback(html).slice(0, MAX_SIMPLE_LISTINGS);
 }
 
 /**

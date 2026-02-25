@@ -119,9 +119,8 @@ export default function DashboardClient() {
     price: searchParams.get('price') ?? DEFAULT_CURRENT_LISTING.price,
     title: searchParams.get('title') ?? DEFAULT_CURRENT_LISTING.title,
     description: searchParams.get('description') ?? DEFAULT_CURRENT_LISTING.description,
-    postedTime: searchParams.get('postedTime') ?? DEFAULT_CURRENT_LISTING.postedTime,
+    listingDate: searchParams.get('listingDate') ?? DEFAULT_CURRENT_LISTING.listingDate,
     location: searchParams.get('location') ?? DEFAULT_CURRENT_LISTING.location,
-    sellerName: searchParams.get('sellerName') ?? DEFAULT_CURRENT_LISTING.sellerName,
   };
 
   const topReasonsFromParam = searchParams
@@ -169,13 +168,9 @@ export default function DashboardClient() {
       currentListingData.location ||
       (hasListingError ? 'Unavailable' : ''),
     image: activeMarketplaceListing?.images?.[0] || currentListingData.image || EMPTY_IMAGE_PLACEHOLDER,
-    sellerName:
-      activeMarketplaceListing?.sellerName ||
-      currentListingData.sellerName ||
-      (hasListingError ? 'Unavailable' : ''),
-    postedTime:
-      activeMarketplaceListing?.postedTime ||
-      currentListingData.postedTime ||
+    listingDate:
+      activeMarketplaceListing?.listingDate ||
+      currentListingData.listingDate ||
       (hasListingError ? 'Unavailable' : ''),
     conditionScore: conditionAssessment?.conditionScore,
     conditionLabel: conditionAssessment?.conditionLabel,
