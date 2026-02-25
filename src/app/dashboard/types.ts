@@ -27,7 +27,7 @@ export interface MarketplaceListingApiData {
   location?: string;
   images?: string[];
   sellerName?: string;
-  postedTime?: string;
+  listingDate?: string;
   condition?: string;
   simpleListings?: SimpleListingApiData[];
   similarListings?: SimilarListing[];

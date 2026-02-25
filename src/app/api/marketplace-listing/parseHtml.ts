@@ -763,7 +763,7 @@ function extractListingFromDomFallback(html: string): {
       location,
       images,
       sellerName,
-      postedTime,
+      listingDate: postedTime,
       condition,
     },
     selectedListingId,
@@ -939,7 +939,7 @@ export function parseMarketplaceListingHtml(input: {
     location: getListingLocation(selectedCandidate) ?? domFallback?.listing.location,
     images,
     sellerName: extractSellerName(selectedCandidate) ?? domFallback?.listing.sellerName,
-    postedTime: extractPostedTime(selectedCandidate) ?? domFallback?.listing.postedTime,
+    listingDate: extractPostedTime(selectedCandidate) ?? domFallback?.listing.listingDate,
     condition: extractCondition(selectedCandidate, input.html) ?? domFallback?.listing.condition,
   };
 
