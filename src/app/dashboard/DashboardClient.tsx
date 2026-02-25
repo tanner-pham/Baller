@@ -194,7 +194,7 @@ export default function DashboardClient() {
                   ) : (
                     /* Issue 5: Horizontal scroll for all search history entries */
                     <div className="relative">
-                      <div className="flex snap-x snap-mandatory gap-6 overflow-x-auto pb-4 no-scrollbar">
+                      <div className="flex snap-x snap-mandatory gap-6 overflow-x-auto no-scrollbar">
                         {searchHistory.map((entry) => (
                           <button
                             key={`${entry.url}-${entry.searchedAt}`}
