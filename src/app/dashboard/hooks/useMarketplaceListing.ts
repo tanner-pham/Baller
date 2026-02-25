@@ -25,8 +25,14 @@ export function useMarketplaceListing(
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
+  // Derive stable primitive values so the effect fires only when the actual
+  // listing identity changes, not when the parent happens to create a new
+  // object reference with the same contents.
+  const itemId = parsedListing?.itemId ?? null;
+  const normalizedUrl = parsedListing?.normalizedUrl ?? null;
+
   useEffect(() => {
-    if (!parsedListing) {
+    if (!itemId || !normalizedUrl) {
       setListing(null);
       setError('');
       setIsLoading(false);
@@ -53,8 +59,8 @@ export function useMarketplaceListing(
 
       try {
         const queryParams = new URLSearchParams({
-          itemId: parsedListing.itemId,
-          listingUrl: parsedListing.normalizedUrl,
+          itemId,
+          listingUrl: normalizedUrl,
         });
 
         const response = await fetch(`/api/marketplace-listing?${queryParams.toString()}`, {
@@ -89,7 +95,7 @@ export function useMarketplaceListing(
         // Tag listing payload with the request item id so downstream hooks can reject mismatches.
         setListing({
           ...payload.listing,
-          itemId: parsedListing.itemId,
+          itemId,
         });
       } catch (caughtError) {
         if (!isMounted || (abortController.signal.aborted && !didTimeout)) {
@@ -129,7 +135,7 @@ export function useMarketplaceListing(
       window.clearTimeout(timeoutId);
       abortController.abort();
     };
-  }, [parsedListing]);
+  }, [itemId, normalizedUrl]);
 
   return {
     listing,
