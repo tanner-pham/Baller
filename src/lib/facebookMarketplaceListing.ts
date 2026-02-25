@@ -34,7 +34,7 @@ export function parseFacebookMarketplaceListingUrl(
 
     return {
       itemId,
-      normalizedUrl: `${FACEBOOK_MARKETPLACE_PROTOCOL}//${FACEBOOK_MARKETPLACE_HOST}/marketplace/item/${itemId}`,
+      normalizedUrl: `${FACEBOOK_MARKETPLACE_PROTOCOL}//${FACEBOOK_MARKETPLACE_HOST}/marketplace/item/${itemId}/`,
     };
   } catch {
     return null;
