@@ -19,6 +19,7 @@ import { useConditionAssessment } from './hooks/useConditionAssessment';
 import { useDashboardSession } from './hooks/useDashboardSession';
 import { useMarketplaceListing } from './hooks/useMarketplaceListing';
 import { useSearchHistory } from './hooks/useSearchHistory';
+import { useSimilarListings } from './hooks/useSimilarListings';
 import type { SearchHistoryEntry } from './types';
 
 /**
@@ -112,6 +113,21 @@ export default function DashboardClient() {
     userId,
     parsedListing,
     listingTitle: activeMarketplaceListing?.title,
+  });
+
+  // Fetch similar listings based on current listing title and price
+  const searchQuery = marketplaceListing?.title || '';
+  const targetPrice = marketplaceListing?.price 
+    ? parseFloat(marketplaceListing.price.replace(/[^0-9.]/g, ''))
+    : 0;
+
+  const {
+    listings: similarListingsFromApi,
+    isLoading: isSimilarListingsLoading,
+  } = useSimilarListings({
+    query: searchQuery,
+    targetPrice,
+    enabled: Boolean(marketplaceListing) && !isListingLoading,
   });
 
   const currentListingData: CurrentListingProps = {
@@ -217,7 +233,9 @@ export default function DashboardClient() {
   };
 
   const similarListingsSource =
-    activeMarketplaceListing?.similarListings && activeMarketplaceListing.similarListings.length > 0
+    similarListingsFromApi && similarListingsFromApi.length > 0
+      ? similarListingsFromApi
+      : activeMarketplaceListing?.similarListings && activeMarketplaceListing.similarListings.length > 0
       ? activeMarketplaceListing.similarListings
       : DEFAULT_SIMILAR_LISTINGS;
   const emptyStateMessage = isAuthenticated
