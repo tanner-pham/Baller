@@ -47,17 +47,20 @@ export async function scrapeMarketplaceListing(
 
   try {
     // Phase 1: Fire-and-forget navigation to listing
-    listingPage.goto(listingUrl, { waitUntil: 'commit', timeout: 10000 }).catch(() => undefined);
+    console.info('[scraper] Navigating to listing…', { listingUrl });
+    listingPage.goto(listingUrl, { waitUntil: 'commit', timeout: 15000 }).catch(() => undefined);
 
     // Phase 2: Get title ASAP (from og:title meta, before React hydrates)
     const title = await extractTitleFast(listingPage);
+    console.info('[scraper] Title extraction done', { title: title || '(empty)' });
 
     if (!title) {
       // Check if we hit an auth wall
       const html = await listingPage.content();
       if (looksLikeFacebookAuthWall(html)) {
+        console.error('[scraper] Auth wall detected — FACEBOOK_COOKIE_HEADER may be missing or expired');
         throw new MarketplaceHtmlError(
-          'Facebook returned a login page instead of the listing.',
+          'Facebook returned a login page instead of the listing. Set FACEBOOK_COOKIE_HEADER env variable with valid session cookies.',
           502,
         );
       }
@@ -90,11 +93,13 @@ export async function scrapeMarketplaceListing(
     if (!listing.title && !listing.price) {
       const html = await listingPage.content();
       if (looksLikeFacebookAuthWall(html)) {
+        console.error('[scraper] Auth wall detected after extraction — FACEBOOK_COOKIE_HEADER may be missing or expired');
         throw new MarketplaceHtmlError(
-          'Facebook returned a login page instead of the listing.',
+          'Facebook returned a login page instead of the listing. Set FACEBOOK_COOKIE_HEADER env variable with valid session cookies.',
           502,
         );
       }
+      console.warn('[scraper] Extraction returned empty title and price (not an auth wall)');
     }
 
     // Map to the NormalizedMarketplaceListing shape

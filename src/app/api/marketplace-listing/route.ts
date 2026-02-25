@@ -11,7 +11,7 @@ import { scrapeMarketplaceListing } from '../../../lib/server/scraper/scrapeMark
 import { MarketplaceHtmlError } from '../../../lib/server/scraper/browserManager';
 
 export const runtime = 'nodejs';
-export const maxDuration = 60;
+export const maxDuration = 300;
 
 function isCacheableListingPayload(
   listing: NormalizedMarketplaceListing | null | undefined,
