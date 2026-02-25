@@ -31,7 +31,8 @@ export default function ListingCard({
         <img
           src={image}
           alt={title}
-          className="object-cover"
+          referrerPolicy="no-referrer"
+          className="h-full w-full object-cover"
         />
       </div>
 
