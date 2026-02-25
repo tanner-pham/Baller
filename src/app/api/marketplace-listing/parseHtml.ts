@@ -108,6 +108,11 @@ function walkObjects(root: unknown, visit: (value: UnknownRecord) => void): void
 
 function getListingId(value: UnknownRecord): string | null {
   const idCandidate = value.id ?? value.listing_id;
+
+  if (typeof idCandidate === 'number' && Number.isFinite(idCandidate)) {
+    return String(Math.trunc(idCandidate));
+  }
+
   return typeof idCandidate === 'string' && idCandidate.trim().length > 0
     ? idCandidate.trim()
     : null;
@@ -213,9 +218,82 @@ function getPrimaryListingImage(value: UnknownRecord): string | undefined {
   return undefined;
 }
 
+function getMarketplaceListingLink(value: UnknownRecord): string | undefined {
+  return normalizeMarketplaceLink(
+    typeof value.marketplace_listing_link === 'string'
+      ? value.marketplace_listing_link
+      : undefined,
+  );
+}
+
+function extractMarketplaceItemIdFromLink(value: string | null | undefined): string | null {
+  const normalizedLink = normalizeMarketplaceLink(value);
+
+  if (!normalizedLink) {
+    return null;
+  }
+
+  const idMatch = normalizedLink.match(/\/marketplace\/item\/(\d+)\/?/i);
+  return idMatch?.[1] ?? null;
+}
+
+function getAllListingPhotoUris(value: UnknownRecord): string[] {
+  const imageUris: string[] = [];
+  const listingPhotos = Array.isArray(value.listing_photos) ? value.listing_photos : [];
+
+  for (const photo of listingPhotos) {
+    if (!isRecord(photo)) {
+      continue;
+    }
+
+    const image = isRecord(photo.image) ? photo.image : null;
+
+    if (image && typeof image.uri === 'string') {
+      const normalizedUri = normalizeWhitespace(image.uri);
+
+      if (normalizedUri) {
+        imageUris.push(normalizedUri);
+      }
+    }
+  }
+
+  return Array.from(new Set(imageUris));
+}
+
+function looksLikeListingCandidate(value: UnknownRecord): boolean {
+  const listingId = getListingId(value);
+  const listingLink = getMarketplaceListingLink(value);
+  const hasNumericListingIdentifier = Boolean(listingId && /^\d+$/.test(listingId));
+  const hasMarketplaceListingLink = Boolean(listingLink && /\/marketplace\/item\/\d+/i.test(listingLink));
+  const hasListingTitle = Boolean(getListingTitle(value));
+  const hasListingPrice = Boolean(getListingPrice(value));
+  const hasListingLocation = Boolean(getListingLocation(value));
+  const hasListingImage =
+    Boolean(getPrimaryListingImage(value)) ||
+    getAllListingPhotoUris(value).length > 0;
+
+  return (
+    (hasNumericListingIdentifier || hasMarketplaceListingLink) &&
+    (hasListingTitle || hasListingPrice || hasListingLocation || hasListingImage)
+  );
+}
+
 function extractListingCandidates(parsedBlocks: unknown[]): UnknownRecord[] {
   const candidates: UnknownRecord[] = [];
   const seenKeys = new Set<string>();
+
+  const pushCandidate = (candidate: UnknownRecord): void => {
+    const id = getListingId(candidate) ?? 'no-id';
+    const title = getListingTitle(candidate) ?? 'no-title';
+    const key = `${id}:${title}`;
+
+    if (seenKeys.has(key)) {
+      return;
+    }
+
+    seenKeys.add(key);
+    candidates.push(candidate);
+  };
 
   for (const block of parsedBlocks) {
     walkObjects(block, (node) => {
@@ -227,32 +305,33 @@ function extractListingCandidates(parsedBlocks: unknown[]): UnknownRecord[] {
         : null;
       const edges = feedUnitWrapper?.edges;
 
-      if (!Array.isArray(edges)) {
-        return;
+      if (Array.isArray(edges)) {
+        for (const edge of edges) {
+          if (!isRecord(edge) || !isRecord(edge.node)) {
+            continue;
+          }
+
+          const edgeNode = edge.node;
+          const listing = isRecord(edgeNode.listing)
+            ? edgeNode.listing
+            : isRecord(edgeNode.marketplace_listing)
+              ? edgeNode.marketplace_listing
+              : edgeNode;
+
+          if (looksLikeListingCandidate(listing)) {
+            pushCandidate(listing);
+          }
+        }
       }
 
-      for (const edge of edges) {
-        if (!isRecord(edge) || !isRecord(edge.node)) {
-          continue;
-        }
+      const directCandidate = isRecord(node.listing)
+        ? node.listing
+        : isRecord(node.marketplace_listing)
+          ? node.marketplace_listing
+          : node;
 
-        const edgeNode = edge.node;
-        const listing = isRecord(edgeNode.listing)
-          ? edgeNode.listing
-          : isRecord(edgeNode.marketplace_listing)
-            ? edgeNode.marketplace_listing
-            : edgeNode;
-
-        const id = getListingId(listing) ?? 'no-id';
-        const title = getListingTitle(listing) ?? 'no-title';
-        const key = `${id}:${title}`;
-
-        if (seenKeys.has(key)) {
-          continue;
-        }
-
-        seenKeys.add(key);
-        candidates.push(listing);
+      if (looksLikeListingCandidate(directCandidate)) {
+        pushCandidate(directCandidate);
       }
     });
   }
@@ -442,21 +521,34 @@ export function parseMarketplaceListingHtml(input: {
   const candidates = extractListingCandidates(parsedBlocks);
   const galleryImages = extractGalleryImages(input.html);
 
+  const requestedItemId = normalizeWhitespace(input.requestedItemId ?? undefined) ?? null;
+
   const selectedCandidate = (
-    input.requestedItemId
-      ? candidates.find((candidate) => getListingId(candidate) === input.requestedItemId)
+    requestedItemId
+      ? candidates.find((candidate) => {
+          const candidateId = getListingId(candidate);
+          const candidateLinkId = extractMarketplaceItemIdFromLink(
+            typeof candidate.marketplace_listing_link === 'string'
+              ? candidate.marketplace_listing_link
+              : undefined,
+          );
+
+          return candidateId === requestedItemId || candidateLinkId === requestedItemId;
+        })
       : undefined
-  ) ?? candidates[0];
+  ) ?? (requestedItemId ? undefined : candidates[0]);
 
   if (!selectedCandidate) {
     throw new Error('Unable to parse listing payload from HTML.');
   }
 
   const primaryImage = getPrimaryListingImage(selectedCandidate);
+  const listingPhotoUris = getAllListingPhotoUris(selectedCandidate);
   const images = Array.from(
     new Set(
       [
         normalizeWhitespace(primaryImage),
+        ...listingPhotoUris,
         ...galleryImages,
       ].filter((image): image is string => Boolean(image)),
     ),
@@ -477,12 +569,18 @@ export function parseMarketplaceListingHtml(input: {
     throw new Error('Parsed listing payload is missing core fields.');
   }
 
+  const selectedListingId = getListingId(selectedCandidate);
+
+  if (requestedItemId && selectedListingId && selectedListingId !== requestedItemId) {
+    throw new Error('Parsed listing payload did not match requested item id.');
+  }
+
   return {
     listing,
     metadata: {
       scriptBlocksParsed: parsedBlocks.length,
       listingCandidates: candidates.length,
-      selectedListingId: getListingId(selectedCandidate),
+      selectedListingId,
       usedGalleryImages: galleryImages.length,
     },
   };

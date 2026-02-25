@@ -69,6 +69,50 @@ describe('Marketplace HTML parser', () => {
     ]);
   });
 
+  it('parses listing data from non-feed GraphQL payload shapes', () => {
+    const listingHtml = `
+      <html>
+        <body>
+          <script>
+            ${JSON.stringify({
+              data: {
+                marketplace_listing_viewer: {
+                  listing: {
+                    id: '998877',
+                    marketplace_listing_title: 'Lenovo ThinkPad X1',
+                    listing_price: { formatted_amount: '$650' },
+                    location: {
+                      reverse_geocode: {
+                        city_page: { display_name: 'Portland, Oregon' },
+                      },
+                    },
+                    listing_photos: [
+                      { image: { uri: 'https://example.com/photo-1.jpg' } },
+                      { image: { uri: 'https://example.com/photo-2.jpg' } },
+                    ],
+                  },
+                },
+              },
+            })}
+          </script>
+        </body>
+      </html>
+    `;
+
+    const parsed = parseMarketplaceListingHtml({
+      html: listingHtml,
+      requestedItemId: '998877',
+    });
+
+    expect(parsed.listing.title).to.equal('Lenovo ThinkPad X1');
+    expect(parsed.listing.price).to.equal('$650');
+    expect(parsed.listing.location).to.equal('Portland, Oregon');
+    expect(parsed.listing.images).to.deep.equal([
+      'https://example.com/photo-1.jpg',
+      'https://example.com/photo-2.jpg',
+    ]);
+  });
+
   it('parses and deduplicates simple listings from search HTML', () => {
     const searchHtml = `
       <html>

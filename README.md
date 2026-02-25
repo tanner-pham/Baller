@@ -104,6 +104,9 @@ See folder-level docs for file-by-file maps:
 
    Optional variables:
    - `FACEBOOK_COOKIE_HEADER` - Cookie header string for logged-in Marketplace access when needed
+   - `FACEBOOK_PLAYWRIGHT_STORAGE_STATE_B64` - Base64-encoded Playwright storage state JSON for authenticated Browserless sessions
+   - `MARKETPLACE_HTML_TIMEOUT_MS` - Marketplace fetch timeout per candidate in milliseconds
+   - `MARKETPLACE_PLAYWRIGHT_BOOTSTRAP` - Enable Playwright bootstrap navigation (`true`/`false`)
 
    **Getting API Keys:**
    - Supabase: https://supabase.com/dashboard (create project → Settings → API)
@@ -194,6 +197,9 @@ Tests run automatically on:
    - `MARKETPLACE_HTML_FETCH_MODE` (`auto`, `playwright`, `http`)
    - `BROWSERLESS_WS_URL` (required for Playwright transport)
    - `FACEBOOK_COOKIE_HEADER` (optional)
+   - `FACEBOOK_PLAYWRIGHT_STORAGE_STATE_B64` (optional)
+   - `MARKETPLACE_HTML_TIMEOUT_MS` (optional)
+   - `MARKETPLACE_PLAYWRIGHT_BOOTSTRAP` (optional)
 
 ## Local Development
 

@@ -120,17 +120,37 @@ export async function GET(request: NextRequest) {
                 details: html,
               }
             : null,
-        (html) =>
-          looksLikeFacebookAuthWall(html)
-            ? {
-                reason: 'Marketplace search returned Facebook login/interstitial content.',
-                status: 502,
-              }
-            : null,
       ],
     });
 
     const simpleListings = parseMarketplaceSearchHtml(upstreamSearch.html);
+
+    if (simpleListings.length === 0 && looksLikeFacebookAuthWall(upstreamSearch.html)) {
+      throw new MarketplaceHtmlFetchError(
+        'Marketplace search returned Facebook login/interstitial content.',
+        502,
+        JSON.stringify(
+          {
+            sourceUrl: upstreamSearch.sourceUrl,
+            attemptedUrls: upstreamSearch.attemptedUrls,
+            attempts: upstreamSearch.attempts,
+            transport: upstreamSearch.transport,
+            usedBootstrapCookies: upstreamSearch.usedBootstrapCookies,
+            usedPlaywrightBootstrap: upstreamSearch.usedPlaywrightBootstrap,
+            dismissedPlaywrightLoginInterstitial:
+              upstreamSearch.dismissedPlaywrightLoginInterstitial,
+            capturedGraphqlPayloadCount:
+              upstreamSearch.capturedGraphqlPayloadCount,
+            capturedGraphqlPayloadMatchingItemIdCount:
+              upstreamSearch.capturedGraphqlPayloadMatchingItemIdCount,
+            usedInjectedSessionState: upstreamSearch.usedInjectedSessionState,
+            playwrightConnectionMode: upstreamSearch.playwrightConnectionMode,
+          },
+          null,
+          2,
+        ),
+      );
+    }
 
     if (simpleListings.length > 0) {
       const mergedPayload: NormalizedMarketplaceListing = {
@@ -159,6 +179,12 @@ export async function GET(request: NextRequest) {
         transport: upstreamSearch.transport,
         usedBootstrapCookies: upstreamSearch.usedBootstrapCookies,
         usedPlaywrightBootstrap: upstreamSearch.usedPlaywrightBootstrap,
+        dismissedPlaywrightLoginInterstitial:
+          upstreamSearch.dismissedPlaywrightLoginInterstitial,
+        capturedGraphqlPayloadCount: upstreamSearch.capturedGraphqlPayloadCount,
+        capturedGraphqlPayloadMatchingItemIdCount:
+          upstreamSearch.capturedGraphqlPayloadMatchingItemIdCount,
+        usedInjectedSessionState: upstreamSearch.usedInjectedSessionState,
         playwrightConnectionMode: upstreamSearch.playwrightConnectionMode,
         count: simpleListings.length,
       },

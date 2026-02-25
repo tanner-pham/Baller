@@ -24,6 +24,10 @@ export interface MarketplaceHtmlFetchResult {
   transport: FetchTransport;
   usedBootstrapCookies: boolean;
   usedPlaywrightBootstrap: boolean;
+  dismissedPlaywrightLoginInterstitial: boolean;
+  capturedGraphqlPayloadCount: number;
+  capturedGraphqlPayloadMatchingItemIdCount: number;
+  usedInjectedSessionState: boolean;
   playwrightConnectionMode?: 'cdp' | 'playwright';
 }
 
@@ -148,6 +152,252 @@ function shouldEnablePlaywrightBootstrap(): boolean {
 
 function looksLikeTimeoutErrorMessage(message: string): boolean {
   return /timeout|timed out/i.test(message);
+}
+
+function shouldRetryPlaywrightWithBootstrap(
+  input: {
+    html: string;
+    capturedGraphqlPayloadCount: number;
+    usedPlaywrightBootstrap: boolean;
+  },
+  bootstrapUrl: string | undefined,
+  bootstrapEnabledByDefault: boolean,
+): boolean {
+  if (!bootstrapUrl || bootstrapEnabledByDefault || input.usedPlaywrightBootstrap) {
+    return false;
+  }
+
+  const lowerHtml = input.html.toLowerCase();
+  const hasAuthSignals =
+    lowerHtml.includes('id="login_form"') ||
+    lowerHtml.includes('see more on facebook') ||
+    lowerHtml.includes('create new account') ||
+    lowerHtml.includes('email or phone number');
+  const hasMarketplaceSignals =
+    lowerHtml.includes('marketplace_listing_title') ||
+    lowerHtml.includes('"marketplace_search"') ||
+    lowerHtml.includes('/marketplace/item/');
+
+  return input.capturedGraphqlPayloadCount <= 3 && hasAuthSignals && !hasMarketplaceSignals;
+}
+
+type PlaywrightPageLike = {
+  locator: (selector: string) => {
+    first: () => {
+      isVisible: (options?: { timeout?: number }) => Promise<boolean>;
+      click: (options?: { timeout?: number }) => Promise<void>;
+      boundingBox: () => Promise<{ x: number; y: number; width: number; height: number } | null>;
+    };
+  };
+  keyboard: { press: (key: string) => Promise<void> };
+  mouse: {
+    click: (x: number, y: number, options?: { delay?: number }) => Promise<void>;
+    wheel: (deltaX: number, deltaY: number) => Promise<void>;
+  };
+  evaluate: <T>(pageFunction: () => T | Promise<T>) => Promise<T>;
+  waitForTimeout: (timeout: number) => Promise<void>;
+};
+
+async function isFacebookLoginInterstitialVisible(page: PlaywrightPageLike): Promise<boolean> {
+  const authSelectors = [
+    'form#login_form',
+    'input[name="email"]',
+    'input[name="pass"]',
+    'div[role="dialog"] input[placeholder*="Email"]',
+    'div[role="dialog"] button:has-text("Log in")',
+  ];
+
+  for (const selector of authSelectors) {
+    try {
+      const control = page.locator(selector).first();
+
+      if (await control.isVisible({ timeout: 250 })) {
+        return true;
+      }
+    } catch {
+      // Continue scanning selectors.
+    }
+  }
+
+  return false;
+}
+
+async function dismissFacebookLoginInterstitial(page: PlaywrightPageLike): Promise<boolean> {
+  const hadAuthInterstitial = await isFacebookLoginInterstitialVisible(page);
+
+  if (!hadAuthInterstitial) {
+    return false;
+  }
+
+  const closeSelectors = [
+    '[aria-label="Close"]',
+    '[aria-label="close"]',
+    'svg[aria-label="Close"]',
+    'div[role="button"][aria-label="Close"]',
+    'div[role="dialog"] [role="button"][aria-label="Close"]',
+    'div[role="dialog"] [aria-label="Close"]',
+    'button:has-text("Close")',
+    'div[role="button"]:has-text("Close")',
+    'div[role="button"]:has-text("Not now")',
+    'button:has-text("Not now")',
+  ];
+
+  for (const selector of closeSelectors) {
+    try {
+      const closeControl = page.locator(selector).first();
+      const isVisible = await closeControl.isVisible({ timeout: 300 });
+
+      if (!isVisible) {
+        continue;
+      }
+
+      await closeControl.click({ timeout: 800 });
+      await page.waitForTimeout(350);
+
+      if (!(await isFacebookLoginInterstitialVisible(page))) {
+        return true;
+      }
+    } catch {
+      // Continue trying other selectors.
+    }
+  }
+
+  try {
+    const dialog = page.locator('div[role="dialog"]').first();
+    const dialogVisible = await dialog.isVisible({ timeout: 300 });
+
+    if (dialogVisible) {
+      const bounds = await dialog.boundingBox();
+
+      if (bounds) {
+        await page.mouse.click(bounds.x + bounds.width - 20, bounds.y + 20, { delay: 30 });
+        await page.waitForTimeout(300);
+
+        if (!(await isFacebookLoginInterstitialVisible(page))) {
+          return true;
+        }
+      }
+    }
+  } catch {
+    // Continue to Escape/evaluate fallbacks.
+  }
+
+  try {
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(250);
+
+    if (!(await isFacebookLoginInterstitialVisible(page))) {
+      return true;
+    }
+  } catch {
+    // Continue to DOM-force fallback.
+  }
+
+  try {
+    await page.evaluate(() => {
+      const dialogNodes = Array.from(document.querySelectorAll('div[role="dialog"]'));
+      const authNodes = Array.from(
+        document.querySelectorAll(
+          'form#login_form, input[name="email"], input[name="pass"], div[aria-label="See more on Facebook"]',
+        ),
+      );
+
+      for (const node of [...dialogNodes, ...authNodes]) {
+        const removableNode = node.closest('div[role="dialog"]') ?? node;
+        removableNode.remove();
+      }
+
+      document.body.style.overflow = 'auto';
+      document.documentElement.style.overflow = 'auto';
+    });
+    await page.waitForTimeout(200);
+    await page.mouse.wheel(0, 450);
+    await page.waitForTimeout(250);
+
+    return !(await isFacebookLoginInterstitialVisible(page));
+  } catch {
+    return false;
+  }
+}
+
+function extractMarketplaceItemIdFromUrl(rawUrl: string): string | null {
+  try {
+    const parsedUrl = new URL(rawUrl);
+    const itemIdMatch = parsedUrl.pathname.match(/\/marketplace\/item\/(\d+)\/?/i);
+    return itemIdMatch?.[1] ?? null;
+  } catch {
+    return null;
+  }
+}
+
+function stripJsonHijackPrefix(value: string): string {
+  let normalized = value.trim();
+
+  const prefixes = ['for (;;);', 'while(1);', 'for(;;);'];
+
+  for (const prefix of prefixes) {
+    if (normalized.startsWith(prefix)) {
+      normalized = normalized.slice(prefix.length).trim();
+    }
+  }
+
+  return normalized;
+}
+
+function parsePossiblyWrappedJson(value: string): unknown | null {
+  const trimmedValue = stripJsonHijackPrefix(value);
+
+  if (!trimmedValue) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(trimmedValue);
+  } catch {
+    return null;
+  }
+}
+
+function serializeJsonForInlineScript(value: unknown): string {
+  return JSON.stringify(value).replace(/<\/script>/gi, '<\\/script>');
+}
+
+function parseCookieHeaderPairs(cookieHeader: string): Array<{ name: string; value: string }> {
+  return cookieHeader
+    .split(';')
+    .map((pair) => pair.trim())
+    .map((pair) => {
+      const separatorIndex = pair.indexOf('=');
+
+      if (separatorIndex <= 0) {
+        return null;
+      }
+
+      const name = pair.slice(0, separatorIndex).trim();
+      const value = pair.slice(separatorIndex + 1).trim();
+
+      if (!name || !value) {
+        return null;
+      }
+
+      return { name, value };
+    })
+    .filter((pair): pair is { name: string; value: string } => Boolean(pair));
+}
+
+function decodeStorageStateFromEnv(): unknown | null {
+  const rawStorageStateB64 = process.env.FACEBOOK_PLAYWRIGHT_STORAGE_STATE_B64?.trim();
+
+  if (!rawStorageStateB64) {
+    return null;
+  }
+
+  try {
+    const decodedJson = Buffer.from(rawStorageStateB64, 'base64').toString('utf8');
+    return JSON.parse(decodedJson);
+  } catch {
+    return null;
+  }
 }
 
 function resolveFetchTransport(mode: FetchMarketplaceHtmlWithFallbackOptions['mode']): FetchTransport {
@@ -281,10 +531,16 @@ async function fetchHtmlViaPlaywright(input: {
   bootstrapUrl?: string;
   timeoutMs: number;
   cookieHeader: string | null;
+  manualCookieHeader: string | null;
+  storageState: unknown | null;
 }): Promise<{
   html: string;
   status: number;
   usedPlaywrightBootstrap: boolean;
+  dismissedPlaywrightLoginInterstitial: boolean;
+  capturedGraphqlPayloadCount: number;
+  capturedGraphqlPayloadMatchingItemIdCount: number;
+  usedInjectedSessionState: boolean;
   playwrightConnectionMode: 'cdp' | 'playwright';
 }> {
   const browserlessWsUrl = process.env.BROWSERLESS_WS_URL?.trim();
@@ -341,6 +597,7 @@ async function fetchHtmlViaPlaywright(input: {
       const context = await browser.newContext({
         userAgent: DEFAULT_USER_AGENT,
         locale: 'en-US',
+        ...(input.storageState ? { storageState: input.storageState as never } : {}),
         extraHTTPHeaders: {
           'accept-language': 'en-US,en;q=0.9',
           referer: input.referer,
@@ -349,7 +606,72 @@ async function fetchHtmlViaPlaywright(input: {
       });
 
       try {
+        if (input.manualCookieHeader) {
+          const cookiePairs = parseCookieHeaderPairs(input.manualCookieHeader);
+
+          if (cookiePairs.length > 0) {
+            const facebookUrls = ['https://www.facebook.com', 'https://m.facebook.com'];
+            const cookies = facebookUrls.flatMap((facebookUrl) =>
+              cookiePairs.map((cookiePair) => ({
+                name: cookiePair.name,
+                value: cookiePair.value,
+                url: facebookUrl,
+              })),
+            );
+
+            try {
+              await context.addCookies(cookies);
+            } catch {
+              // Fallback to header-based cookies only.
+            }
+          }
+        }
+
         const page = await context.newPage();
+        const itemIdHint = extractMarketplaceItemIdFromUrl(input.url);
+        const capturedPayloads: unknown[] = [];
+        let capturedGraphqlPayloadMatchingItemIdCount = 0;
+
+        page.on('response', (response) => {
+          void (async () => {
+            try {
+              const responseUrl = response.url().toLowerCase();
+              const isMarketplacePayload =
+                responseUrl.includes('/api/graphql') ||
+                responseUrl.includes('__bbox') ||
+                responseUrl.includes('/ajax/') ||
+                responseUrl.includes('marketplace');
+
+              if (!isMarketplacePayload) {
+                return;
+              }
+
+              const bodyText = await response.text();
+              const parsedPayload = parsePossiblyWrappedJson(bodyText);
+              const payloadMatchesItemIdHint =
+                !itemIdHint ||
+                bodyText.includes(itemIdHint) ||
+                responseUrl.includes(itemIdHint.toLowerCase());
+
+              if (!payloadMatchesItemIdHint) {
+                return;
+              }
+
+              if (!parsedPayload) {
+                return;
+              }
+
+              if (itemIdHint) {
+                capturedGraphqlPayloadMatchingItemIdCount += 1;
+              }
+
+              capturedPayloads.push(parsedPayload);
+            } catch {
+              // Ignore response payload parse failures.
+            }
+          })();
+        });
+
         await page.route('**/*', (route) => {
           const resourceType = route.request().resourceType();
 
@@ -364,6 +686,7 @@ async function fetchHtmlViaPlaywright(input: {
         page.setDefaultTimeout(input.timeoutMs);
 
         let usedPlaywrightBootstrap = false;
+        let dismissedPlaywrightLoginInterstitial = false;
 
         if (input.bootstrapUrl) {
           try {
@@ -401,7 +724,38 @@ async function fetchHtmlViaPlaywright(input: {
           // domcontentloaded is best-effort only for this workflow.
         }
 
+        dismissedPlaywrightLoginInterstitial = await dismissFacebookLoginInterstitial(page);
+
+        if (dismissedPlaywrightLoginInterstitial) {
+          try {
+            await page.waitForLoadState('domcontentloaded', { timeout: 1500 });
+          } catch {
+            // Allow scraping even if post-dismiss domcontentloaded does not fire.
+          }
+
+          try {
+            await page.waitForLoadState('networkidle', { timeout: 1200 });
+          } catch {
+            // Best-effort wait for payload responses after dismissal.
+          }
+        }
+
         const html = await page.content();
+        const dedupedCapturedPayloads = Array.from(
+          new Set(capturedPayloads.map((payload) => JSON.stringify(payload))),
+        )
+          .slice(0, 30)
+          .map((payloadString) => JSON.parse(payloadString));
+
+        const htmlWithCapturedPayloads =
+          dedupedCapturedPayloads.length > 0
+            ? `${html}\n${dedupedCapturedPayloads
+                .map(
+                  (payload) =>
+                    `<script type="application/json" data-captured="playwright-graphql">${serializeJsonForInlineScript(payload)}</script>`,
+                )
+                .join('\n')}`
+            : html;
         const status = response?.status() ?? 200;
 
         if (status >= 400) {
@@ -412,14 +766,18 @@ async function fetchHtmlViaPlaywright(input: {
           );
         }
 
-        if (!html || html.trim().length === 0) {
+        if (!htmlWithCapturedPayloads || htmlWithCapturedPayloads.trim().length === 0) {
           throw new MarketplaceHtmlFetchError('Marketplace HTML response was empty', 502);
         }
 
         return {
-          html,
+          html: htmlWithCapturedPayloads,
           status,
           usedPlaywrightBootstrap,
+          dismissedPlaywrightLoginInterstitial,
+          capturedGraphqlPayloadCount: dedupedCapturedPayloads.length,
+          capturedGraphqlPayloadMatchingItemIdCount,
+          usedInjectedSessionState: Boolean(input.manualCookieHeader || input.storageState),
           playwrightConnectionMode,
         };
       } finally {
@@ -476,6 +834,7 @@ export async function fetchMarketplaceHtmlWithFallback(
   const bootstrapTimeoutMs = options.bootstrapTimeoutMs ?? DEFAULT_BOOTSTRAP_TIMEOUT_MS;
   const transport = resolveFetchTransport(options.mode);
   const manualCookieHeader = process.env.FACEBOOK_COOKIE_HEADER?.trim() ?? null;
+  const storageState = decodeStorageStateFromEnv();
   const bootstrapCookieHeader =
     transport === 'http'
       ? await getBootstrapCookieHeader({
@@ -488,19 +847,48 @@ export async function fetchMarketplaceHtmlWithFallback(
   const attempts: MarketplaceHtmlFetchAttempt[] = [];
   let lastError: MarketplaceHtmlFetchError | null = null;
   let usedPlaywrightBootstrap = false;
+  let dismissedPlaywrightLoginInterstitial = false;
+  let capturedGraphqlPayloadCount = 0;
+  let capturedGraphqlPayloadMatchingItemIdCount = 0;
+  let usedInjectedSessionState = false;
   let playwrightConnectionMode: 'cdp' | 'playwright' | undefined;
+  const bootstrapEnabledByDefault = shouldEnablePlaywrightBootstrap();
 
   for (const candidateUrl of attemptedUrls) {
     try {
       const result =
         transport === 'playwright'
-          ? await fetchHtmlViaPlaywright({
-              url: candidateUrl,
-              referer: options.referer,
-              bootstrapUrl: shouldEnablePlaywrightBootstrap() ? options.bootstrapUrl : undefined,
-              timeoutMs,
-              cookieHeader: mergedCookieHeader,
-            })
+          ? await (async () => {
+              const firstResult = await fetchHtmlViaPlaywright({
+                url: candidateUrl,
+                referer: options.referer,
+                bootstrapUrl: bootstrapEnabledByDefault ? options.bootstrapUrl : undefined,
+                timeoutMs,
+                cookieHeader: mergedCookieHeader,
+                manualCookieHeader,
+                storageState,
+              });
+
+              if (
+                shouldRetryPlaywrightWithBootstrap(
+                  firstResult,
+                  options.bootstrapUrl,
+                  bootstrapEnabledByDefault,
+                )
+              ) {
+                return await fetchHtmlViaPlaywright({
+                  url: candidateUrl,
+                  referer: options.referer,
+                  bootstrapUrl: options.bootstrapUrl,
+                  timeoutMs,
+                  cookieHeader: mergedCookieHeader,
+                  manualCookieHeader,
+                  storageState,
+                });
+              }
+
+              return firstResult;
+            })()
           : {
               ...(await fetchHtmlViaHttp({
                 url: candidateUrl,
@@ -513,6 +901,23 @@ export async function fetchMarketplaceHtmlWithFallback(
 
       if (result.usedPlaywrightBootstrap) {
         usedPlaywrightBootstrap = true;
+      }
+
+      if ('dismissedPlaywrightLoginInterstitial' in result && result.dismissedPlaywrightLoginInterstitial) {
+        dismissedPlaywrightLoginInterstitial = true;
+      }
+
+      if ('capturedGraphqlPayloadCount' in result) {
+        capturedGraphqlPayloadCount = result.capturedGraphqlPayloadCount;
+      }
+
+      if ('capturedGraphqlPayloadMatchingItemIdCount' in result) {
+        capturedGraphqlPayloadMatchingItemIdCount =
+          result.capturedGraphqlPayloadMatchingItemIdCount;
+      }
+
+      if ('usedInjectedSessionState' in result && result.usedInjectedSessionState) {
+        usedInjectedSessionState = true;
       }
 
       if ('playwrightConnectionMode' in result) {
@@ -538,6 +943,10 @@ export async function fetchMarketplaceHtmlWithFallback(
         transport,
         usedBootstrapCookies: Boolean(bootstrapCookieHeader),
         usedPlaywrightBootstrap,
+        dismissedPlaywrightLoginInterstitial,
+        capturedGraphqlPayloadCount,
+        capturedGraphqlPayloadMatchingItemIdCount,
+        usedInjectedSessionState,
         playwrightConnectionMode,
       };
     } catch (caughtError) {
@@ -573,6 +982,10 @@ export async function fetchMarketplaceHtmlWithFallback(
         transport,
         usedBootstrapCookies: Boolean(bootstrapCookieHeader),
         usedPlaywrightBootstrap,
+        dismissedPlaywrightLoginInterstitial,
+        capturedGraphqlPayloadCount,
+        capturedGraphqlPayloadMatchingItemIdCount,
+        usedInjectedSessionState,
         playwrightConnectionMode,
         finalDetails: trimErrorDetails(lastError.details),
       },

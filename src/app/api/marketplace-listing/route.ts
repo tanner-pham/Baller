@@ -32,6 +32,20 @@ function getPositiveIntEnv(name: string): number | null {
 
 export const runtime = 'nodejs';
 
+function isCacheableListingPayload(
+  listing: NormalizedMarketplaceListing | null | undefined,
+): boolean {
+  if (!listing) {
+    return false;
+  }
+
+  const hasPrice = Boolean(listing.price?.trim());
+  const hasLocation = Boolean(listing.location?.trim());
+  const hasImages = Array.isArray(listing.images) && listing.images.length > 0;
+
+  return hasPrice || hasLocation || hasImages;
+}
+
 /**
  * Adds cache-status metadata for observability without changing response JSON contracts.
  */
@@ -156,7 +170,12 @@ export async function GET(request: NextRequest) {
         const cachedListing = await getListingCacheEntry<NormalizedMarketplaceListing>(listingId);
 
         if (cachedListing) {
-          if (isCacheFresh(cachedListing.computedAt)) {
+          if (!isCacheableListingPayload(cachedListing.listingPayload)) {
+            console.info('Marketplace listing cache hit rejected (insufficient listing payload)', {
+              listingId,
+              computedAt: cachedListing.computedAt,
+            });
+          } else if (isCacheFresh(cachedListing.computedAt)) {
             console.info('Marketplace listing cache hit', {
               listingId,
               computedAt: cachedListing.computedAt,
@@ -175,11 +194,13 @@ export async function GET(request: NextRequest) {
             );
           }
 
-          staleCache = cachedListing;
-          console.info('Marketplace listing cache stale-hit', {
-            listingId,
-            computedAt: cachedListing.computedAt,
-          });
+          if (isCacheableListingPayload(cachedListing.listingPayload)) {
+            staleCache = cachedListing;
+            console.info('Marketplace listing cache stale-hit', {
+              listingId,
+              computedAt: cachedListing.computedAt,
+            });
+          }
         } else {
           console.info('Marketplace listing cache miss', { listingId });
         }
@@ -211,20 +232,45 @@ export async function GET(request: NextRequest) {
                   details: html,
                 }
               : null,
-          (html) =>
-            looksLikeFacebookAuthWall(html)
-              ? {
-                  reason: 'Marketplace HTML fetch returned Facebook login/interstitial content.',
-                  status: 502,
-                }
-              : null,
         ],
       });
 
-      const parsedListing = parseMarketplaceListingHtml({
-        html: upstreamHtml.html,
-        requestedItemId: listingId,
-      });
+      let parsedListing: ReturnType<typeof parseMarketplaceListingHtml>;
+
+      try {
+        parsedListing = parseMarketplaceListingHtml({
+          html: upstreamHtml.html,
+          requestedItemId: listingId,
+        });
+      } catch (parseError) {
+        if (looksLikeFacebookAuthWall(upstreamHtml.html)) {
+          throw new MarketplaceHtmlFetchError(
+            'Marketplace HTML fetch returned Facebook login/interstitial content.',
+            502,
+            JSON.stringify(
+              {
+                sourceUrl: upstreamHtml.sourceUrl,
+                attemptedUrls: upstreamHtml.attemptedUrls,
+                attempts: upstreamHtml.attempts,
+                transport: upstreamHtml.transport,
+                usedBootstrapCookies: upstreamHtml.usedBootstrapCookies,
+                usedPlaywrightBootstrap: upstreamHtml.usedPlaywrightBootstrap,
+                dismissedPlaywrightLoginInterstitial:
+                  upstreamHtml.dismissedPlaywrightLoginInterstitial,
+                capturedGraphqlPayloadCount: upstreamHtml.capturedGraphqlPayloadCount,
+                capturedGraphqlPayloadMatchingItemIdCount:
+                  upstreamHtml.capturedGraphqlPayloadMatchingItemIdCount,
+                usedInjectedSessionState: upstreamHtml.usedInjectedSessionState,
+                playwrightConnectionMode: upstreamHtml.playwrightConnectionMode,
+              },
+              null,
+              2,
+            ),
+          );
+        }
+
+        throw parseError;
+      }
 
       normalizedListing = parsedListing.listing;
       parserMetadata = {
@@ -236,6 +282,12 @@ export async function GET(request: NextRequest) {
         transport: upstreamHtml.transport,
         usedBootstrapCookies: upstreamHtml.usedBootstrapCookies,
         usedPlaywrightBootstrap: upstreamHtml.usedPlaywrightBootstrap,
+        dismissedPlaywrightLoginInterstitial:
+          upstreamHtml.dismissedPlaywrightLoginInterstitial,
+        capturedGraphqlPayloadCount: upstreamHtml.capturedGraphqlPayloadCount,
+        capturedGraphqlPayloadMatchingItemIdCount:
+          upstreamHtml.capturedGraphqlPayloadMatchingItemIdCount,
+        usedInjectedSessionState: upstreamHtml.usedInjectedSessionState,
         playwrightConnectionMode: upstreamHtml.playwrightConnectionMode,
         parse: parsedListing.metadata,
       };
@@ -271,12 +323,18 @@ export async function GET(request: NextRequest) {
 
     if (listingId) {
       try {
-        await upsertListingCacheEntry<NormalizedMarketplaceListing>({
-          listingId,
-          normalizedUrl: listingUrl,
-          listingPayload: normalizedListing,
-        });
-        console.info('Marketplace listing cache fresh-write', { listingId });
+        if (isCacheableListingPayload(normalizedListing)) {
+          await upsertListingCacheEntry<NormalizedMarketplaceListing>({
+            listingId,
+            normalizedUrl: listingUrl,
+            listingPayload: normalizedListing,
+          });
+          console.info('Marketplace listing cache fresh-write', { listingId });
+        } else {
+          console.info('Marketplace listing cache write skipped (insufficient listing payload)', {
+            listingId,
+          });
+        }
       } catch (caughtError) {
         console.error('Marketplace listing cache write failed', {
           listingId,
