@@ -2,7 +2,7 @@
 
 ## Description
 
-Baller is a web-based tool that helps you make smarter and safer purchasing decisions on peer-to-peer marketplaces. When you’re browsing listings, you often are forced to make quick decisions on limited information, making it hard to tell if the product is fairly priced or even legitimate. Baller's objective is to reduce that uncertainty for every user on these marketplaces. By analyzing a listing and comparing it with similar items across platforms (work in progress), our goal is to provide accurate market data and offer users a sense of relief when scrolling through listings. Using the data that we find in your listing and on the market, Baller gives users an estimate on item condition, recommends an offer based on current market trends, and highlights potential scam indicators, allowing users to search freely and without worry.
+Baller is a web-based tool that helps you make smarter and safer purchasing decisions on peer-to-peer marketplaces. When you’re browsing listings, you often are forced to make quick decisions on limited information, making it hard to tell if the product is fairly priced or even legitimate. Baller's objective is to reduce that uncertainty for every user on these marketplaces. By analyzing a listing and comparing it with similar items across platforms (work in progress), our goal is to provide accurate market data and offer users a sense of relief when scrolling through listings. Using the data that we find in your listing and on the market, Baller gives users an estimate on item condition, recommends an offer based on current market trends, and highlights potential scam indicators (work in progress), allowing users to search freely and without worry.
 
 ## Getting Started
 
@@ -23,11 +23,13 @@ To use Baller, you only need:
 3. Copy the browser URL from the address bar.
 Note: This is different from the platform’s Share link. Use the image below as a reference.
 
+![Image of a listing with browser link circled in green](images/Baller_WebLink.png)
+
 4. Paste the URL into Baller and click Search.
 
 ### Creating an account (optional)
 
-You can use Baller without an account only once. If you plan to use Baller more than once, create an account to save your recent searches. Your dashboard stores your most recent 25 analyzed listings for quick access later.
+The intention of Baller is to push our users to create accounts. In future iterations we plan to implement it so that those who do want to utilize the app more then once will be pushed to create an account to do so. Creating an acount also has the benefit of storing a users most recent 25 analyzed listings for quick access later in the dashboard.
 
 ## Baller Basics
 
@@ -66,6 +68,8 @@ Since Baller is open-source, we want reporting issues to be quick and easy. If y
 1. Go to the Baller home page.
 
 2. Scroll to the Resources section at the bottom of the site.
+
+![Github Circle on our Resources tab in Baller home page](images/github_circled.png)
 
 3. Click GitHub, then navigate to Issues.
 
