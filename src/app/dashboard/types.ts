@@ -1,5 +1,13 @@
 import type { SimilarListing } from './(components)/SimilarListings';
 
+export interface SimpleListingApiData {
+  title: string;
+  location: string;
+  price: string;
+  image: string;
+  link: string;
+}
+
 export interface SearchHistoryEntry {
   itemId: string;
   url: string;
@@ -19,7 +27,9 @@ export interface MarketplaceListingApiData {
   location?: string;
   images?: string[];
   sellerName?: string;
-  postedTime?: string;
+  listingDate?: string;
+  condition?: string;
+  simpleListings?: SimpleListingApiData[];
   similarListings?: SimilarListing[];
 }
 

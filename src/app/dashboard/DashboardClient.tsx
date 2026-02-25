@@ -132,14 +132,13 @@ export default function DashboardClient() {
           {/* Section: Active Analysis */}
           {!shouldShowEmptyState && (
             <div className="flex flex-col">
-               <CurrentListing 
+               <CurrentListing
                   title={displayTitle}
                   price={displayPrice}
                   image={displayImage}
                   description={activeMarketplaceListing?.description || "Loading detailed description..."}
                   location={activeMarketplaceListing?.location || searchParams.get('location') || "Unknown Location"}
-                  sellerName={activeMarketplaceListing?.sellerName || "Private Seller"}
-                  postedTime={activeMarketplaceListing?.postedTime || "Recently"}
+                  listingDate={activeMarketplaceListing?.listingDate || "Recently"}
                   conditionScore={conditionAssessment?.conditionScore}
                   conditionLabel={conditionAssessment?.conditionLabel}
                />

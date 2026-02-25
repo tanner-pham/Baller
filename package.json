@@ -12,11 +12,13 @@
     "test:all": "npm run test && npm run test:backend"
   },
   "dependencies": {
+    "@sparticuz/chromium-min": "^143.0.4",
     "@supabase/supabase-js": "^2.95.3",
     "dotenv": "^17.2.4",
     "lucide-react": "^0.563.0",
     "next": "16.1.4",
     "openai": "^6.22.0",
+    "playwright-core": "^1.58.2",
     "react": "19.2.3",
     "react-dom": "19.2.3"
   },

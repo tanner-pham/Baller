@@ -9,6 +9,7 @@ Shared utilities used by both route handlers and client components.
 | `src/lib/supabaseServerClient.ts` | Server-only Supabase service role client factory. | `getSupabaseServiceRoleClient` | `@supabase/supabase-js`, `server-only` |
 | `src/lib/auth/useAuthSession.ts` | Shared client auth/session hook used across auth, navigation, and dashboard. | `useAuthSession` | browser Supabase client |
 | `src/lib/server/cacheTtl.ts` | Shared 48h cache freshness helper utilities. | `CACHE_TTL_HOURS`, `isCacheFresh` | server runtime |
+| `src/lib/server/facebookMarketplaceHtmlFetcher.ts` | Shared Marketplace HTML transport layer with Playwright (Browserless) and http fallback modes. | `fetchMarketplaceHtmlWithFallback`, `MarketplaceHtmlFetchError` | `fetch`, `playwright-core` |
 | `src/lib/server/listingCacheRepository.ts` | Service-role repository for listing cache reads/writes. | `getListingCacheEntry`, `upsertListingCacheEntry` | `src/lib/supabaseServerClient.ts` |
 | `src/lib/server/conditionCacheRepository.ts` | Service-role repository for condition cache reads/writes. | `getConditionCacheEntry`, `upsertConditionCacheEntry` | `src/lib/supabaseServerClient.ts` |
 

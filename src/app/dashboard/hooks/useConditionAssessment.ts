@@ -91,7 +91,7 @@ export function useConditionAssessment({
             listedPrice: listing.price,
             listingId,
             images: listing.images,
-            postedTime: listing.postedTime,
+            postedTime: listing.listingDate,
           }),
         });
 
