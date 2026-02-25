@@ -1,5 +1,7 @@
-import { chromium, type BrowserContext, type Page } from 'playwright-core';
+import { chromium, type Browser, type BrowserContext, type Page } from 'playwright-core';
 import * as path from 'path';
+
+const IS_LAMBDA = !!process.env.AWS_LAMBDA_FUNCTION_NAME || !!process.env.VERCEL;
 
 const BROWSER_DATA_DIR = path.resolve(
   process.env.MARKETPLACE_PLAYWRIGHT_USER_DATA_DIR ?? '/tmp/.browser-data'
@@ -52,6 +54,7 @@ export class MarketplaceHtmlError extends Error {
 
 // --------------- singleton state ---------------
 
+let browserInstance: Browser | null = null;
 let contextInstance: BrowserContext | null = null;
 let idleTimer: NodeJS.Timeout | null = null;
 let launching: Promise<BrowserContext> | null = null;
@@ -63,6 +66,10 @@ function resetIdleTimer(): void {
       console.info('[browserManager] Idle timeout — closing browser context');
       await contextInstance.close().catch(() => undefined);
       contextInstance = null;
+    }
+    if (browserInstance) {
+      await browserInstance.close().catch(() => undefined);
+      browserInstance = null;
     }
   }, IDLE_TIMEOUT_MS);
 }
@@ -106,29 +113,71 @@ async function addCookiesFromEnv(context: BrowserContext): Promise<void> {
   }
 }
 
-async function launchContext(): Promise<BrowserContext> {
+/**
+ * Launch browser context on Lambda/Vercel using @sparticuz/chromium for the binary.
+ * Uses a non-persistent context since Lambda is stateless.
+ */
+async function launchLambdaContext(): Promise<BrowserContext> {
+  console.info('[browserManager] Launching Lambda browser context…');
+
+  // Dynamic import so @sparticuz/chromium is only loaded on Lambda
+  // (avoids bundling the ~50MB binary locally)
+  const sparticuzChromium = (await import('@sparticuz/chromium')).default;
+
+  const executablePath = await sparticuzChromium.executablePath();
+
+  const browser = await chromium.launch({
+    executablePath,
+    headless: true,
+    args: sparticuzChromium.args,
+  });
+
+  browserInstance = browser;
+
+  const context = await browser.newContext({
+    viewport: { width: 1280, height: 800 },
+    userAgent: DEFAULT_USER_AGENT,
+    bypassCSP: true,
+  });
+
+  await addCookiesFromEnv(context);
+  console.info('[browserManager] Lambda browser context ready');
+  return context;
+}
+
+/**
+ * Launch persistent browser context for local/self-hosted environments.
+ */
+async function launchLocalContext(): Promise<BrowserContext> {
   console.info('[browserManager] Launching persistent browser context…');
 
   const executablePath = normalizeEnvValue(process.env.MARKETPLACE_PLAYWRIGHT_EXECUTABLE_PATH);
   const channelEnv = normalizeEnvValue(process.env.MARKETPLACE_PLAYWRIGHT_CHANNEL);
   const channel = channelEnv?.toLowerCase() === 'none' ? undefined : channelEnv;
 
-  let context: BrowserContext;
+  const context = await chromium.launchPersistentContext(BROWSER_DATA_DIR, {
+    headless: true,
+    ...(executablePath ? { executablePath } : channel ? { channel } : {}),
+    viewport: { width: 1280, height: 800 },
+    userAgent: DEFAULT_USER_AGENT,
+    args: [
+      '--disable-blink-features=AutomationControlled',
+      '--disable-web-security',
+      '--disable-features=IsolateOrigins,site-per-process',
+      '--disable-gpu',
+      '--no-sandbox',
+    ],
+    bypassCSP: true,
+  });
+
+  await addCookiesFromEnv(context);
+  console.info('[browserManager] Browser context ready');
+  return context;
+}
+
+async function launchContext(): Promise<BrowserContext> {
   try {
-    context = await chromium.launchPersistentContext(BROWSER_DATA_DIR, {
-      headless: true,
-      ...(executablePath ? { executablePath } : channel ? { channel } : {}),
-      viewport: { width: 1280, height: 800 },
-      userAgent: DEFAULT_USER_AGENT,
-      args: [
-        '--disable-blink-features=AutomationControlled',
-        '--disable-web-security',
-        '--disable-features=IsolateOrigins,site-per-process',
-        '--disable-gpu',
-        '--no-sandbox',
-      ],
-      bypassCSP: true,
-    });
+    return IS_LAMBDA ? await launchLambdaContext() : await launchLocalContext();
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     console.error('[browserManager] Failed to launch browser context:', message);
@@ -138,10 +187,6 @@ async function launchContext(): Promise<BrowserContext> {
       message,
     );
   }
-
-  await addCookiesFromEnv(context);
-  console.info('[browserManager] Browser context ready');
-  return context;
 }
 
 // --------------- public API ---------------
@@ -188,6 +233,10 @@ export async function shutdownBrowser(): Promise<void> {
   if (contextInstance) {
     await contextInstance.close().catch(() => undefined);
     contextInstance = null;
+  }
+  if (browserInstance) {
+    await browserInstance.close().catch(() => undefined);
+    browserInstance = null;
   }
 }
 
