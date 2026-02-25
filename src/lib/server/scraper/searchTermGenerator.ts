@@ -5,7 +5,7 @@
  * Ported from tanner-scrapper/src/llm.ts generateSearchTermLocal().
  */
 export function generateSearchTermLocal(title: string): string {
-  let term = title
+  const term = title
     .replace(/[()[\]]/g, ' ')
     .replace(
       /\b(for sale|obo|firm|like new|brand new|great condition|excellent|good condition|must sell|priced to sell)\b/gi,
