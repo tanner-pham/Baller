@@ -2,7 +2,7 @@ import { chromium, type BrowserContext, type Page } from 'playwright-core';
 import * as path from 'path';
 
 const BROWSER_DATA_DIR = path.resolve(
-  process.env.MARKETPLACE_PLAYWRIGHT_USER_DATA_DIR ?? '.browser-data'
+  process.env.MARKETPLACE_PLAYWRIGHT_USER_DATA_DIR ?? '/tmp/.browser-data'
 );
 const IDLE_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes
 
@@ -113,20 +113,31 @@ async function launchContext(): Promise<BrowserContext> {
   const channelEnv = normalizeEnvValue(process.env.MARKETPLACE_PLAYWRIGHT_CHANNEL);
   const channel = channelEnv?.toLowerCase() === 'none' ? undefined : channelEnv;
 
-  const context = await chromium.launchPersistentContext(BROWSER_DATA_DIR, {
-    headless: true,
-    ...(executablePath ? { executablePath } : channel ? { channel } : {}),
-    viewport: { width: 1280, height: 800 },
-    userAgent: DEFAULT_USER_AGENT,
-    args: [
-      '--disable-blink-features=AutomationControlled',
-      '--disable-web-security',
-      '--disable-features=IsolateOrigins,site-per-process',
-      '--disable-gpu',
-      '--no-sandbox',
-    ],
-    bypassCSP: true,
-  });
+  let context: BrowserContext;
+  try {
+    context = await chromium.launchPersistentContext(BROWSER_DATA_DIR, {
+      headless: true,
+      ...(executablePath ? { executablePath } : channel ? { channel } : {}),
+      viewport: { width: 1280, height: 800 },
+      userAgent: DEFAULT_USER_AGENT,
+      args: [
+        '--disable-blink-features=AutomationControlled',
+        '--disable-web-security',
+        '--disable-features=IsolateOrigins,site-per-process',
+        '--disable-gpu',
+        '--no-sandbox',
+      ],
+      bypassCSP: true,
+    });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error('[browserManager] Failed to launch browser context:', message);
+    throw new MarketplaceHtmlError(
+      `Browser unavailable: ${message}`,
+      502,
+      message,
+    );
+  }
 
   await addCookiesFromEnv(context);
   console.info('[browserManager] Browser context ready');
@@ -142,11 +153,17 @@ export async function acquireBrowserContext(): Promise<BrowserContext> {
 
   // Prevent parallel launches
   if (!launching) {
-    launching = launchContext().then((ctx) => {
-      contextInstance = ctx;
-      launching = null;
-      return ctx;
-    });
+    launching = launchContext().then(
+      (ctx) => {
+        contextInstance = ctx;
+        launching = null;
+        return ctx;
+      },
+      (err) => {
+        launching = null;
+        throw err;
+      },
+    );
   }
 
   return launching;
