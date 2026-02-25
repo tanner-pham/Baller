@@ -5,7 +5,7 @@ This document focuses on internal development practices, architecture, and contr
 For setup instructions, environment configuration, and general usage, see the [top-level README](../README.md).
 
 ## Obtaining the source code
-Follow the instructions in [README -- Environment Setup / Installation](./README.md#environment-setup--installation)
+Follow the instructions in [README -- Environment Setup / Installation](../README.md#environment-setup--installation)
 
 ## Architecture Overview
 A develop-focused overview (see folder-level READMEs for detail):
@@ -33,14 +33,14 @@ A develop-focused overview (see folder-level READMEs for detail):
 
 ## Building & Test Commands
 ### Build, development, environment setup, and test commands are documented in:
-[README -- Building the System](./README.md#building-the-system)
+[README -- Building the System](../README.md#building-the-system)
 
 This includes:
 * dev server (`npm run dev`)
 * production build (`npm run build`)
 * environment variables
 ___
-[README -- Testing the System](./README.md#testing-the-system)
+[README -- Testing the System](../README.md#testing-the-system)
 
 Which covers:
 * Jest (frontend) - `npm test`
