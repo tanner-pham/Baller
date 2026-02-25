@@ -2,7 +2,7 @@
 
 ## Description
 
-Baller is a web-based tool that helps you make smarter and safer purchasing decisions on peer-to-peer marketplaces. When you’re browsing listings, you often are forced to make quick decisions on limited information, making it hard to tell if the product is fairly priced or even legitimate. Baller's objective is to reduce that uncertainty for every user on these marketplaces. By analyzing a listing and cross-referencing similar items across platforms, our goal is to provide accurate market data and offer users a sense of relief when scrolling through listings. Using the data that we find in your listing and on the market, Baller gives users an estimate on item condition, recommends an offer based on current market trends, and highlights potential scam indicators, allowing users to search freely and without worry.
+Baller is a web-based tool that helps you make smarter and safer purchasing decisions on peer-to-peer marketplaces. When you’re browsing listings, you often are forced to make quick decisions on limited information, making it hard to tell if the product is fairly priced or even legitimate. Baller's objective is to reduce that uncertainty for every user on these marketplaces. By analyzing a listing and comparing it with similar items across platforms (work in progress), our goal is to provide accurate market data and offer users a sense of relief when scrolling through listings. Using the data that we find in your listing and on the market, Baller gives users an estimate on item condition, recommends an offer based on current market trends, and highlights potential scam indicators, allowing users to search freely and without worry.
 
 ## Getting Started
 
