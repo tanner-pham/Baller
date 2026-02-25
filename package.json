@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "test": "jest --config jest.config.ts --passWithNoTests --coverage",
-    "test:backend": "mocha --require tsx 'backend/**/*.test.ts' 'src/app/**/route.test.ts' --exit",
+    "test:backend": "mocha --require tsx 'tests/backend/**/*.test.ts' --exit",
     "test:all": "npm run test && npm run test:backend"
   },
   "dependencies": {

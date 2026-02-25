@@ -17,7 +17,6 @@ Return ONLY a JSON object with this exact structure (no markdown, no extra text)
   "conditionLabel": "<one of: New, Like New, Good, Fair, Poor>",
   "reasoning": "<brief explanation of visible wear, damage, or condition indicators>",
   "wearIndicators": [<array of specific issues like "scratches on screen", "scuffed corners", etc.>],
-  "modelAccuracy": "<integer from 0 to 100>",
   "topReasons": [<array of 2-4 concise bullets explaining the pricing logic>],
   "suggestedPrice": "<integer string in USD, no symbols, e.g. '8500'>",
   "suggestedOffer": "<integer string in USD, no symbols, e.g. '7800'>",

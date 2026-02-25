@@ -19,6 +19,7 @@ import { useConditionAssessment } from './hooks/useConditionAssessment';
 import { useDashboardSession } from './hooks/useDashboardSession';
 import { useMarketplaceListing } from './hooks/useMarketplaceListing';
 import { useSearchHistory } from './hooks/useSearchHistory';
+import { useSimilarListings } from './hooks/useSimilarListings';
 import type { SearchHistoryEntry } from './types';
 
 /**
@@ -114,8 +115,23 @@ export default function DashboardClient() {
     listingTitle: activeMarketplaceListing?.title,
   });
 
+  // Fetch similar listings based on current listing title and price
+  const searchQuery = marketplaceListing?.title || '';
+  const targetPrice = marketplaceListing?.price 
+    ? parseFloat(marketplaceListing.price.replace(/[^0-9.]/g, ''))
+    : 0;
+
+  const {
+    listings: similarListingsFromApi,
+    isLoading: isSimilarListingsLoading,
+  } = useSimilarListings({
+    query: searchQuery,
+    targetPrice,
+    enabled: Boolean(marketplaceListing) && !isListingLoading,
+  });
+
   const currentListingData: CurrentListingProps = {
-    image: searchParams.get('image') ?? DEFAULT_CURRENT_LISTING.image,
+    image: (activeMarketplaceListing?.images?.[0] ?? searchParams.get('image')) || DEFAULT_CURRENT_LISTING.image,
     price: searchParams.get('price') ?? DEFAULT_CURRENT_LISTING.price,
     title: searchParams.get('title') ?? DEFAULT_CURRENT_LISTING.title,
     description: searchParams.get('description') ?? DEFAULT_CURRENT_LISTING.description,
@@ -168,7 +184,7 @@ export default function DashboardClient() {
       activeMarketplaceListing?.location ||
       currentListingData.location ||
       (hasListingError ? 'Unavailable' : ''),
-    image: activeMarketplaceListing?.image || currentListingData.image || EMPTY_IMAGE_PLACEHOLDER,
+    image: activeMarketplaceListing?.images?.[0] || currentListingData.image || EMPTY_IMAGE_PLACEHOLDER,
     sellerName:
       activeMarketplaceListing?.sellerName ||
       currentListingData.sellerName ||
@@ -217,7 +233,9 @@ export default function DashboardClient() {
   };
 
   const similarListingsSource =
-    activeMarketplaceListing?.similarListings && activeMarketplaceListing.similarListings.length > 0
+    similarListingsFromApi && similarListingsFromApi.length > 0
+      ? similarListingsFromApi
+      : activeMarketplaceListing?.similarListings && activeMarketplaceListing.similarListings.length > 0
       ? activeMarketplaceListing.similarListings
       : DEFAULT_SIMILAR_LISTINGS;
   const emptyStateMessage = isAuthenticated
@@ -401,7 +419,7 @@ export default function DashboardClient() {
         </section>
       ) : (
         <>
-          <div className="mt-8">
+          <div>
             <CurrentListing {...resolvedCurrentListingData} />
           </div>
           <PricingAnalysis {...resolvedPricingAnalysisData} />
