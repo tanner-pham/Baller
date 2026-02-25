@@ -73,7 +73,7 @@ Since Baller is open-source, we want reporting issues to be quick and easy. If y
 
 3. Click GitHub, then navigate to Issues.
 
-4. Select **New Issue**.
+4. Select **New Issue** or choose from our templates.
 
 5. Describe the issue in as much detail as possible (include steps to reproduce, what you expected, and what actually happened).
 
