@@ -220,7 +220,6 @@ export default function DashboardClient() {
     activeMarketplaceListing?.similarListings && activeMarketplaceListing.similarListings.length > 0
       ? activeMarketplaceListing.similarListings
       : DEFAULT_SIMILAR_LISTINGS;
-  const emptyStateMessage = isAuthenticated
     ? 'No listing loaded yet. Open the menu to load a previous listing, or paste a new Facebook Marketplace link in the top bar.'
     : 'No listing loaded yet. Paste a Facebook Marketplace link in the top bar to start. Log in to unlock search history.';
 
