@@ -5,7 +5,7 @@ This document focuses on internal development practices, architecture, and contr
 For setup instructions, environment configuration, and general usage, see the [top-level README](../README.md).
 
 ## Obtaining the source code
-Follow the instructions in [README -- Environment Setup / Installation](../README.md#environment-setup--installation)
+Follow the instructions in [README -- Environment Setup / Installation](../README.md#environment-setup)
 
 ## Architecture Overview
 A develop-focused overview (see folder-level READMEs for detail):
