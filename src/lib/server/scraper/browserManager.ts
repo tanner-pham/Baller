@@ -125,7 +125,7 @@ async function launchLambdaContext(): Promise<BrowserContext> {
   const sparticuzChromium = (await import('@sparticuz/chromium-min')).default;
 
   const executablePath = await sparticuzChromium.executablePath(
-    'https://github.com/Sparticuz/chromium/releases/download/v143.0.0/chromium-v143.0.0-pack.x86_64.tar'
+    'https://github.com/Sparticuz/chromium/releases/download/v143.0.4/chromium-v143.0.4-pack.x64.tar'
   );
 
   const browser = await chromium.launch({
