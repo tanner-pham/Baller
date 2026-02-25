@@ -9,7 +9,7 @@ const BROWSER_DATA_DIR = path.resolve(
 const IDLE_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes
 
 const DEFAULT_USER_AGENT =
-  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36';
+  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36';
 
 const BLOCKED_RESOURCES = [
   '**/tr/**',
@@ -88,7 +88,7 @@ function normalizeEnvValue(value: string | undefined): string | undefined {
 
 function parseCookieHeaderToContextCookies(
   cookieHeader: string,
-): Array<{ name: string; value: string; url: string }> {
+): Array<{ name: string; value: string; domain: string; path: string }> {
   return cookieHeader
     .split(';')
     .map((s) => s.trim())
@@ -99,9 +99,9 @@ function parseCookieHeaderToContextCookies(
       const name = entry.slice(0, idx).trim();
       const value = entry.slice(idx + 1).trim();
       if (!name || value.length === 0) return null;
-      return { name, value, url: 'https://www.facebook.com' };
+      return { name, value, domain: '.facebook.com', path: '/' };
     })
-    .filter((c): c is { name: string; value: string; url: string } => c !== null);
+    .filter((c): c is { name: string; value: string; domain: string; path: string } => c !== null);
 }
 
 async function addCookiesFromEnv(context: BrowserContext): Promise<void> {
@@ -131,7 +131,10 @@ async function launchLambdaContext(): Promise<BrowserContext> {
   const browser = await chromium.launch({
     executablePath,
     headless: true,
-    args: sparticuzChromium.args,
+    args: [
+      ...sparticuzChromium.args,
+      '--disable-blink-features=AutomationControlled',
+    ],
   });
 
   browserInstance = browser;
