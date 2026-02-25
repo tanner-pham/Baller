@@ -11,6 +11,7 @@ Internal Facebook Marketplace scraping service.
 All non-health endpoints require `Authorization: Bearer <SCRAPER_INTERNAL_TOKEN>`.
 
 ## Scripts
+All three scripts must be running, included in docker deployment
 
 ```bash
 npm run api
@@ -18,7 +19,7 @@ npm run worker
 npm run build
 ```
 
-## Environment
+## Environment Variables
 
 - `SCRAPER_INTERNAL_TOKEN`
 - `SCRAPER_PORT` (default `4010`)
