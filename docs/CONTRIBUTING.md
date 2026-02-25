@@ -65,9 +65,7 @@ Which covers:
 ## Branch and Contributing Workflow
 We use a simple workflow:
 * ``main`` --- stable branch
-* feature branches: ``feature/<name>``
-* bugfix branches: ``fix/<name>``
-* releases: ``release/v0.x.x``
+* change branches: ``<person_id>/<branch_name>``
 PR requirements:
 * Must pass CI
 * Must include tests for new functions
