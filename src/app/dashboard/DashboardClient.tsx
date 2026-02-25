@@ -392,11 +392,46 @@ export default function DashboardClient() {
       {isDashboardLoading ? (
         <DashboardLoadingSkeleton />
       ) : shouldShowEmptyState ? (
-        <section className="mx-auto mt-10 w-full max-w-6xl px-4">
-          <div className="rounded-md border-4 border-black bg-white px-5 py-4 shadow-[4px_4px_0px_0px_#000000]">
-            <p className="font-['Space_Grotesk',sans-serif] text-sm font-bold text-black">
-              {emptyStateMessage}
-            </p>
+        <section className="border-b-4 border-t-4 border-black bg-[#90EE90] p-15">
+          <div className="mx-auto w-full max-w-6xl">
+            <div className="mb-8 rounded-xl border-5 border-black bg-white p-8 shadow-[8px_8px_0px_0px_#000000]">
+              <h2 className="mb-6 font-['Anton',sans-serif] text-4xl uppercase text-black">
+                Previous Listings
+              </h2>
+
+              {searchHistory.length === 0 ? (
+                <div className="rounded-md border-4 border-black bg-[#F5F5F0] p-6 shadow-[4px_4px_0px_0px_#000000]">
+                  <p className="font-['Space_Grotesk',sans-serif] text-lg font-semibold text-black">
+                    No listings yet.
+                  </p>
+                  <p className="mt-2 font-['Space_Grotesk',sans-serif] text-sm text-gray-700">
+                    Paste a Facebook Marketplace link above to analyze your first listing.
+                  </p>
+                </div>
+              ) : (
+                <div className="grid gap-6 md:grid-cols-2">
+                  {searchHistory.map((entry) => (
+                    <button
+                      key={`${entry.url}-${entry.searchedAt}`}
+                      onClick={() => handleSelectPreviousSearch(entry)}
+                      className="rounded-xl border-5 border-black bg-[#FF69B4] p-6 text-left shadow-[6px_6px_0px_0px_#000000] transition-all hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[8px_8px_0px_0px_#000000]"
+                    >
+                      <p className="font-['Anton',sans-serif] text-xl uppercase text-black">
+                        {entry.listingTitle}
+                      </p>
+
+                      <p className="mt-2 break-all font-['Space_Grotesk',sans-serif] text-xs font-semibold text-black">
+                        {entry.url}
+                      </p>
+
+                      <p className="mt-4 font-['Space_Grotesk',sans-serif] text-xs font-semibold text-black">
+                        {new Date(entry.searchedAt).toLocaleString()}
+                      </p>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </section>
       ) : (
@@ -404,12 +439,65 @@ export default function DashboardClient() {
           <div>
             <CurrentListing {...resolvedCurrentListingData} />
           </div>
+
           <PricingAnalysis {...resolvedPricingAnalysisData} />
+
           <div className="size-full overflow-y-auto bg-[#F5F5F0]">
             <SimilarListings listings={listingsWithValidatedLinks} />
           </div>
         </>
+
       )}
+
+          {isAuthenticated && (
+            <section className="border-t-4 border-b-4 border-black bg-[#FADF0B] p-15">
+              <div className="mx-auto w-full max-w-6xl">
+                <div className="rounded-xl border-5 border-black bg-white p-10 shadow-[8px_8px_0px_0px_#000000]">
+                  <h2 className="mb-6 font-['Anton',sans-serif] text-4xl uppercase text-black">
+                    Thanks for Logging In 🔓
+                  </h2>
+
+                  <p className="mb-8 font-['Space_Grotesk',sans-serif] text-lg font-semibold text-black">
+                    Your account unlocks powerful tools to help you negotiate smarter and win better deals.
+                  </p>
+
+                  <div className="grid gap-6 md:grid-cols-3">
+                    <div className="rounded-md border-4 border-black bg-[#90EE90] p-6 shadow-[4px_4px_0px_0px_#000000]">
+                      <h3 className="font-['Anton',sans-serif] text-xl uppercase text-black">
+                        Unlimited Analyses
+                      </h3>
+                      <p className="mt-3 font-['Space_Grotesk',sans-serif] text-sm font-semibold text-black">
+                        Analyze as many listings as you want without restrictions.
+                      </p>
+                    </div>
+
+                    <div className="rounded-md border-4 border-black bg-[#FF69B4] p-6 shadow-[4px_4px_0px_0px_#000000]">
+                      <h3 className="font-['Anton',sans-serif] text-xl uppercase text-black">
+                        Deeper Insights
+                      </h3>
+                      <p className="mt-3 font-['Space_Grotesk',sans-serif] text-sm font-semibold text-black">
+                        More advanced pricing models and smarter negotiation recommendations.
+                      </p>
+                    </div>
+
+                    <div className="rounded-md border-4 border-black bg-[#FF6600] p-6 shadow-[4px_4px_0px_0px_#000000]">
+                      <h3 className="font-['Anton',sans-serif] text-xl uppercase text-black">
+                        Saved Listings
+                      </h3>
+                      <p className="mt-3 font-['Space_Grotesk',sans-serif] text-sm font-semibold text-black">
+                        Your listing history is stored so you can revisit deals anytime.
+                      </p>
+                    </div>
+                  </div>
+
+                  <p className="mt-10 text-center font-['Space_Grotesk',sans-serif] text-sm font-bold text-black">
+                    We’re building even more premium features soon 🚀
+                  </p>
+                </div>
+              </div>
+            </section>
+          )}
+        
     </main>
   );
 }
