@@ -120,11 +120,13 @@ async function addCookiesFromEnv(context: BrowserContext): Promise<void> {
 async function launchLambdaContext(): Promise<BrowserContext> {
   console.info('[browserManager] Launching Lambda browser context…');
 
-  // Dynamic import so @sparticuz/chromium is only loaded on Lambda
-  // (avoids bundling the ~50MB binary locally)
-  const sparticuzChromium = (await import('@sparticuz/chromium')).default;
+  // Dynamic import so @sparticuz/chromium-min is only loaded on Lambda
+  // chromium-min doesn't bundle the binary — it downloads from a CDN at runtime into /tmp
+  const sparticuzChromium = (await import('@sparticuz/chromium-min')).default;
 
-  const executablePath = await sparticuzChromium.executablePath();
+  const executablePath = await sparticuzChromium.executablePath(
+    'https://github.com/Sparticuz/chromium/releases/download/v143.0.0/chromium-v143.0.0-pack.x86_64.tar'
+  );
 
   const browser = await chromium.launch({
     executablePath,
