@@ -2,6 +2,36 @@
 
 Baller is a Next.js app that helps users evaluate Facebook Marketplace listings with pricing context and AI-assisted condition insights.
 
+## Gamma Release (v0.2.0)
+
+### What's New Since Beta
+
+The gamma release brings a major backend overhaul and a round of dashboard UX improvements built on top of the beta foundation.
+
+**Scraping & Data Pipeline**
+- Replaced the RapidAPI-based listing retrieval with direct HTML scraping using Playwright, cutting load times and removing the external API dependency.
+- Added a full Playwright-based scraper (`src/lib/server/scraper/`) that runs two browser tabs in parallel — one for the listing page, one for a location-scoped comparable search.
+- Built a robust HTML parser (`parseHtml.ts`) with JSON-from-script extraction, DOM fallback, and gallery image collection. Handles Facebook auth walls, login modals, and edge cases gracefully.
+- Introduced `@sparticuz/chromium-min` for Vercel/Lambda compatibility so the scraper works in serverless environments.
+- Added cookie and Playwright storage-state injection for authenticated Marketplace sessions.
+
+**Dashboard UX**
+- Unauthed users are now prompted with a sign-in popup when they try to search another listing, instead of silently failing.
+- Previous Listings section is hidden entirely for guests — only authenticated users see their history.
+- Previous Listings now scrolls horizontally (all entries, not capped at 4) with a scroll indicator so users know there's more to see.
+- Removed the sidebar hamburger button. Logout now lives directly in the header next to the search bar.
+- Market Value is now computed as the average of the current listing price and all similar listing prices, rather than just echoing the ask price.
+- Fixed similar listings not rendering — added a fallback that maps `simpleListings` (string prices) into the `SimilarListing` format (numeric prices) when the scraper's `similarListings` array is empty.
+- Added video-primary-image detection: if the first image URL looks like a video (`/v/`, `.mp4`, etc.), the display falls back to the next available photo.
+- Fixed listing card images not filling their containers (`w-full h-full object-cover`).
+
+**Infrastructure & Testing**
+- Reorganized tests into `tests/frontend/` and `tests/backend/` directories.
+- Added frontend tests for the SimilarListings component (100% coverage).
+- Added backend tests for the HTML parser and URL parsing utilities.
+
+---
+
 ## Beta Release (v0.1.0)
 
 **Git Tag:** `beta-release`
