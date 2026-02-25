@@ -1,4 +1,10 @@
 const FACEBOOK_MARKETPLACE_HOST = 'www.facebook.com';
+const FACEBOOK_MARKETPLACE_ACCEPTED_HOSTS = new Set([
+  'www.facebook.com',
+  'facebook.com',
+  'm.facebook.com',
+  'mbasic.facebook.com',
+]);
 const FACEBOOK_MARKETPLACE_PROTOCOL = 'https:';
 const FACEBOOK_MARKETPLACE_ITEM_PATH_REGEX = /^\/marketplace\/item\/(\d+)\/?$/;
 
@@ -24,7 +30,7 @@ export function parseFacebookMarketplaceListingUrl(
 
     if (
       parsedUrl.protocol !== FACEBOOK_MARKETPLACE_PROTOCOL ||
-      parsedUrl.hostname !== FACEBOOK_MARKETPLACE_HOST ||
+      !FACEBOOK_MARKETPLACE_ACCEPTED_HOSTS.has(parsedUrl.hostname) ||
       !itemPathMatch
     ) {
       return null;

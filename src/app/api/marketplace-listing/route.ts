@@ -7,24 +7,30 @@ import {
 import { parseFacebookMarketplaceListingUrl } from '../../../lib/facebookMarketplaceListing';
 import { isCacheFresh } from '../../../lib/server/cacheTtl';
 import {
+  fetchMarketplaceHtmlWithFallback,
+  MarketplaceHtmlFetchError,
+} from '../../../lib/server/facebookMarketplaceHtmlFetcher';
+import {
   getListingCacheEntry,
   upsertListingCacheEntry,
   type ListingCacheEntry,
 } from '../../../lib/server/listingCacheRepository';
 
-const UPSTREAM_FETCH_TIMEOUT_MS = 12000;
+const DEFAULT_UPSTREAM_FETCH_TIMEOUT_MS = 15000;
 
-class UpstreamHtmlError extends Error {
-  status: number;
+function getPositiveIntEnv(name: string): number | null {
+  const rawValue = process.env[name];
 
-  details?: string;
-
-  constructor(message: string, status = 502, details?: string) {
-    super(message);
-    this.status = status;
-    this.details = details;
+  if (!rawValue) {
+    return null;
   }
+
+  const parsedValue = Number.parseInt(rawValue, 10);
+
+  return Number.isFinite(parsedValue) && parsedValue > 0 ? parsedValue : null;
 }
+
+export const runtime = 'nodejs';
 
 /**
  * Adds cache-status metadata for observability without changing response JSON contracts.
@@ -91,6 +97,12 @@ function buildListingFetchCandidates(listingUrl: string, listingId: string | nul
       withoutQuery.pathname = `${withoutQuery.pathname}/`;
       pushCandidate(withoutQuery.toString());
     }
+
+    if (withoutQuery.hostname === 'www.facebook.com') {
+      const mobileVariant = new URL(withoutQuery.toString());
+      mobileVariant.hostname = 'm.facebook.com';
+      pushCandidate(mobileVariant.toString());
+    }
   } catch {
     // No-op: malformed URL candidate already handled by caller validations.
   }
@@ -103,125 +115,6 @@ function buildListingFetchCandidates(listingUrl: string, listingId: string | nul
   return candidates;
 }
 
-async function fetchMarketplaceHtmlCandidate(listingUrl: string): Promise<{
-  html: string;
-  status: number;
-}> {
-  const abortController = new AbortController();
-  const timeoutId = setTimeout(() => {
-    abortController.abort();
-  }, UPSTREAM_FETCH_TIMEOUT_MS);
-
-  try {
-    const response = await fetch(listingUrl, {
-      method: 'GET',
-      headers: {
-        'accept-language': 'en-US,en;q=0.9',
-        accept:
-          'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
-        'user-agent':
-          'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-        referer: 'https://www.facebook.com/marketplace/',
-      },
-      cache: 'no-store',
-      signal: abortController.signal,
-    });
-
-    const responseText = await response.text();
-
-    if (!response.ok) {
-      throw new UpstreamHtmlError(
-        `Marketplace HTML request failed with status ${response.status}`,
-        response.status,
-        responseText.slice(0, 1000),
-      );
-    }
-
-    if (!responseText || responseText.trim().length === 0) {
-      throw new UpstreamHtmlError('Marketplace HTML response was empty', 502);
-    }
-
-    if (looksLikeFacebookGenericErrorPage(responseText)) {
-      throw new UpstreamHtmlError(
-        'Marketplace HTML fetch returned a Facebook generic error page.',
-        502,
-        responseText.slice(0, 1000),
-      );
-    }
-
-    if (looksLikeFacebookAuthWall(responseText)) {
-      throw new UpstreamHtmlError(
-        'Marketplace HTML fetch returned Facebook login/interstitial content.',
-        502,
-      );
-    }
-
-    return {
-      html: responseText,
-      status: response.status,
-    };
-  } catch (caughtError) {
-    if (abortController.signal.aborted) {
-      throw new UpstreamHtmlError('Marketplace HTML request timed out.', 504);
-    }
-
-    if (caughtError instanceof UpstreamHtmlError) {
-      throw caughtError;
-    }
-
-    throw new UpstreamHtmlError(
-      caughtError instanceof Error ? caughtError.message : 'Marketplace HTML request failed.',
-      502,
-    );
-  } finally {
-    clearTimeout(timeoutId);
-  }
-}
-
-async function fetchMarketplaceHtml(listingUrl: string): Promise<{
-  html: string;
-  status: number;
-  sourceUrl: string;
-  attemptedUrls: string[];
-}> {
-  return fetchMarketplaceHtmlWithFallback(listingUrl, null);
-}
-
-async function fetchMarketplaceHtmlWithFallback(
-  listingUrl: string,
-  listingId: string | null,
-): Promise<{
-  html: string;
-  status: number;
-  sourceUrl: string;
-  attemptedUrls: string[];
-}> {
-  const attemptedUrls = buildListingFetchCandidates(listingUrl, listingId);
-  let lastError: UpstreamHtmlError | null = null;
-
-  for (const candidateUrl of attemptedUrls) {
-    try {
-      const result = await fetchMarketplaceHtmlCandidate(candidateUrl);
-      return {
-        ...result,
-        sourceUrl: candidateUrl,
-        attemptedUrls,
-      };
-    } catch (caughtError) {
-      if (caughtError instanceof UpstreamHtmlError) {
-        lastError = caughtError;
-        continue;
-      }
-
-      lastError = new UpstreamHtmlError(
-        caughtError instanceof Error ? caughtError.message : 'Marketplace HTML request failed.',
-      );
-    }
-  }
-
-  throw lastError ?? new UpstreamHtmlError('Marketplace HTML request failed.');
-}
-
 export async function GET(request: NextRequest) {
   try {
     const requestedItemId = request.nextUrl.searchParams.get('itemId');
@@ -229,7 +122,10 @@ export async function GET(request: NextRequest) {
 
     if (!requestedItemId && !requestedListingUrl) {
       console.error('Marketplace listing request missing required listing identifier');
-      return NextResponse.json({ error: 'itemId or listingUrl is required' }, { status: 400 });
+      return NextResponse.json(
+        { success: false, error: 'itemId or listingUrl is required' },
+        { status: 400 },
+      );
     }
 
     const parsedListingFromUrl = requestedListingUrl
@@ -247,7 +143,10 @@ export async function GET(request: NextRequest) {
         requestedItemId,
         requestedListingUrl,
       });
-      return NextResponse.json({ error: 'Unable to resolve listing URL' }, { status: 400 });
+      return NextResponse.json(
+        { success: false, error: 'Unable to resolve listing URL' },
+        { status: 400 },
+      );
     }
 
     let staleCache: ListingCacheEntry<NormalizedMarketplaceListing> | null = null;
@@ -296,7 +195,32 @@ export async function GET(request: NextRequest) {
     let parserMetadata: unknown;
 
     try {
-      const upstreamHtml = await fetchMarketplaceHtmlWithFallback(listingUrl, listingId);
+      const upstreamHtml = await fetchMarketplaceHtmlWithFallback({
+        urls: buildListingFetchCandidates(listingUrl, listingId),
+        referer: 'https://www.facebook.com/marketplace/',
+        bootstrapUrl: 'https://www.facebook.com/marketplace/',
+        timeoutMs:
+          getPositiveIntEnv('MARKETPLACE_HTML_TIMEOUT_MS') ??
+          DEFAULT_UPSTREAM_FETCH_TIMEOUT_MS,
+        validators: [
+          (html) =>
+            looksLikeFacebookGenericErrorPage(html)
+              ? {
+                  reason: 'Marketplace HTML fetch returned a Facebook generic error page.',
+                  status: 502,
+                  details: html,
+                }
+              : null,
+          (html) =>
+            looksLikeFacebookAuthWall(html)
+              ? {
+                  reason: 'Marketplace HTML fetch returned Facebook login/interstitial content.',
+                  status: 502,
+                }
+              : null,
+        ],
+      });
+
       const parsedListing = parseMarketplaceListingHtml({
         html: upstreamHtml.html,
         requestedItemId: listingId,
@@ -308,12 +232,17 @@ export async function GET(request: NextRequest) {
         upstreamStatus: upstreamHtml.status,
         sourceUrl: upstreamHtml.sourceUrl,
         attemptedUrls: upstreamHtml.attemptedUrls,
+        attempts: upstreamHtml.attempts,
+        transport: upstreamHtml.transport,
+        usedBootstrapCookies: upstreamHtml.usedBootstrapCookies,
+        usedPlaywrightBootstrap: upstreamHtml.usedPlaywrightBootstrap,
+        playwrightConnectionMode: upstreamHtml.playwrightConnectionMode,
         parse: parsedListing.metadata,
       };
     } catch (caughtError) {
       if (staleCache) {
         const reason =
-          caughtError instanceof UpstreamHtmlError
+          caughtError instanceof MarketplaceHtmlFetchError
             ? `upstream-html-${caughtError.status}`
             : 'upstream-html-parse-failure';
 
@@ -326,9 +255,10 @@ export async function GET(request: NextRequest) {
         return getStaleFallbackResponse(staleCache, reason);
       }
 
-      if (caughtError instanceof UpstreamHtmlError) {
+      if (caughtError instanceof MarketplaceHtmlFetchError) {
         return NextResponse.json(
           {
+            success: false,
             error: caughtError.message,
             details: caughtError.details,
           },
@@ -369,6 +299,7 @@ export async function GET(request: NextRequest) {
     console.error('Marketplace listing fetch failed:', caughtError);
     return NextResponse.json(
       {
+        success: false,
         error:
           caughtError instanceof Error
             ? caughtError.message

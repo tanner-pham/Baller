@@ -563,5 +563,19 @@ export function looksLikeFacebookAuthWall(html: string): boolean {
     lowerHtml.includes('you must log in to continue') ||
     lowerHtml.includes('please log in to continue');
 
-  return hasLoginForm || hasLoginRedirect || hasExplicitAuthMessage;
+  if (!hasLoginForm && !hasLoginRedirect && !hasExplicitAuthMessage) {
+    return false;
+  }
+
+  const hasMarketplaceDataSignals =
+    lowerHtml.includes('marketplace_listing_title') ||
+    lowerHtml.includes('"marketplace_search"') ||
+    lowerHtml.includes('"listing_price"') ||
+    lowerHtml.includes('primary_listing_photo') ||
+    lowerHtml.includes('marketplace_listing_link') ||
+    lowerHtml.includes('product photo of');
+
+  // Facebook can render a login modal on top of real marketplace payloads.
+  // Treat it as an auth wall only when marketplace data signals are absent.
+  return !hasMarketplaceDataSignals;
 }

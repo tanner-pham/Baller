@@ -24,10 +24,10 @@ This folder contains App Router pages, API route handlers, and UI components.
 | `src/app/api/assess-condition/normalize.ts` | Normalizes and validates model JSON payload. | `parseAssessmentResponse`, `isOpenAIErrorWithCode` | `types.ts` |
 | `src/app/api/assess-condition/types.ts` | Condition assessment type contracts. | `CONDITION_LABELS`, `ParsedAssessment` | n/a |
 | `src/app/api/assess-condition/route.test.ts` | Mocha/Chai behavior tests for response shapes and error handling. | tests only | mocha/chai |
-| `src/app/api/marketplace-listing/route.ts` | Marketplace listing API endpoint backed by direct HTML parsing with 48h DB cache + stale fallback. | `GET` | `parseHtml.ts`, server cache helpers |
+| `src/app/api/marketplace-listing/route.ts` | Marketplace listing API endpoint backed by HTML parsing + shared transport (Playwright/http) with 48h DB cache + stale fallback. | `GET` | `parseHtml.ts`, `src/lib/server/facebookMarketplaceHtmlFetcher.ts`, server cache helpers |
 | `src/app/api/marketplace-listing/parseHtml.ts` | Shared HTML parser and query builder for listing + search extraction workflows. | `parseMarketplaceListingHtml`, `parseMarketplaceSearchHtml`, `buildMarketplaceSearchUrl` | `types.ts` |
 | `src/app/api/marketplace-listing/types.ts` | Internal normalized response types. | `NormalizedMarketplaceListing`, `NormalizedSimpleListing`, `NormalizedSimilarListing` | n/a |
-| `src/app/api/simple-listings/route.ts` | Backend-only endpoint that fetches search HTML and returns parsed simple listings after listing cache is available. | `GET` | marketplace parser + server cache helpers |
+| `src/app/api/simple-listings/route.ts` | Backend-only endpoint that fetches search HTML and returns parsed simple listings after listing cache is available. | `GET` | marketplace parser, `src/lib/server/facebookMarketplaceHtmlFetcher.ts`, server cache helpers |
 
 ## Shared Landing Components
 

@@ -99,6 +99,11 @@ See folder-level docs for file-by-file maps:
    - `SUPABASE_ANON_KEY` - Supabase anonymous/public key
    - `SUPABASE_SERVICE_ROLE_KEY` - Supabase service role key (server-only)
    - `OPENAI_API_KEY` - OpenAI API key for GPT-4o-mini
+   - `MARKETPLACE_HTML_FETCH_MODE` - `auto`, `playwright`, or `http` (default `auto`)
+   - `BROWSERLESS_WS_URL` - Browserless Playwright websocket URL for Marketplace HTML fetches
+
+   Optional variables:
+   - `FACEBOOK_COOKIE_HEADER` - Cookie header string for logged-in Marketplace access when needed
 
    **Getting API Keys:**
    - Supabase: https://supabase.com/dashboard (create project → Settings → API)
@@ -186,6 +191,9 @@ Tests run automatically on:
    - `SUPABASE_ANON_KEY`
    - `SUPABASE_SERVICE_ROLE_KEY` (server-only)
    - `OPENAI_API_KEY`
+   - `MARKETPLACE_HTML_FETCH_MODE` (`auto`, `playwright`, `http`)
+   - `BROWSERLESS_WS_URL` (required for Playwright transport)
+   - `FACEBOOK_COOKIE_HEADER` (optional)
 
 ## Local Development
 

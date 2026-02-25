@@ -176,5 +176,10 @@ describe('Marketplace HTML parser', () => {
     expect(looksLikeFacebookAuthWall(authWallHtml)).to.equal(true);
     expect(looksLikeFacebookAuthWall('<html><body>Marketplace content</body></html>')).to.equal(false);
     expect(looksLikeFacebookAuthWall('<html><body>Create a new account</body></html>')).to.equal(false);
+    expect(
+      looksLikeFacebookAuthWall(
+        '<html><body><form id="login_form"></form><script>{"data":{"marketplace_search":{"feed_units":{"edges":[]}}}}</script></body></html>',
+      ),
+    ).to.equal(false);
   });
 });
