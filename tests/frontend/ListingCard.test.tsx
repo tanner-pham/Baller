@@ -22,9 +22,9 @@ describe('ListingCard Component', () => {
   const ballerUrl = '/dashboard?listingUrl=https%3A%2F%2Ffacebook.com%2Fmarketplace%2Fitem%2F123';
 
   describe('with ballerUrl provided', () => {
-    it('renders "VIEW LISTING" text', () => {
+    it('renders "VIEW ON FACEBOOK" text', () => {
       render(<ListingCard {...defaultProps} ballerUrl={ballerUrl} />);
-      expect(screen.getByText('VIEW LISTING')).toBeInTheDocument();
+      expect(screen.getByText('VIEW ON FACEBOOK')).toBeInTheDocument();
     });
 
     it('renders "RUN IN BALLER" text', () => {
@@ -34,13 +34,13 @@ describe('ListingCard Component', () => {
 
     it('renders both buttons simultaneously (two buttons side by side)', () => {
       render(<ListingCard {...defaultProps} ballerUrl={ballerUrl} />);
-      expect(screen.getByText('VIEW LISTING')).toBeInTheDocument();
+      expect(screen.getByText('VIEW ON FACEBOOK')).toBeInTheDocument();
       expect(screen.getByText('RUN IN BALLER')).toBeInTheDocument();
     });
 
-    it('renders "VIEW LISTING" inside a plain anchor with correct attributes', () => {
+    it('renders "VIEW ON FACEBOOK" inside a plain anchor with correct attributes', () => {
       render(<ListingCard {...defaultProps} ballerUrl={ballerUrl} />);
-      const viewLink = screen.getByText('VIEW LISTING').closest('a');
+      const viewLink = screen.getByText('VIEW ON FACEBOOK').closest('a');
       expect(viewLink).toHaveAttribute('href', defaultProps.link);
       expect(viewLink).toHaveAttribute('target', '_blank');
       expect(viewLink).toHaveAttribute('rel', 'noopener noreferrer');
@@ -50,13 +50,6 @@ describe('ListingCard Component', () => {
       render(<ListingCard {...defaultProps} ballerUrl={ballerUrl} />);
       const ballerLink = screen.getByText('RUN IN BALLER').closest('a');
       expect(ballerLink).toHaveAttribute('href', ballerUrl);
-    });
-
-    it('shows hover expand subtext for VIEW LISTING on hover', () => {
-      render(<ListingCard {...defaultProps} ballerUrl={ballerUrl} />);
-      const viewBtn = screen.getByText('VIEW LISTING').closest('a')!.parentElement!;
-      fireEvent.mouseEnter(viewBtn);
-      expect(screen.getByText('View on Facebook')).toBeInTheDocument();
     });
 
     it('shows hover expand subtext for RUN IN BALLER on hover', () => {
@@ -96,7 +89,7 @@ describe('ListingCard Component', () => {
 
     it('renders all three buttons simultaneously', () => {
       render(<ListingCard {...defaultProps} ballerUrl={ballerUrl} compareUrl={compareUrl} />);
-      expect(screen.getByText('VIEW LISTING')).toBeInTheDocument();
+      expect(screen.getByText('VIEW ON FACEBOOK')).toBeInTheDocument();
       expect(screen.getByText('RUN IN BALLER')).toBeInTheDocument();
       expect(screen.getByText('COMPARE')).toBeInTheDocument();
     });
@@ -130,9 +123,9 @@ describe('ListingCard Component', () => {
   });
 
   describe('without ballerUrl (backward compatibility)', () => {
-    it('renders only "VIEW LISTING" button', () => {
+    it('renders only "VIEW ON FACEBOOK" button', () => {
       render(<ListingCard {...defaultProps} />);
-      expect(screen.getByText('VIEW LISTING')).toBeInTheDocument();
+      expect(screen.getByText('VIEW ON FACEBOOK')).toBeInTheDocument();
     });
 
     it('does not render "RUN IN BALLER" button', () => {

@@ -145,9 +145,9 @@ describe('CompareBar Component', () => {
       const { container } = render(
         <CompareBar selections={[selection1]} onRemove={mockOnRemove} onClear={mockOnClear} />
       );
-      const bar = container.firstChild as HTMLElement;
-      expect(bar.className).toContain('border-t');
-      expect(bar.className).toContain('border-black');
+      const innerBar = (container.firstChild as HTMLElement).querySelector('.border-t-5') as HTMLElement;
+      expect(innerBar).not.toBeNull();
+      expect(innerBar.className).toContain('border-black');
     });
   });
 });

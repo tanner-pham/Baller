@@ -87,6 +87,10 @@ Recent decisions affecting current work:
 - [03-02]: VerdictCard uses 0.3 threshold (30% visible) for one-shot scroll-reveal trigger
 - [03-02]: TOO_CLOSE_TO_CALL passes null winnerSide so neither column highlights
 
+### Roadmap Evolution
+
+- Phase 4 added: UI Revamp with frontend-design skill
+
 ### Pending Todos
 
 None yet.

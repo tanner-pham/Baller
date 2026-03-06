@@ -72,3 +72,13 @@ Phases execute in numeric order: 1 -> 2 -> 3
 | 1. One-Click Re-Analyze | 2/2 | Complete | - |
 | 2. Comparison View | 3/3 | Complete |  |
 | 3. Pros/Cons and Verdict | 2/2 | Complete | - |
+
+### Phase 4: UI Revamp with frontend-design skill
+
+**Goal:** [To be planned]
+**Requirements**: TBD
+**Depends on:** Phase 3
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd:plan-phase 4 to break down)
