@@ -24,14 +24,17 @@ export function SimilarListings({ listings }: SimilarListingsProps) {
           </h1>
 
           <div className="mb-6 flex snap-x snap-mandatory gap-8 overflow-x-auto no-scrollbar">
-            {listings.map((listing) => (
-              <div
-                key={`${listing.link}-${listing.title}`}
-                className="w-[calc((100%_-_3*2rem)/4)] flex-shrink-0 snap-start"
-              >
-                <ListingCard {...listing} />
-              </div>
-            ))}
+            {listings.map((listing) => {
+              const ballerUrl = `/dashboard?listingUrl=${encodeURIComponent(listing.link)}`;
+              return (
+                <div
+                  key={`${listing.link}-${listing.title}`}
+                  className="w-[calc((100%_-_3*2rem)/4)] flex-shrink-0 snap-start"
+                >
+                  <ListingCard {...listing} ballerUrl={ballerUrl} />
+                </div>
+              );
+            })}
           </div>
 
           <div className="absolute bottom-6 right-7">
