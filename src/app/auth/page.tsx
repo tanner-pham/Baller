@@ -77,7 +77,7 @@ export default function AuthPage() {
           return;
         }
 
-        setSuccessMessage('Account created. Please log in.');
+        setSuccessMessage('Account created! Please check your inbox and verify your email before logging in.');
         setMode('login');
         setPassword('');
         setIsSubmitting(false);
