@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { X } from 'lucide-react';
+import { AnalysisProgress } from './(components)/AnalysisProgress';
 import { SimilarListings } from './(components)/SimilarListings';
 import { CurrentListing } from './(components)/CurrentListing';
 import { PricingAnalysis } from './(components)/PriceAnalysis';
@@ -62,6 +63,19 @@ function computeMarketValue(
 
   const avg = Math.round(prices.reduce((sum, p) => sum + p, 0) / prices.length);
   return `$${avg.toLocaleString()}`;
+}
+
+const ANALYSIS_STEPS = ['Fetching listing', 'Analyzing condition', 'Finalizing'];
+
+function getProgressStep(
+  isListingLoading: boolean,
+  isConditionLoading: boolean,
+  hasConditionResolved: boolean,
+): number {
+  if (isListingLoading) return 0;
+  if (isConditionLoading) return 1;
+  if (!hasConditionResolved) return 1; // Still analyzing until condition resolves
+  return 2; // Done / Finalizing
 }
 
 export default function DashboardClient() {
@@ -173,9 +187,10 @@ export default function DashboardClient() {
       )}
 
       {isDashboardLoading ? (
-        <div className={`p-20 text-center ${anton} uppercase text-3xl animate-pulse`}>
-          Analyzing Listing...
-        </div>
+        <AnalysisProgress
+          currentStep={getProgressStep(isListingLoading, isConditionLoading, hasConditionResolved)}
+          steps={ANALYSIS_STEPS}
+        />
       ) : (
         <>
           {/* Issue 2: Only show Previous Listings for authenticated users */}
