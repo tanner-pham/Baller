@@ -84,9 +84,12 @@ describe('CompareBar Component', () => {
       render(
         <CompareBar selections={[selection1]} onRemove={mockOnRemove} onClear={mockOnClear} />
       );
-      const compareBtn = screen.getByText('COMPARE').closest('span');
-      expect(compareBtn?.className).toContain('bg-gray-300');
-      expect(compareBtn?.className).toContain('cursor-not-allowed');
+      // The outer wrapper span contains the disabled styling classes
+      const innerSpan = screen.getByText('COMPARE');
+      const outerSpan = innerSpan.parentElement;
+      expect(outerSpan?.tagName).toBe('SPAN');
+      expect(outerSpan?.className).toContain('bg-gray-300');
+      expect(outerSpan?.className).toContain('cursor-not-allowed');
     });
   });
 

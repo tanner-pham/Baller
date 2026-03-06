@@ -5,10 +5,12 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { X } from 'lucide-react';
 import { AnalysisProgress } from './(components)/AnalysisProgress';
 import { SimilarListings } from './(components)/SimilarListings';
+import { CompareBar } from './(components)/CompareBar';
 import { CurrentListing } from './(components)/CurrentListing';
 import { PricingAnalysis } from './(components)/PriceAnalysis';
 import { Navigation } from '../(components)/Navigation';
 import { parseFacebookMarketplaceListingUrl } from '../../lib/facebookMarketplaceListing';
+import type { CompareSelection } from './(components)/SimilarListings';
 
 import {
   sectionBorderB4P15,
@@ -21,6 +23,7 @@ import {
   shadow8,
   anton,
   space,
+  pressable,
 } from '../consts';
 
 import {
@@ -82,6 +85,7 @@ export default function DashboardClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [showSignInPopup, setShowSignInPopup] = useState(false);
+  const [compareSelections, setCompareSelections] = useState<CompareSelection[]>([]);
   const listingUrlParam = searchParams.get('listingUrl') ?? '';
 
   const parsedListing = useMemo(
@@ -129,6 +133,26 @@ export default function DashboardClient() {
   const handleUnauthSearchAttempt = () => {
     setShowSignInPopup(true);
   };
+
+  // Compare selection handlers
+  const handleToggleCompare = (selection: CompareSelection) => {
+    setCompareSelections(prev => {
+      const exists = prev.some(s => s.url === selection.url);
+      if (exists) return prev.filter(s => s.url !== selection.url);
+      if (prev.length >= 2) return prev; // Already full
+      return [...prev, selection];
+    });
+  };
+
+  const handleRemoveCompare = (selection: CompareSelection) => {
+    setCompareSelections(prev => prev.filter(s => s.url !== selection.url));
+  };
+
+  const handleClearCompare = () => {
+    setCompareSelections([]);
+  };
+
+  const isCurrentListingSelected = compareSelections.some(s => s.url === listingUrlParam);
 
   const isDashboardLoading = isListingLoading || isConditionLoading || (parsedListing && !hasConditionResolved);
   const shouldShowEmptyState = !parsedListing && !isDashboardLoading;
@@ -256,6 +280,27 @@ export default function DashboardClient() {
                   conditionScore={conditionAssessment?.conditionScore}
                   conditionLabel={conditionAssessment?.conditionLabel}
                />
+               {/* Add to Compare button for current listing */}
+               {listingUrlParam && (
+                 <div className={`${sectionBorderB4P15} bg-[#90EE90] -mt-[1px] flex justify-center`}>
+                   <button
+                     type="button"
+                     onClick={() => handleToggleCompare({
+                       url: listingUrlParam,
+                       title: displayTitle,
+                       price: displayPrice,
+                       image: displayImage,
+                     })}
+                     className={`${b5} ${roundedXl} px-4 py-2 ${shadow4} ${pressable} ${anton} text-sm uppercase ${
+                       isCurrentListingSelected
+                         ? 'bg-[#FF69B4] text-white'
+                         : 'bg-[#FF69B4] text-black'
+                     }`}
+                   >
+                     {isCurrentListingSelected ? 'REMOVE FROM COMPARE' : 'ADD TO COMPARE'}
+                   </button>
+                 </div>
+               )}
                {/* Issue 4: Market value computed from listing + similar listings average */}
                <PricingAnalysis
                   suggestedOffer={conditionAssessment?.suggestedOffer || "Calculating..."}
@@ -266,16 +311,26 @@ export default function DashboardClient() {
                />
                {/* Issue 3: Render similar listings from both similarListings and simpleListings */}
                {activeMarketplaceListing?.similarListings && activeMarketplaceListing.similarListings.length > 0 && (
-                 <SimilarListings listings={activeMarketplaceListing.similarListings} />
+                 <SimilarListings
+                   listings={activeMarketplaceListing.similarListings}
+                   currentListingUrl={listingUrlParam}
+                   onToggleCompare={handleToggleCompare}
+                   compareSelections={compareSelections}
+                 />
                )}
                {!activeMarketplaceListing?.similarListings?.length && activeMarketplaceListing?.simpleListings && activeMarketplaceListing.simpleListings.length > 0 && (
-                 <SimilarListings listings={activeMarketplaceListing.simpleListings.map(sl => ({
-                   title: sl.title,
-                   location: sl.location,
-                   price: Number(sl.price.replace(/[^\d.]/g, '')) || 0,
-                   image: sl.image,
-                   link: sl.link,
-                 }))} />
+                 <SimilarListings
+                   listings={activeMarketplaceListing.simpleListings.map(sl => ({
+                     title: sl.title,
+                     location: sl.location,
+                     price: Number(sl.price.replace(/[^\d.]/g, '')) || 0,
+                     image: sl.image,
+                     link: sl.link,
+                   }))}
+                   currentListingUrl={listingUrlParam}
+                   onToggleCompare={handleToggleCompare}
+                   compareSelections={compareSelections}
+                 />
                )}
             </div>
           )}
@@ -311,6 +366,15 @@ export default function DashboardClient() {
             </section>
           )}
         </>
+      )}
+
+      {/* Sticky compare bar - renders when 1+ listings selected, z-40 below sign-in modal z-50 */}
+      {compareSelections.length > 0 && (
+        <CompareBar
+          selections={compareSelections}
+          onRemove={handleRemoveCompare}
+          onClear={handleClearCompare}
+        />
       )}
     </main>
   );
