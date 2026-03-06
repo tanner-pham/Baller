@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 02-03 Diff Highlighting
-last_updated: "2026-03-06T05:58:14.670Z"
-last_activity: 2026-03-06 — Completed 02-03 Diff Highlighting (DiffSummaryBanner + PriceComparison + ConditionComparison)
+stopped_at: Completed 03-01 Pros/Cons Engine and Verdict API
+last_updated: "2026-03-06T08:14:02Z"
+last_activity: 2026-03-06 — Completed 03-01 Pros/Cons Engine and Verdict API (prosConsEngine + /api/compare-verdict)
 progress:
   total_phases: 3
   completed_phases: 2
-  total_plans: 5
-  completed_plans: 5
-  percent: 100
+  total_plans: 7
+  completed_plans: 6
+  percent: 86
 ---
 
 # Project State
@@ -21,23 +21,23 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-05)
 
 **Core value:** Users can quickly compare multiple Facebook Marketplace listings to confidently decide which one to buy and what to offer.
-**Current focus:** Phase 2 — Comparison View
+**Current focus:** Phase 3 — Pros/Cons and Verdict
 
 ## Current Position
 
-Phase: 2 of 3 (Comparison View) -- COMPLETE
-Plan: 3 of 3 in current phase (02-01, 02-02, 02-03 complete)
+Phase: 3 of 3 (Pros/Cons and Verdict)
+Plan: 1 of 2 in current phase (03-01 complete)
 Status: Executing
-Last activity: 2026-03-06 — Completed 02-03 Diff Highlighting (DiffSummaryBanner + PriceComparison + ConditionComparison)
+Last activity: 2026-03-06 — Completed 03-01 Pros/Cons Engine and Verdict API (prosConsEngine + /api/compare-verdict)
 
-Progress: [██████████] 100%
+Progress: [████████░░] 86%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 5
+- Total plans completed: 6
 - Average duration: 4min
-- Total execution time: 0.32 hours
+- Total execution time: 0.38 hours
 
 **By Phase:**
 
@@ -45,9 +45,10 @@ Progress: [██████████] 100%
 |-------|-------|-------|----------|
 | 01-one-click-re-analyze | 2 | 5min | 2.5min |
 | 02-comparison-view | 3 | 13min | 4.3min |
+| 03-pros-cons-and-verdict | 1 | 4min | 4min |
 
 **Recent Trend:**
-- Last 5 plans: 01-01 (3min), 01-02 (2min), 02-01 (4min), 02-02 (5min), 02-03 (4min)
+- Last 5 plans: 01-02 (2min), 02-01 (4min), 02-02 (5min), 02-03 (4min), 03-01 (4min)
 - Trend: Consistent
 
 *Updated after each plan completion*
@@ -75,6 +76,11 @@ Recent decisions affecting current work:
 - [02-03]: Diff components only render when BOTH listings loaded (leftIsReady && rightIsReady)
 - [02-03]: Neutral tone enforced: no verdict language (reserved for Phase 3)
 - [02-03]: Price $0 treated as invalid (null) to avoid misleading comparisons
+- [03-01]: ProConChip has source field ('rule' | 'ai') for future flexibility; UI treats them identically
+- [03-01]: Listing age comparison requires >1 day difference to avoid same-day noise
+- [03-01]: Verdict normalize caps feature arrays at 3 items per side, defaults to TOO_CLOSE_TO_CALL
+- [03-01]: Images sent with detail:'low' to minimize OpenAI token cost
+- [03-01]: Market value "above market" threshold >10% to avoid flagging marginal differences
 
 ### Pending Todos
 
@@ -88,6 +94,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-06T05:53:01Z
-Stopped at: Completed 02-03 Diff Highlighting
-Resume file: .planning/phases/02-comparison-view/02-03-SUMMARY.md
+Last session: 2026-03-06T08:14:02Z
+Stopped at: Completed 03-01 Pros/Cons Engine and Verdict API
+Resume file: .planning/phases/03-pros-cons-and-verdict/03-01-SUMMARY.md
