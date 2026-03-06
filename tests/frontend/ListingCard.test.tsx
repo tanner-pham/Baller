@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import ListingCard from '@/src/app/dashboard/(components)/ListingCard';
 
 // Mock next/link to render as a plain anchor tag
@@ -50,13 +50,17 @@ describe('ListingCard Component', () => {
       expect(ballerLink).toHaveAttribute('href', ballerUrl);
     });
 
-    it('contains hover expand subtext for VIEW LISTING', () => {
+    it('shows hover expand subtext for VIEW LISTING on hover', () => {
       render(<ListingCard {...defaultProps} ballerUrl={ballerUrl} />);
+      const viewBtn = screen.getByText('VIEW LISTING').closest('a')!.parentElement!;
+      fireEvent.mouseEnter(viewBtn);
       expect(screen.getByText('View on Facebook')).toBeInTheDocument();
     });
 
-    it('contains hover expand subtext for RUN IN BALLER', () => {
+    it('shows hover expand subtext for RUN IN BALLER on hover', () => {
       render(<ListingCard {...defaultProps} ballerUrl={ballerUrl} />);
+      const ballerBtn = screen.getByText('RUN IN BALLER').closest('a')!.parentElement!;
+      fireEvent.mouseEnter(ballerBtn);
       expect(screen.getByText('Full price analysis')).toBeInTheDocument();
     });
   });
