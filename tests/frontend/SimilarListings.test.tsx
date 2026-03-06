@@ -75,4 +75,37 @@ describe('SimilarListings Component', () => {
       );
     });
   });
+
+  describe('compareUrl wiring', () => {
+    const currentListingUrl = 'https://facebook.com/marketplace/item/999';
+
+    it('renders COMPARE button for each listing when currentListingUrl is provided', () => {
+      render(<SimilarListings listings={mockListings} currentListingUrl={currentListingUrl} />);
+      const compareButtons = screen.getAllByText('COMPARE');
+      expect(compareButtons).toHaveLength(2);
+    });
+
+    it('computes compareUrl with correct format: /compare?left={currentListingUrl}&right={listing.link}', () => {
+      render(<SimilarListings listings={mockListings} currentListingUrl={currentListingUrl} />);
+      const compareLinks = screen.getAllByRole('link', { name: /compare/i });
+      // Filter to only COMPARE links (not other links with "compare" text)
+      const actualCompareLinks = compareLinks.filter(link =>
+        link.getAttribute('href')?.startsWith('/compare')
+      );
+      expect(actualCompareLinks).toHaveLength(2);
+      expect(actualCompareLinks[0]).toHaveAttribute(
+        'href',
+        `/compare?left=${encodeURIComponent(currentListingUrl)}&right=${encodeURIComponent('https://facebook.com/marketplace/item/123')}`
+      );
+      expect(actualCompareLinks[1]).toHaveAttribute(
+        'href',
+        `/compare?left=${encodeURIComponent(currentListingUrl)}&right=${encodeURIComponent('https://facebook.com/marketplace/item/456')}`
+      );
+    });
+
+    it('does not render COMPARE button when currentListingUrl is not provided', () => {
+      render(<SimilarListings listings={mockListings} />);
+      expect(screen.queryByText('COMPARE')).not.toBeInTheDocument();
+    });
+  });
 });
