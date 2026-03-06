@@ -1,5 +1,14 @@
 'use client';
 import Link from 'next/link';
+import { ExternalLink, BarChart3 } from 'lucide-react';
+import {
+  anton,
+  space,
+  b5,
+  shadow4,
+  roundedXl,
+  pressable,
+} from '../../consts';
 
 interface ListingCardProps {
   title: string;
@@ -7,6 +16,7 @@ interface ListingCardProps {
   price: number;
   image: string;
   link: string;
+  ballerUrl?: string;
 }
 
 export default function ListingCard({
@@ -15,13 +25,14 @@ export default function ListingCard({
   price,
   image,
   link,
+  ballerUrl,
 }: ListingCardProps) {
   return (
-    <div className="flex cursor-pointer flex-col items-center rounded-xl border-5 border-black bg-[#FADF0B] p-6 text-center shadow-[6px_6px_0px_0px_#000000] transition-all">
+    <div className="flex flex-col items-center rounded-xl border-5 border-black bg-[#FADF0B] p-6 text-center shadow-[6px_6px_0px_0px_#000000] transition-all">
 
       {/* Price */}
       <div className="mb-6 rounded-xl border-5 border-black bg-[#90EE90] px-6 py-3 shadow-[4px_4px_0px_0px_#000000] transition-all">
-        <span className="font-['Anton',sans-serif] text-3xl text-black uppercase">
+        <span className={`${anton} text-3xl text-black uppercase`}>
           ${price.toLocaleString()}
         </span>
       </div>
@@ -37,25 +48,60 @@ export default function ListingCard({
       </div>
 
       {/* Title */}
-      <h2 className="font-['Anton',sans-serif] text-3xl mb-3 text-center text-black">
+      <h2 className={`${anton} text-3xl mb-3 text-center text-black`}>
         {title}
       </h2>
 
       {/* Location */}
-      <p className="font-['Space_Grotesk',sans-serif] font-semibold text-gray-700 text-center mb-6">
+      <p className={`${space} font-semibold text-gray-700 text-center mb-6`}>
         {location}
       </p>
 
-      {/* CTA */}
-      <Link href={link}>
-        <div className="rounded-xl border-5 border-black bg-[#3300FF] px-6 py-3 text-white shadow-[4px_4px_0px_0px_#000000] transition-all hover:translate-x-[-1px] hover:translate-y-[-1px] hover:shadow-[6px_6px_0px_0px_#000000] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none">
-          <span className="font-['Anton',sans-serif] text-base uppercase text-center">
-            VIEW LISTING
-          </span>
+      {/* Button Row */}
+      <div className="flex gap-3 w-full">
+
+        {/* VIEW LISTING - external link */}
+        <div className="group flex-1">
+          <a
+            href={link}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={`block bg-[#3300FF] text-white ${b5} px-4 py-3 ${shadow4} ${roundedXl} ${pressable} overflow-hidden`}
+          >
+            <span className={`${anton} text-base uppercase text-center block`}>
+              VIEW LISTING
+            </span>
+            <div className="max-h-0 overflow-hidden transition-all duration-200 group-hover:max-h-10 group-hover:mt-1">
+              <div className="flex items-center justify-center gap-1">
+                <ExternalLink className="size-3" />
+                <span className={`${space} text-xs font-semibold`}>View on Facebook</span>
+              </div>
+            </div>
+          </a>
         </div>
-      </Link>
+
+        {/* RUN IN BALLER - internal navigation */}
+        {ballerUrl && (
+          <div className="group flex-1">
+            <Link
+              href={ballerUrl}
+              className={`block bg-[#FF6600] text-white ${b5} px-4 py-3 ${shadow4} ${roundedXl} ${pressable} overflow-hidden`}
+            >
+              <span className={`${anton} text-base uppercase text-center block`}>
+                RUN IN BALLER
+              </span>
+              <div className="max-h-0 overflow-hidden transition-all duration-200 group-hover:max-h-10 group-hover:mt-1">
+                <div className="flex items-center justify-center gap-1">
+                  <BarChart3 className="size-3" />
+                  <span className={`${space} text-xs font-semibold`}>Full price analysis</span>
+                </div>
+              </div>
+            </Link>
+          </div>
+        )}
+
+      </div>
 
     </div>
-    
   );
 }
