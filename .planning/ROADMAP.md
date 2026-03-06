@@ -56,18 +56,19 @@ Plans:
 **Success Criteria** (what must be TRUE):
   1. The comparison view displays auto-generated pros and cons for each listing covering price and suggested offer, condition, and features/specs
   2. The comparison view shows a clear "better deal" verdict with human-readable reasoning explaining why one listing is preferred
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 03-01: TBD
+- [ ] 03-01-PLAN.md — Rule-based pros/cons engine and /api/compare-verdict AI endpoint
+- [ ] 03-02-PLAN.md — ProsCons chips, VerdictCard with scroll-reveal, winner highlight, and CompareClient wiring
 
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 → 2 → 3
+Phases execute in numeric order: 1 -> 2 -> 3
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. One-Click Re-Analyze | 0/2 | Planning complete | - |
-| 2. Comparison View | 2/3 | In Progress|  |
-| 3. Pros/Cons and Verdict | 0/0 | Not started | - |
+| 1. One-Click Re-Analyze | 2/2 | Complete | - |
+| 2. Comparison View | 3/3 | Complete |  |
+| 3. Pros/Cons and Verdict | 0/2 | Planning complete | - |
