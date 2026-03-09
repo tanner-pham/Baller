@@ -11,6 +11,7 @@ export interface CurrentListingProps {
   conditionScore?: number;
   conditionLabel?: string;
   compareButton?: React.ReactNode;
+  backToListingButton?: React.ReactNode;
 }
 
 export function CurrentListing({
@@ -23,6 +24,7 @@ export function CurrentListing({
   conditionScore,
   conditionLabel,
   compareButton,
+  backToListingButton,
 }: CurrentListingProps) {
   return (
     <div className="bg-[#90EE90] px-15 pt-6 pb-15">
@@ -97,8 +99,9 @@ export function CurrentListing({
               )}
             </div>
 
-            {compareButton && (
-              <div className="mt-4">
+            {(backToListingButton || compareButton) && (
+              <div className="mt-4 flex flex-wrap items-center gap-3">
+                {backToListingButton}
                 {compareButton}
               </div>
             )}

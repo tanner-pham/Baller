@@ -165,6 +165,7 @@ export default function DashboardClient() {
   };
 
   const isCurrentListingSelected = compareSelections.some(s => s.url === listingUrlParam);
+  const currentListingActionButtonClass = `${b5} ${roundedXl} px-4 py-2 ${shadow4} ${pressable} ${anton} text-sm uppercase`;
 
   const isDashboardLoading = isListingLoading || isConditionLoading || (parsedListing && !hasConditionResolved);
   const shouldShowEmptyState = !parsedListing && !isDashboardLoading;
@@ -326,6 +327,15 @@ export default function DashboardClient() {
                   listingDate={activeMarketplaceListing?.listingDate || "Recently"}
                   conditionScore={conditionAssessment?.conditionScore}
                   conditionLabel={conditionAssessment?.conditionLabel}
+                  backToListingButton={listingUrlParam ? (
+                    <button
+                      type="button"
+                      onClick={() => window.open(listingUrlParam, '_blank', 'noopener,noreferrer')}
+                      className={`${currentListingActionButtonClass} bg-[#3300FF] text-white`}
+                    >
+                      BACK TO LISTING
+                    </button>
+                  ) : undefined}
                   compareButton={listingUrlParam ? (
                     <button
                       type="button"
@@ -335,7 +345,7 @@ export default function DashboardClient() {
                         price: displayPrice,
                         image: displayImage,
                       })}
-                      className={`${b5} ${roundedXl} px-4 py-2 ${shadow4} ${pressable} ${anton} text-sm uppercase ${
+                      className={`${currentListingActionButtonClass} ${
                         isCurrentListingSelected
                           ? 'bg-[#FF69B4] text-white'
                           : 'bg-[#FF69B4] text-black'
