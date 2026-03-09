@@ -3,9 +3,9 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: completed
-stopped_at: Completed 03-02 ProsCons Chips, VerdictCard, and CompareClient Wiring -- ALL MILESTONE PLANS COMPLETE
-last_updated: "2026-03-06T08:32:31.921Z"
-last_activity: 2026-03-06 — Completed 03-02 ProsCons Chips, VerdictCard, and CompareClient Wiring (all milestone plans done)
+stopped_at: Completed quick task 1: Fix intermittent marketplace listing scrape race where image and description are sometimes missing or wrong; verify the fix
+last_updated: "2026-03-09T02:21:16Z"
+last_activity: 2026-03-09 — Completed quick task 1: Fix intermittent marketplace listing scrape race where image and description are sometimes missing or wrong; verify the fix
 progress:
   total_phases: 3
   completed_phases: 3
@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-03-05)
 Phase: 3 of 3 (Pros/Cons and Verdict)
 Plan: 2 of 2 in current phase (03-02 complete)
 Status: Complete
-Last activity: 2026-03-06 — Completed 03-02 ProsCons Chips, VerdictCard, and CompareClient Wiring (all milestone plans done)
+Last activity: 2026-03-09 — Completed quick task 1: Fix intermittent marketplace listing scrape race where image and description are sometimes missing or wrong; verify the fix
 
 Progress: [██████████] 100%
 
@@ -86,6 +86,7 @@ Recent decisions affecting current work:
 - [03-02]: IntersectionObserver only created when verdict data is loaded to prevent premature winner highlight
 - [03-02]: VerdictCard uses 0.3 threshold (30% visible) for one-shot scroll-reveal trigger
 - [03-02]: TOO_CLOSE_TO_CALL passes null winnerSide so neither column highlights
+- [Quick-001]: Marketplace listing fetch waits for detail signals, retries once on shell HTML, and only caches detail-ready listing payloads
 
 ### Roadmap Evolution
 
@@ -101,8 +102,14 @@ None yet.
 - [Research]: Not all similar listing URLs may be scrapeable (auth walls, removed listings)
 - [Research]: Comparison view container decision (new page vs. modal vs. inline) still open -- resolve during Phase 2 planning
 
+### Quick Tasks Completed
+
+| # | Description | Date | Commit | Directory |
+|---|-------------|------|--------|-----------|
+| 1 | Fix intermittent marketplace listing scrape race where image and description are sometimes missing or wrong; verify the fix | 2026-03-09 | caa726c | [1-fix-intermittent-marketplace-listing-scr](./quick/1-fix-intermittent-marketplace-listing-scr/) |
+
 ## Session Continuity
 
-Last session: 2026-03-06T08:26:36Z
-Stopped at: Completed 03-02 ProsCons Chips, VerdictCard, and CompareClient Wiring -- ALL MILESTONE PLANS COMPLETE
-Resume file: .planning/phases/03-pros-cons-and-verdict/03-02-SUMMARY.md
+Last session: 2026-03-09T02:21:16Z
+Stopped at: Completed quick task 1: Fix intermittent marketplace listing scrape race where image and description are sometimes missing or wrong; verify the fix
+Resume file: .planning/quick/1-fix-intermittent-marketplace-listing-scr/1-SUMMARY.md
