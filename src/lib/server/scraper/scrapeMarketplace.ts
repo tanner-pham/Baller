@@ -12,9 +12,15 @@ import {
   fetchMarketplaceHtmlWithFallback,
   MarketplaceHtmlFetchError,
 } from '../facebookMarketplaceHtmlFetcher';
+import {
+  getMarketplaceListingCompletenessScore,
+  hasMarketplaceListingDescription,
+  hasMarketplaceListingImage,
+} from '../marketplaceListingQuality';
 
 const DEFAULT_LISTING_FETCH_TIMEOUT_MS = 15_000;
 const DEFAULT_SEARCH_FETCH_TIMEOUT_MS = 15_000;
+const RETRY_LISTING_FETCH_TIMEOUT_MS = 25_000;
 
 function buildFetchCandidates(url: string): string[] {
   const candidates: string[] = [];
@@ -77,6 +83,41 @@ function mergeSearchMatchIntoListing(
   };
 }
 
+function shouldRetryIncompleteListingFetch(input: {
+  listing: NormalizedMarketplaceListing;
+  metadata: {
+    listingCandidates: number;
+  };
+  transport: 'http' | 'playwright-local' | 'playwright-browserless';
+  capturedGraphqlPayloadMatchingItemIdCount: number;
+}): boolean {
+  const missingImage = !hasMarketplaceListingImage(input.listing);
+  const missingDescription = !hasMarketplaceListingDescription(input.listing);
+
+  if (!missingImage && !missingDescription) {
+    return false;
+  }
+
+  if (input.transport === 'http') {
+    return false;
+  }
+
+  return (
+    input.metadata.listingCandidates === 0 ||
+    input.capturedGraphqlPayloadMatchingItemIdCount === 0
+  );
+}
+
+function pickHigherQualityListing(
+  currentListing: NormalizedMarketplaceListing,
+  candidateListing: NormalizedMarketplaceListing,
+): NormalizedMarketplaceListing {
+  const currentScore = getMarketplaceListingCompletenessScore(currentListing);
+  const candidateScore = getMarketplaceListingCompletenessScore(candidateListing);
+
+  return candidateScore >= currentScore ? candidateListing : currentListing;
+}
+
 /**
  * Scrape a Facebook Marketplace listing and its comparables.
  *
@@ -102,12 +143,14 @@ export async function scrapeMarketplaceListing(
 
   // Step 2: Parse listing from HTML
   let listing: NormalizedMarketplaceListing;
+  let listingMetadata: { listingCandidates: number };
   try {
     const parsed = parseMarketplaceListingHtml({
       html: listingFetchResult.html,
       requestedItemId: listingId,
     });
     listing = parsed.listing;
+    listingMetadata = parsed.metadata;
   } catch (parseError) {
     throw new MarketplaceHtmlFetchError(
       parseError instanceof Error
@@ -149,8 +192,49 @@ export async function scrapeMarketplaceListing(
   // Step 4: Fill missing listing fields from search results
   // (when unauthenticated, listing page only returns og: meta — price/location
   // come from matching the listing in search results)
-  if (!listing.price || !listing.location) {
+  if (!listing.price || !listing.location || !hasMarketplaceListingImage(listing)) {
     listing = mergeSearchMatchIntoListing(listing, simpleListings, listingId);
+  }
+
+  if (
+    shouldRetryIncompleteListingFetch({
+      listing,
+      metadata: listingMetadata,
+      transport: listingFetchResult.transport,
+      capturedGraphqlPayloadMatchingItemIdCount:
+        listingFetchResult.capturedGraphqlPayloadMatchingItemIdCount,
+    })
+  ) {
+    try {
+      const retryFetchResult = await fetchMarketplaceHtmlWithFallback({
+        urls: buildFetchCandidates(listingUrl),
+        referer: 'https://www.facebook.com/marketplace/',
+        bootstrapUrl: 'https://www.facebook.com/marketplace/',
+        timeoutMs: RETRY_LISTING_FETCH_TIMEOUT_MS,
+      });
+
+      const retryParsed = parseMarketplaceListingHtml({
+        html: retryFetchResult.html,
+        requestedItemId: listingId,
+      });
+
+      let retriedListing = retryParsed.listing;
+
+      if (
+        !retriedListing.price ||
+        !retriedListing.location ||
+        !hasMarketplaceListingImage(retriedListing)
+      ) {
+        retriedListing = mergeSearchMatchIntoListing(retriedListing, simpleListings, listingId);
+      }
+
+      listing = pickHigherQualityListing(listing, retriedListing);
+    } catch (retryError) {
+      console.warn(
+        '[scraper] Listing detail retry failed, using best initial payload:',
+        retryError instanceof Error ? retryError.message : retryError,
+      );
+    }
   }
 
   // Step 5: Convert simpleListings to similarListings for frontend compatibility

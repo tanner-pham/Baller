@@ -1047,7 +1047,7 @@ export function buildMarketplaceSearchUrl(input: {
     ? `https://www.facebook.com/marketplace/${input.locationId}/search`
     : 'https://www.facebook.com/marketplace/search';
   const url = new URL(basePath);
-  const queryText = normalizeWhitespace(input.title);
+  const queryText = normalizeWhitespace([input.title, input.location].filter(Boolean).join(' '));
 
   url.searchParams.set('query', queryText ?? 'marketplace item');
   url.searchParams.set('exact', 'false');

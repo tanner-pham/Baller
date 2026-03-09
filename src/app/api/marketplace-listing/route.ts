@@ -7,25 +7,12 @@ import {
   upsertListingCacheEntry,
   type ListingCacheEntry,
 } from '../../../lib/server/listingCacheRepository';
+import { isCacheableMarketplaceListingPayload } from '../../../lib/server/marketplaceListingQuality';
 import { scrapeMarketplaceListing } from '../../../lib/server/scraper/scrapeMarketplace';
 import { MarketplaceHtmlFetchError } from '../../../lib/server/facebookMarketplaceHtmlFetcher';
 
 export const runtime = 'nodejs';
 export const maxDuration = 300;
-
-function isCacheableListingPayload(
-  listing: NormalizedMarketplaceListing | null | undefined,
-): boolean {
-  if (!listing) {
-    return false;
-  }
-
-  const hasPrice = Boolean(listing.price?.trim());
-  const hasLocation = Boolean(listing.location?.trim());
-  const hasImages = Array.isArray(listing.images) && listing.images.length > 0;
-
-  return hasPrice || hasLocation || hasImages;
-}
 
 /**
  * Adds cache-status metadata for observability without changing response JSON contracts.
@@ -95,7 +82,7 @@ export async function GET(request: NextRequest) {
         const cachedListing = await getListingCacheEntry<NormalizedMarketplaceListing>(listingId);
 
         if (cachedListing) {
-          if (!isCacheableListingPayload(cachedListing.listingPayload)) {
+          if (!isCacheableMarketplaceListingPayload(cachedListing.listingPayload)) {
             console.info('Marketplace listing cache hit rejected (insufficient listing payload)', {
               listingId,
               computedAt: cachedListing.computedAt,
@@ -119,7 +106,7 @@ export async function GET(request: NextRequest) {
             );
           }
 
-          if (isCacheableListingPayload(cachedListing.listingPayload)) {
+          if (isCacheableMarketplaceListingPayload(cachedListing.listingPayload)) {
             staleCache = cachedListing;
             console.info('Marketplace listing cache stale-hit', {
               listingId,
@@ -169,7 +156,7 @@ export async function GET(request: NextRequest) {
 
     if (listingId) {
       try {
-        if (isCacheableListingPayload(normalizedListing)) {
+        if (isCacheableMarketplaceListingPayload(normalizedListing)) {
           await upsertListingCacheEntry<NormalizedMarketplaceListing>({
             listingId,
             normalizedUrl: listingUrl,
@@ -187,6 +174,24 @@ export async function GET(request: NextRequest) {
           error: caughtError,
         });
       }
+    }
+
+    if (!isCacheableMarketplaceListingPayload(normalizedListing)) {
+      if (staleCache) {
+        console.info('Marketplace listing cache stale-fallback used due to incomplete fresh scrape', {
+          listingId,
+        });
+
+        return getStaleFallbackResponse(staleCache, 'fresh-scrape-incomplete');
+      }
+
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Marketplace listing details are still loading. Please try again.',
+        },
+        { status: 502 },
+      );
     }
 
     const cacheStatus = staleCache ? 'stale-refresh' : 'miss';
