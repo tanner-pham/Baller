@@ -4,8 +4,8 @@ milestone: v1.0
 milestone_name: milestone
 status: completed
 stopped_at: Completed quick task 1: Fix intermittent marketplace listing scrape race where image and description are sometimes missing or wrong; verify the fix
-last_updated: "2026-03-09T02:21:16Z"
-last_activity: 2026-03-09 — Completed quick task 1: Fix intermittent marketplace listing scrape race where image and description are sometimes missing or wrong; verify the fix
+last_updated: "2026-03-09T02:37:40Z"
+last_activity: 2026-03-09 — Completed quick task 2: Inspected image scrape coverage and GPT-4o image inputs
 progress:
   total_phases: 3
   completed_phases: 3
@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-03-05)
 Phase: 3 of 3 (Pros/Cons and Verdict)
 Plan: 2 of 2 in current phase (03-02 complete)
 Status: Complete
-Last activity: 2026-03-09 — Completed quick task 1: Fix intermittent marketplace listing scrape race where image and description are sometimes missing or wrong; verify the fix
+Last activity: 2026-03-09 — Completed quick task 2: Inspected image scrape coverage and GPT-4o image inputs
 
 Progress: [██████████] 100%
 
@@ -87,6 +87,7 @@ Recent decisions affecting current work:
 - [03-02]: VerdictCard uses 0.3 threshold (30% visible) for one-shot scroll-reveal trigger
 - [03-02]: TOO_CLOSE_TO_CALL passes null winnerSide so neither column highlights
 - [Quick-001]: Marketplace listing fetch waits for detail signals, retries once on shell HTML, and only caches detail-ready listing payloads
+- [Quick-002]: Scraping stores a full `images[]` array when listing HTML exposes it, but both GPT-4o paths currently send only the first image
 
 ### Roadmap Evolution
 
@@ -107,9 +108,10 @@ None yet.
 | # | Description | Date | Commit | Directory |
 |---|-------------|------|--------|-----------|
 | 1 | Fix intermittent marketplace listing scrape race where image and description are sometimes missing or wrong; verify the fix | 2026-03-09 | caa726c | [1-fix-intermittent-marketplace-listing-scr](./quick/1-fix-intermittent-marketplace-listing-scr/) |
+| 2 | Inspect whether marketplace scraping captures all listing images and whether GPT-4o receives all images or only the primary one | 2026-03-09 | 42b39d1 | [2-inspect-whether-marketplace-scraping-cap](./quick/2-inspect-whether-marketplace-scraping-cap/) |
 
 ## Session Continuity
 
-Last session: 2026-03-09T02:21:16Z
-Stopped at: Completed quick task 1: Fix intermittent marketplace listing scrape race where image and description are sometimes missing or wrong; verify the fix
-Resume file: .planning/quick/1-fix-intermittent-marketplace-listing-scr/1-SUMMARY.md
+Last session: 2026-03-09T02:37:40Z
+Stopped at: Completed quick task 2: Inspected image scrape coverage and GPT-4o image inputs
+Resume file: .planning/quick/2-inspect-whether-marketplace-scraping-cap/2-SUMMARY.md
