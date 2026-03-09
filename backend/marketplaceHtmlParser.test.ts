@@ -150,6 +150,70 @@ describe('Marketplace HTML parser', () => {
     ]);
   });
 
+  it('prefers captured GraphQL listing details over an early DOM shell', () => {
+    const listingHtml = `
+      <html>
+        <head>
+          <meta property="og:title" content="Vintage Kerosene Lamps" />
+          <meta property="og:description" content="Shell description that should be replaced." />
+          <meta property="product:price:amount" content="57" />
+          <meta property="og:image" content="https://example.com/shell-cover.jpg" />
+          <link rel="canonical" href="https://www.facebook.com/marketplace/item/424242/" />
+        </head>
+        <body>
+          <h1>Vintage Kerosene Lamps</h1>
+          <div>Listed in Kirkland, Washington</div>
+          <img
+            alt="Product photo of Vintage Kerosene Lamps"
+            src="https://example.com/shell-gallery.jpg"
+          />
+          <script>
+            ${JSON.stringify({
+              data: {
+                marketplace_listing_viewer: {
+                  listing: {
+                    id: '424242',
+                    marketplace_listing_title: 'Vintage Kerosene Lamps',
+                    listing_price: { formatted_amount: '$57' },
+                    location: {
+                      reverse_geocode: {
+                        city_page: { display_name: 'Kirkland, Washington' },
+                      },
+                    },
+                    primary_listing_photo: {
+                      image: { uri: 'https://example.com/live-primary.jpg' },
+                    },
+                    listing_photos: [
+                      { image: { uri: 'https://example.com/live-secondary.jpg' } },
+                    ],
+                    redacted_description: {
+                      text: 'Functional condition with no major damage impacts value positively.',
+                    },
+                    marketplace_listing_seller: { name: 'Taylor' },
+                  },
+                },
+              },
+            })}
+          </script>
+        </body>
+      </html>
+    `;
+
+    const parsed = parseMarketplaceListingHtml({
+      html: listingHtml,
+      requestedItemId: '424242',
+    });
+
+    expect(parsed.listing.description).to.equal(
+      'Functional condition with no major damage impacts value positively.',
+    );
+    expect(parsed.listing.sellerName).to.equal('Taylor');
+    expect(parsed.listing.images).to.include.members([
+      'https://example.com/live-primary.jpg',
+      'https://example.com/live-secondary.jpg',
+    ]);
+  });
+
   it('parses and deduplicates simple listings from search HTML', () => {
     const searchHtml = `
       <html>

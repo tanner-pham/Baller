@@ -57,7 +57,7 @@ const DEFAULT_USER_AGENT =
 const DEFAULT_LOCAL_PLAYWRIGHT_USER_DATA_DIR = '.browser-data';
 const DEFAULT_LOCAL_PLAYWRIGHT_HEADLESS = true;
 const LOCAL_PLAYWRIGHT_NAVIGATION_TIMEOUT_MS = 10000;
-const LOCAL_PLAYWRIGHT_READINESS_TIMEOUT_MS = 6000;
+const PLAYWRIGHT_LISTING_READINESS_TIMEOUT_MS = 10000;
 const LOCAL_PLAYWRIGHT_NAVIGATION_GRACE_MS = 2500;
 const LOCAL_PLAYWRIGHT_BLOCKED_RESOURCES = [
   '**/tr/**',
@@ -277,8 +277,53 @@ type PlaywrightPageLike = {
     wheel: (deltaX: number, deltaY: number) => Promise<void>;
   };
   evaluate: <T>(pageFunction: () => T | Promise<T>) => Promise<T>;
+  waitForFunction: (
+    pageFunction: () => unknown,
+    options?: { timeout?: number },
+  ) => Promise<unknown>;
   waitForTimeout: (timeout: number) => Promise<void>;
 };
+
+async function waitForMarketplaceListingDetailSignals(
+  page: PlaywrightPageLike,
+  timeoutMs: number,
+): Promise<void> {
+  await page.waitForFunction(
+    () => {
+      const html = document.documentElement?.innerHTML ?? '';
+      const lowerHtml = html.toLowerCase();
+      const bodyText = document.body?.innerText ?? '';
+      const lowerBodyText = bodyText.toLowerCase();
+
+      const hasMarketplaceSignals =
+        lowerHtml.includes('marketplace_listing_title') ||
+        lowerHtml.includes('/marketplace/item/');
+      const hasValueSignals =
+        /\$\d/.test(bodyText) ||
+        lowerBodyText.includes('free') ||
+        lowerHtml.includes('listing_price') ||
+        lowerHtml.includes('formatted_amount') ||
+        lowerHtml.includes('product:price:amount');
+      const hasDescriptionSignals =
+        lowerHtml.includes('redacted_description') ||
+        lowerHtml.includes('og:description') ||
+        lowerBodyText.includes('description');
+      const hasImageSignals =
+        lowerHtml.includes('primary_listing_photo') ||
+        lowerHtml.includes('listing_photos') ||
+        /<img\b[^>]*alt=["'][^"']*product photo of/i.test(html);
+
+      return hasMarketplaceSignals && hasValueSignals && (hasImageSignals || hasDescriptionSignals);
+    },
+    {
+      timeout: Math.max(1500, Math.min(timeoutMs, PLAYWRIGHT_LISTING_READINESS_TIMEOUT_MS)),
+    },
+  );
+
+  // Allow async response listeners to finish appending captured GraphQL payloads
+  // before we snapshot the final page HTML.
+  await page.waitForTimeout(250);
+}
 
 async function isFacebookLoginInterstitialVisible(page: PlaywrightPageLike): Promise<boolean> {
   const authSelectors = [
@@ -792,33 +837,6 @@ async function fetchHtmlViaLocalPlaywright(input: {
           page.waitForTimeout(Math.min(LOCAL_PLAYWRIGHT_NAVIGATION_GRACE_MS, navigationTimeoutMs)),
         ]);
 
-        // Wait for the SPA to hydrate and render listing data (price, location).
-        // Facebook serves og:meta immediately but rich listing data loads via
-        // GraphQL after React hydrates, typically within 2-3 seconds.
-        try {
-          await page.waitForFunction(
-            () => {
-              const bodyText = document.body?.innerText ?? '';
-              // Check for a dollar price visible in the rendered DOM
-              if (/\$\d/.test(bodyText)) return true;
-              // Check for listing data in the page HTML (GraphQL payloads)
-              const html = document.documentElement?.innerHTML ?? '';
-              if (html.includes('listing_price') || html.includes('formatted_amount')) return true;
-              return false;
-            },
-            {
-              timeout: Math.max(
-                1000,
-                Math.min(input.timeoutMs, LOCAL_PLAYWRIGHT_READINESS_TIMEOUT_MS),
-              ),
-            },
-          );
-        } catch {
-          // Best-effort readiness check; continue with HTML capture.
-        }
-
-        await Promise.race([navigationPromise, page.waitForTimeout(500)]);
-
         // Dismiss Facebook login interstitial if present
         let dismissedPlaywrightLoginInterstitial = false;
         try {
@@ -840,6 +858,14 @@ async function fetchHtmlViaLocalPlaywright(input: {
             // Best-effort wait for payload responses after dismissal.
           }
         }
+
+        try {
+          await waitForMarketplaceListingDetailSignals(page, input.timeoutMs);
+        } catch {
+          // Best-effort readiness check; continue with HTML capture.
+        }
+
+        await Promise.race([navigationPromise, page.waitForTimeout(500)]);
 
         const html = await page.content();
 
@@ -1127,6 +1153,12 @@ async function fetchHtmlViaPlaywright(input: {
           } catch {
             // Best-effort wait for payload responses after dismissal.
           }
+        }
+
+        try {
+          await waitForMarketplaceListingDetailSignals(page, input.timeoutMs);
+        } catch {
+          // Best-effort readiness check; continue with HTML capture.
         }
 
         const html = await page.content();

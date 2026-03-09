@@ -125,6 +125,8 @@ export default function DashboardClient() {
   const displayPrice = activeMarketplaceListing?.price || searchParams.get('price') || "Price Hidden";
   // Issue 7: Skip video primary images, use next available photo
   const displayImage = getFirstNonVideoImage(activeMarketplaceListing?.images) || searchParams.get('image') || DEFAULT_CURRENT_LISTING.image;
+  const displayDescription = activeMarketplaceListing?.description
+    || (isListingLoading ? "Loading detailed description..." : "No description provided.");
 
   const handleSelectPreviousSearch = (entry: SearchHistoryEntry) => {
     const searchQuery = new URLSearchParams({ listingUrl: entry.url, itemId: entry.itemId });
@@ -319,7 +321,7 @@ export default function DashboardClient() {
                   title={displayTitle}
                   price={displayPrice}
                   image={displayImage}
-                  description={activeMarketplaceListing?.description || "Loading detailed description..."}
+                  description={displayDescription}
                   location={activeMarketplaceListing?.location || searchParams.get('location') || "Unknown Location"}
                   listingDate={activeMarketplaceListing?.listingDate || "Recently"}
                   conditionScore={conditionAssessment?.conditionScore}
