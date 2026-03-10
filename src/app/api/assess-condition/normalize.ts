@@ -1,4 +1,4 @@
-import { CONDITION_LABELS, type ParsedAssessment } from './types';
+import { CONDITION_LABELS, SCAM_RISK_LEVELS, type ParsedAssessment } from './types';
 
 /**
  * Calculates modelAccuracy score (0-98) based on image count, description quality, and listing age.
@@ -101,6 +101,40 @@ function normalizeTopReasons(value: unknown): string[] {
 }
 
 /**
+ * Clamps and defaults the scam risk score.
+ */
+function normalizeScamRiskScore(value: unknown): number {
+  const raw = Number(value);
+  if (!Number.isFinite(raw)) return 0;
+  return Math.min(1, Math.max(0, raw));
+}
+
+/**
+ * Validates scam risk level against allowed values.
+ */
+function normalizeScamRiskLevel(value: unknown): (typeof SCAM_RISK_LEVELS)[number] {
+  if (
+    typeof value === 'string' &&
+    SCAM_RISK_LEVELS.includes(value as (typeof SCAM_RISK_LEVELS)[number])
+  ) {
+    return value as (typeof SCAM_RISK_LEVELS)[number];
+  }
+  return 'Low';
+}
+
+/**
+ * Normalizes scam red flags to a clean string array capped at 4 entries.
+ */
+function normalizeScamRedFlags(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return value
+    .filter((item): item is string => typeof item === 'string')
+    .map((item) => item.trim())
+    .filter(Boolean)
+    .slice(0, 4);
+}
+
+/**
  * Parses and normalizes the model JSON payload into a stable API shape.
  */
 export function parseAssessmentResponse(rawContent: string): ParsedAssessment {
@@ -138,5 +172,8 @@ export function parseAssessmentResponse(rawContent: string): ParsedAssessment {
       typeof parsed.negotiationTip === 'string' && parsed.negotiationTip.trim().length > 0
         ? parsed.negotiationTip.trim()
         : 'Ask politely for flexibility and offer immediate pickup/payment.',
+    scamRiskScore: normalizeScamRiskScore(parsed.scamRiskScore),
+    scamRiskLevel: normalizeScamRiskLevel(parsed.scamRiskLevel),
+    scamRedFlags: normalizeScamRedFlags(parsed.scamRedFlags),
   };
 }

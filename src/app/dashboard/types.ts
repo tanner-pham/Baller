@@ -47,6 +47,9 @@ export interface ConditionAssessmentData {
   suggestedPrice?: string;
   suggestedOffer?: string;
   negotiationTip?: string;
+  scamRiskScore?: number;
+  scamRiskLevel?: string;
+  scamRedFlags?: string[];
 }
 
 export interface ConditionAssessmentApiResponse {

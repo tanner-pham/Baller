@@ -8,6 +8,7 @@ import { SimilarListings } from './(components)/SimilarListings';
 import { CompareBar } from './(components)/CompareBar';
 import { CurrentListing } from './(components)/CurrentListing';
 import { PricingAnalysis } from './(components)/PriceAnalysis';
+import { ScamRiskBanner } from './(components)/ScamRiskBanner';
 import { Navigation } from '../(components)/Navigation';
 import { parseFacebookMarketplaceListingUrl } from '../../lib/facebookMarketplaceListing';
 import type { CompareSelection } from './(components)/SimilarListings';
@@ -353,6 +354,14 @@ export default function DashboardClient() {
                   topReasons={conditionAssessment?.topReasons || []}
                   negotiationTip={conditionAssessment?.negotiationTip || "Analyzing negotiation strategy..."}
                />
+               {/* Scam Risk Banner — shown when assessment includes scam data */}
+               {conditionAssessment?.scamRiskLevel && (
+                 <ScamRiskBanner
+                   scamRiskScore={conditionAssessment.scamRiskScore ?? 0}
+                   scamRiskLevel={conditionAssessment.scamRiskLevel}
+                   scamRedFlags={conditionAssessment.scamRedFlags ?? []}
+                 />
+               )}
                {/* Issue 3: Render similar listings from both similarListings and simpleListings */}
                {activeMarketplaceListing?.similarListings && activeMarketplaceListing.similarListings.length > 0 && (
                  <SimilarListings

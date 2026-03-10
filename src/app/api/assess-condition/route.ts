@@ -24,6 +24,9 @@ interface ConditionAssessmentPayload {
   suggestedPrice: string;
   suggestedOffer: string;
   negotiationTip: string;
+  scamRiskScore: number;
+  scamRiskLevel: string;
+  scamRedFlags: string[];
 }
 
 /**
@@ -282,6 +285,9 @@ Image could not be accessed. Use description/context only and be conservative.`,
         suggestedPrice: Number(assessment.suggestedPrice).toLocaleString('en-US'),
         suggestedOffer: Number(assessment.suggestedOffer).toLocaleString('en-US'),
         negotiationTip: assessment.negotiationTip,
+        scamRiskScore: assessment.scamRiskScore,
+        scamRiskLevel: assessment.scamRiskLevel,
+        scamRedFlags: assessment.scamRedFlags,
       },
       listedPrice,
     );
