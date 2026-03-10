@@ -13,17 +13,8 @@ import { parseFacebookMarketplaceListingUrl } from '../../lib/facebookMarketplac
 import type { CompareSelection } from './(components)/SimilarListings';
 
 import {
-  sectionBorderB4P15,
   maxW6Full,
-  b4,
-  b5,
-  roundedXl,
-  shadow4,
-  shadow6,
-  shadow8,
-  anton,
-  space,
-  pressable,
+  dashboardStyles,
 } from '../consts';
 
 import {
@@ -165,7 +156,6 @@ export default function DashboardClient() {
   };
 
   const isCurrentListingSelected = compareSelections.some(s => s.url === listingUrlParam);
-  const currentListingActionButtonClass = `${b5} ${roundedXl} px-4 py-2 ${shadow4} ${pressable} ${anton} text-sm uppercase`;
 
   const isDashboardLoading = isListingLoading || isConditionLoading || (parsedListing && !hasConditionResolved);
   const shouldShowEmptyState = !parsedListing && !isDashboardLoading;
@@ -177,7 +167,7 @@ export default function DashboardClient() {
   );
 
   return (
-    <main className="min-h-screen w-full overflow-y-auto bg-[#F5F5F0]">
+    <main className={dashboardStyles.main}>
       {/* Issue 6: Removed sidebar toggle props, added onUnauthSearchAttempt */}
       <Navigation
         dashboardNav
@@ -186,35 +176,35 @@ export default function DashboardClient() {
 
       {/* Issue 1: Sign-in popup overlay */}
       {showSignInPopup && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className={`relative bg-white ${b5} ${roundedXl} p-10 ${shadow8} max-w-md w-full mx-4`}>
+        <div className={dashboardStyles.signInOverlay}>
+          <div className={dashboardStyles.signInCard}>
             <button
               type="button"
               onClick={() => setShowSignInPopup(false)}
-              className="absolute top-4 right-4 rounded-md border-2 border-black p-1 transition-all hover:bg-gray-100"
+              className={dashboardStyles.signInCloseButton}
               aria-label="Close"
             >
-              <X className="size-5" strokeWidth={2.5} />
+              <X className={dashboardStyles.signInCloseIcon} strokeWidth={2.5} />
             </button>
 
-            <h2 className={`${anton} text-4xl uppercase text-black mb-4 text-center`}>
+            <h2 className={dashboardStyles.signInTitle}>
               SIGN IN REQUIRED
             </h2>
-            <p className={`${space} text-base font-semibold text-gray-600 mb-8 text-center`}>
+            <p className={dashboardStyles.signInBody}>
               Create an account or sign in to search additional listings and unlock full analysis features.
             </p>
-            <div className="flex flex-col gap-3">
+            <div className={dashboardStyles.signInButtons}>
               <button
                 type="button"
                 onClick={() => router.push('/auth')}
-                className={`w-full ${roundedXl} ${b5} bg-[#FADF0B] px-6 py-4 ${shadow6} ${anton} text-xl uppercase text-black transition-all hover:translate-x-[-1px] hover:translate-y-[-1px] hover:shadow-[8px_8px_0px_0px_#000000] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none`}
+                className={dashboardStyles.signInPrimaryButton}
               >
                 Log In / Sign Up
               </button>
               <button
                 type="button"
                 onClick={() => setShowSignInPopup(false)}
-                className={`w-full ${roundedXl} border-4 border-black bg-white px-6 py-3 ${space} text-sm font-semibold text-gray-600 transition-all hover:bg-gray-50`}
+                className={dashboardStyles.signInSecondaryButton}
               >
                 Maybe later
               </button>
@@ -232,49 +222,52 @@ export default function DashboardClient() {
         <>
           {/* Issue 2: Only show Previous Listings for authenticated users */}
           {isAuthenticated && (
-            <section className="border-t-4 border-black bg-[#90EE90] px-15 pt-15 pb-6">
+            <section className={dashboardStyles.previousListingsSection}>
               <div className={maxW6Full}>
-                <div className={`bg-white ${b5} ${roundedXl} ${previousListingsOpen ? 'p-10' : 'px-10 py-6'} ${shadow8}`}>
+                <div className={`${dashboardStyles.previousListingsCard} ${
+                  previousListingsOpen ? dashboardStyles.previousListingsCardOpen : dashboardStyles.previousListingsCardClosed
+                }`}
+                >
                   <button
                     type="button"
                     onClick={() => setPreviousListingsOpen(prev => !prev)}
-                    className="flex w-full items-center justify-between"
+                    className={dashboardStyles.previousListingsToggleButton}
                   >
-                    <h2 className={`${anton} text-5xl uppercase text-black`}>
+                    <h2 className={dashboardStyles.previousListingsTitle}>
                       Previous Listings
                     </h2>
                     {previousListingsOpen ? (
-                      <ChevronUp className="size-8" strokeWidth={3} />
+                      <ChevronUp className={dashboardStyles.previousListingsChevronIcon} strokeWidth={3} />
                     ) : (
-                      <ChevronDown className="size-8" strokeWidth={3} />
+                      <ChevronDown className={dashboardStyles.previousListingsChevronIcon} strokeWidth={3} />
                     )}
                   </button>
 
                   {previousListingsOpen && searchHistory.length === 0 && (
-                    <p className={`${space} text-lg font-semibold text-black/60 mt-8`}>
+                    <p className={dashboardStyles.previousListingsEmptyText}>
                       No listings analyzed yet.
                     </p>
                   )}
                   {previousListingsOpen && searchHistory.length > 0 && (
                     /* Issue 5: Horizontal scroll for all search history entries */
-                    <div className="relative">
-                      <div className="flex snap-x snap-mandatory gap-6 overflow-x-auto no-scrollbar">
+                    <div className={dashboardStyles.previousListingsScrollerWrap}>
+                      <div className={dashboardStyles.previousListingsScroller}>
                         {searchHistory.map((entry) => {
                           const isSelected = compareSelections.some(s => s.url === entry.url);
                           return (
                             <div
                               key={`${entry.url}-${entry.searchedAt}`}
-                              className={`relative min-w-[280px] max-w-[320px] flex-shrink-0 snap-start rounded-xl ${b5} bg-[#FF69B4] p-6 text-left ${shadow6} transition-all hover:translate-x-[-1px] hover:translate-y-[-1px] hover:shadow-[8px_8px_0px_0px_#000000]`}
+                              className={dashboardStyles.previousListingCard}
                             >
                               <button
                                 type="button"
                                 onClick={() => handleSelectPreviousSearch(entry)}
-                                className="w-full text-left"
+                                className={dashboardStyles.previousListingButton}
                               >
-                                <p className={`${anton} text-xl uppercase text-black line-clamp-1 pr-8`}>
+                                <p className={dashboardStyles.previousListingTitle}>
                                   {entry.listingTitle || "Marketplace Listing"}
                                 </p>
-                                <p className={`mt-1 break-all ${space} text-xs font-bold text-black/50`}>
+                                <p className={dashboardStyles.previousListingUrl}>
                                   {entry.url}
                                 </p>
                               </button>
@@ -287,11 +280,11 @@ export default function DashboardClient() {
                                   image: "",
                                 })}
                                 aria-label={isSelected ? "Remove from compare" : "Add to compare"}
-                                className={`absolute top-3 right-3 flex size-7 items-center justify-center rounded-full ${b5} shadow-[2px_2px_0px_0px_#000000] transition-all ${
-                                  isSelected ? 'bg-[#3300FF] text-white' : 'bg-white text-black'
+                                className={`${dashboardStyles.previousListingCompareButton} ${
+                                  isSelected ? dashboardStyles.previousListingCompareSelected : dashboardStyles.previousListingCompareUnselected
                                 }`}
                               >
-                                {isSelected ? <Check className="size-3.5" strokeWidth={3} /> : <Plus className="size-3.5" strokeWidth={3} />}
+                                {isSelected ? <Check className={dashboardStyles.previousListingCompareIcon} strokeWidth={3} /> : <Plus className={dashboardStyles.previousListingCompareIcon} strokeWidth={3} />}
                               </button>
                             </div>
                           );
@@ -299,11 +292,11 @@ export default function DashboardClient() {
                       </div>
                       {/* Scroll indicator */}
                       {searchHistory.length > 3 && (
-                        <div className="mt-3 flex items-center justify-end gap-2">
-                          <div className="h-1.5 w-16 rounded-full bg-black/20 overflow-hidden">
-                            <div className="h-full w-1/3 rounded-full bg-black/60" />
+                        <div className={dashboardStyles.scrollIndicatorRow}>
+                          <div className={dashboardStyles.scrollIndicatorTrack}>
+                            <div className={dashboardStyles.scrollIndicatorThumb} />
                           </div>
-                          <span className={`${anton} text-sm uppercase text-black/40`}>
+                          <span className={dashboardStyles.scrollIndicatorText}>
                             SCROLL →
                           </span>
                         </div>
@@ -317,7 +310,7 @@ export default function DashboardClient() {
 
           {/* Section: Active Analysis */}
           {!shouldShowEmptyState && (
-            <div className="flex flex-col">
+            <div className={dashboardStyles.activeAnalysisCol}>
                <CurrentListing
                   title={displayTitle}
                   price={displayPrice}
@@ -331,7 +324,7 @@ export default function DashboardClient() {
                     <button
                       type="button"
                       onClick={() => window.open(listingUrlParam, '_blank', 'noopener,noreferrer')}
-                      className={`${currentListingActionButtonClass} bg-[#3300FF] text-white`}
+                      className={`${dashboardStyles.currentListingActionButtonBase} ${dashboardStyles.currentListingActionBack}`}
                     >
                       BACK TO LISTING
                     </button>
@@ -345,10 +338,10 @@ export default function DashboardClient() {
                         price: displayPrice,
                         image: displayImage,
                       })}
-                      className={`${currentListingActionButtonClass} ${
+                      className={`${dashboardStyles.currentListingActionButtonBase} ${
                         isCurrentListingSelected
-                          ? 'bg-[#FF69B4] text-white'
-                          : 'bg-[#FF69B4] text-black'
+                          ? dashboardStyles.currentListingActionCompareSelected
+                          : dashboardStyles.currentListingActionCompareUnselected
                       }`}
                     >
                       {isCurrentListingSelected ? 'REMOVE FROM COMPARE' : 'ADD TO COMPARE'}
@@ -391,28 +384,28 @@ export default function DashboardClient() {
 
           {/* Section: Account Benefits (Yellow) */}
           {isAuthenticated && (
-            <section className={`${sectionBorderB4P15} bg-[#FADF0B]`}>
+            <section className={dashboardStyles.accountSection}>
               <div className={maxW6Full}>
-                <div className={`bg-white ${b5} ${roundedXl} p-10 ${shadow8}`}>
-                  <h2 className={`${anton} text-5xl uppercase text-black mb-4`}>
+                <div className={dashboardStyles.accountCard}>
+                  <h2 className={dashboardStyles.accountTitle}>
                     Account Active
                   </h2>
-                  <p className={`mb-10 ${space} text-xl font-bold text-black/70`}>
+                  <p className={dashboardStyles.accountBody}>
                     You have full access to our advanced negotiation engine.
                   </p>
 
-                  <div className="grid gap-8 md:grid-cols-3">
-                    <div className={`rounded-xl ${b4} bg-[#90EE90] p-8 ${shadow4}`}>
-                      <h3 className={`${anton} text-2xl uppercase text-black mb-2`}>Unlimited</h3>
-                      <p className={`${space} text-sm font-semibold`}>Analyze any listing instantly.</p>
+                  <div className={dashboardStyles.accountGrid}>
+                    <div className={`${dashboardStyles.accountStatCardBase} ${dashboardStyles.accountStatBgUnlimited}`}>
+                      <h3 className={dashboardStyles.accountStatTitle}>Unlimited</h3>
+                      <p className={dashboardStyles.accountStatText}>Analyze any listing instantly.</p>
                     </div>
-                    <div className={`rounded-xl ${b4} bg-[#FF69B4] p-8 ${shadow4}`}>
-                      <h3 className={`${anton} text-2xl uppercase text-black mb-2`}>Insights</h3>
-                      <p className={`${space} text-sm font-semibold`}>Advanced data-driven offer models.</p>
+                    <div className={`${dashboardStyles.accountStatCardBase} ${dashboardStyles.accountStatBgInsights}`}>
+                      <h3 className={dashboardStyles.accountStatTitle}>Insights</h3>
+                      <p className={dashboardStyles.accountStatText}>Advanced data-driven offer models.</p>
                     </div>
-                    <div className={`rounded-xl ${b4} bg-[#FF6600] p-8 ${shadow4}`}>
-                      <h3 className={`${anton} text-2xl uppercase text-black mb-2`}>History</h3>
-                      <p className={`${space} text-sm font-semibold`}>Track all your potential deals.</p>
+                    <div className={`${dashboardStyles.accountStatCardBase} ${dashboardStyles.accountStatBgHistory}`}>
+                      <h3 className={dashboardStyles.accountStatTitle}>History</h3>
+                      <p className={dashboardStyles.accountStatText}>Track all your potential deals.</p>
                     </div>
                   </div>
                 </div>

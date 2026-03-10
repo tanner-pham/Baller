@@ -5,6 +5,20 @@ import {
   PiggyBank,
   type LucideIcon,
 } from 'lucide-react';
+import {
+  featuresCard,
+  featuresCardHeaderRow,
+  featuresContainer,
+  featuresDescription,
+  featuresGrid,
+  featuresHeader,
+  featuresSection,
+  featuresIcon,
+  featuresSubText,
+  featuresTitle,
+  featuresAuthorIconBox,
+  largeBoldFont,
+} from '../consts';
 
 interface Feature {
   title: string;
@@ -44,35 +58,35 @@ export function Features() {
   return (
     <section
       id="features"
-      className="relative overflow-hidden border-b-5 border-black bg-[#90EE90] py-20 lg:py-32"
+      className={featuresSection}
     >
-      <div className="container mx-auto px-4">
-        <div className="mb-16 text-center">
-          <h2 className="mb-4 text-6xl text-black font-['Anton',sans-serif] lg:text-7xl">
+      <div className={featuresContainer}>
+        <div className={featuresHeader}>
+          <h2 className={largeBoldFont}>
             POWERFUL FEATURES
           </h2>
-          <p className="mx-auto max-w-2xl text-xl font-bold text-gray-700 font-['Space_Grotesk',sans-serif]">
+          <p className={featuresSubText}>
             Everything you need to make informed marketplace decisions
           </p>
         </div>
 
-        <div className="mx-auto grid max-w-6xl grid-cols-1 gap-6 md:grid-cols-2">
+        <div className={featuresGrid}>
           {FEATURES.map((feature) => (
             <div
               key={feature.title}
-              className="rounded-2xl border-5 border-black bg-white p-8 shadow-[6px_6px_0px_0px_#000000] transition-all hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[8px_8px_0px_0px_#000000]"
+              className={featuresCard}
             >
-              <div className="mb-6 flex items-center gap-4">
+              <div className={featuresCardHeaderRow}>
                 <div
-                  className="flex size-16 items-center justify-center rounded-xl border-5 border-black text-3xl"
+                  className={featuresAuthorIconBox}
                   style={{ backgroundColor: feature.color }}
                 >
-                  <feature.icon className="size-8 text-black" strokeWidth={2.5} />
+                  <feature.icon className={featuresIcon} strokeWidth={2.5} />
                 </div>
-                <h3 className="text-2xl font-['Anton',sans-serif]">{feature.title}</h3>
+                <h3 className={featuresTitle}>{feature.title}</h3>
               </div>
 
-              <p className="mb-6 font-semibold text-gray-700 font-['Space_Grotesk',sans-serif]">
+              <p className={featuresDescription}>
                 {feature.description}
               </p>
             </div>

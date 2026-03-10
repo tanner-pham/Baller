@@ -1,4 +1,19 @@
 import { BarChart3, Search, Shield } from 'lucide-react';
+import {
+  howItWorksCard,
+  howItWorksContainer,
+  howItWorksGrid,
+  howItWorksHeader,
+  howItWorksIcon,
+  howItWorksIconBox,
+  howItWorksIconRow,
+  howItWorksNumberBadge,
+  howItWorksSection,
+  howItWorksStepDescription,
+  howItWorksStepTitle,
+  howItWorksSubText,
+  largeBoldFont,
+} from '../consts';
 
 const STEPS = [
   {
@@ -28,42 +43,42 @@ export function HowItWorks() {
   return (
     <section
       id="how-it-works"
-      className="relative overflow-hidden border-b-5 border-black bg-[#FFFFFF] py-20 lg:py-32"
+      className={howItWorksSection}
     >
-      <div className="container mx-auto px-4">
-        <div className="mb-16 text-center">
-          <h2 className="mb-4 text-6xl text-black font-['Anton',sans-serif] lg:text-7xl">
+      <div className={howItWorksContainer}>
+        <div className={howItWorksHeader}>
+          <h2 className={largeBoldFont}>
             HOW IT WORKS
           </h2>
-          <p className="mx-auto max-w-2xl text-xl font-bold text-gray-700 font-['Space_Grotesk',sans-serif]">
+          <p className={howItWorksSubText}>
             Three simple steps to smarter marketplace decisions
           </p>
         </div>
 
-        <div className="mx-auto grid max-w-6xl grid-cols-1 gap-8 md:grid-cols-3">
+        <div className={howItWorksGrid}>
           {STEPS.map((step) => (
             <div
               key={step.number}
-              className="relative rounded-2xl border-5 border-black bg-white p-8 shadow-[6px_6px_0px_0px_#000000] transition-all"
+              className={howItWorksCard}
             >
               <div
-                className="absolute -left-4 -top-4 flex size-12 items-center justify-center rounded-full border-5 border-black text-2xl font-['Anton',sans-serif]"
+                className={howItWorksNumberBadge}
                 style={{ backgroundColor: step.color }}
               >
                 {step.number}
               </div>
 
-              <div className="mb-6 flex justify-center">
+              <div className={howItWorksIconRow}>
                 <div
-                  className="flex size-20 items-center justify-center rounded-2xl border-5 border-black"
+                  className={howItWorksIconBox}
                   style={{ backgroundColor: step.color }}
                 >
-                  <step.icon className="size-10" strokeWidth={3} />
+                  <step.icon className={howItWorksIcon} strokeWidth={3} />
                 </div>
               </div>
 
-              <h3 className="mb-3 text-center text-3xl font-['Anton',sans-serif]">{step.title}</h3>
-              <p className="text-center font-semibold text-gray-700 font-['Space_Grotesk',sans-serif]">
+              <h3 className={howItWorksStepTitle}>{step.title}</h3>
+              <p className={howItWorksStepDescription}>
                 {step.description}
               </p>
             </div>

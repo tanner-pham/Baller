@@ -1,5 +1,13 @@
 "use client";
-import { MapPin } from 'lucide-react';
+import { Clock3, MapPin } from 'lucide-react';
+import {
+  conditionBgExcellent,
+  conditionBgFair,
+  conditionBgGood,
+  conditionBgPoor,
+  currentListingStyles,
+  textShadowStyle,
+} from '../../consts';
 
 export interface CurrentListingProps {
   image: string;
@@ -26,10 +34,21 @@ export function CurrentListing({
   compareButton,
   backToListingButton,
 }: CurrentListingProps) {
+  const conditionBg =
+    conditionScore === undefined
+      ? null
+      : conditionScore >= 0.8
+        ? conditionBgExcellent
+        : conditionScore >= 0.6
+          ? conditionBgGood
+          : conditionScore >= 0.4
+            ? conditionBgFair
+            : conditionBgPoor;
+
   return (
-    <div className="bg-[#90EE90] px-15 pt-6 pb-15">
-      <div className="mx-auto flex w-full max-w-6xl items-stretch justify-between gap-20 rounded-xl border-5 border-black bg-white p-6 shadow-[8px_8px_0px_0px_#000000]">
-        <div className="flex-[1] overflow-hidden rounded-xl border-5 border-black">
+    <div className={currentListingStyles.section}>
+      <div className={currentListingStyles.card}>
+        <div className={currentListingStyles.imageWrap}>
           {/* eslint-disable-next-line @next/next/no-img-element -- external Facebook CDN URLs */}
           <img
             src={image}
@@ -37,62 +56,51 @@ export function CurrentListing({
             width={500}
             height={500}
             referrerPolicy="no-referrer"
-            className="h-full w-full object-cover"
+            className={currentListingStyles.image}
           />
         </div>
 
-        <div className="flex min-w-0 flex-[2] flex-col justify-between p-6">
+        <div className={currentListingStyles.content}>
           <div>
-            <div className="mb-3 flex items-start justify-between gap-4">
+            <div className={currentListingStyles.titlePriceRow}>
               <h1
-                className="line-clamp-3 break-words text-[clamp(1.5rem,4vw,4.5rem)] leading-[0.9] tracking-tight text-white font-['Bebas_Neue',sans-serif]"
-                style={{
-                  textShadow:
-                    '6px 6px 0px #000000, -2px -2px 0px #000000, 2px -2px 0px #000000, -2px 2px 0px #000000',
-                  WebkitTextStroke: '3px black',
-                }}
+                className={currentListingStyles.title}
+                style={textShadowStyle}
               >
                 {title}
               </h1>
 
-              <div className="rounded-xl border-5 border-black bg-[#FF69B4] px-4 py-2 shadow-[4px_4px_0px_0px_#000000] transition-all">
-                <span className="text-3xl text-black font-['Anton',sans-serif]">{price}</span>
+              <div className={currentListingStyles.priceBox}>
+                <span className={currentListingStyles.priceText}>{price}</span>
               </div>
             </div>
 
             {description && (
-              <p className="mb-4 text-center text-base font-semibold leading-relaxed text-gray-700 font-['Space_Grotesk',sans-serif]">
+              <p className={currentListingStyles.description}>
                 {description}
               </p>
             )}
 
-            <div className="mb-4 flex flex-wrap gap-3">
-              <div className="flex items-center gap-2 rounded-xl border-5 border-black bg-[#FADF0B] px-3 py-2 shadow-[4px_4px_0px_0px_#000000] transition-all">
-                <MapPin className="size-4" strokeWidth={3} />
-                <span className="text-center font-semibold text-gray-700 font-['Space_Grotesk',sans-serif]">
+            <div className={currentListingStyles.metaRow}>
+              <div className={currentListingStyles.locationChip}>
+                <MapPin className={currentListingStyles.locationIcon} strokeWidth={3} />
+                <span className={currentListingStyles.locationText}>
                   {location}
                 </span>
               </div>
 
-              <div className="rounded-xl border-5 border-black bg-[#FF6600] px-3 py-2 shadow-[4px_4px_0px_0px_#000000] transition-all">
-                <span className="text-center font-semibold text-white font-['Space_Grotesk',sans-serif]">
+              <div className={currentListingStyles.timeChip}>
+                <Clock3 className={currentListingStyles.timeIcon} strokeWidth={3} />
+                <span className={currentListingStyles.timeText}>
                   {listingDate}
                 </span>
               </div>
 
-              {conditionScore !== undefined && conditionLabel && (
+              {conditionBg && conditionLabel && (
                 <div
-                  className={`inline-flex items-center rounded-xl border-5 border-black px-3 py-2 shadow-[4px_4px_0px_0px_#000000] transition-all ${
-                    conditionScore >= 0.8
-                      ? 'bg-[#00FF00]'
-                      : conditionScore >= 0.6
-                        ? 'bg-[#FADF0B]'
-                        : conditionScore >= 0.4
-                          ? 'bg-[#FF6600]'
-                          : 'bg-[#FF0000]'
-                  }`}
+                  className={`${currentListingStyles.conditionChipBase} ${conditionBg}`}
                 >
-                  <span className="text-sm font-bold uppercase font-['Space_Grotesk',sans-serif]">
+                  <span className={currentListingStyles.conditionText}>
                     Condition: {conditionLabel}
                   </span>
                 </div>
@@ -100,7 +108,7 @@ export function CurrentListing({
             </div>
 
             {(backToListingButton || compareButton) && (
-              <div className="mt-4 flex flex-wrap items-center gap-3">
+              <div className={currentListingStyles.actionsRow}>
                 {backToListingButton}
                 {compareButton}
               </div>

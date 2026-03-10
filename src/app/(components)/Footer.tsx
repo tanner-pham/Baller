@@ -1,3 +1,18 @@
+import {
+  footerRoot,
+  footerContainer,
+  footerGrid,
+  footerBrandRow,
+  footerBrandText,
+  footerBrandDescription,
+  footerColumnTitleProduct,
+  footerColumnTitleResources,
+  footerLinkList,
+  footerLink,
+  footerBottomBar,
+  footerCopyright,
+} from '../consts';
+
 export function Footer() {
   const productLinks = [
     { name: 'How It Works', href: '#how-it-works' },
@@ -11,32 +26,32 @@ export function Footer() {
   ];
 
   return (
-    <footer className="bg-black text-white border-t-5 border-black">
-      <div className="container mx-auto px-4 py-16">
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-12 mb-12">
+    <footer className={footerRoot}>
+      <div className={footerContainer}>
+        <div className={footerGrid}>
           {/* Brand Column */}
           <div>
-            <div className="flex items-center gap-3 mb-6">
-              <span className="font-['Anton',sans-serif] text-3xl tracking-tight">
+            <div className={footerBrandRow}>
+              <span className={footerBrandText}>
                 BALLER
               </span>
             </div>
-            <p className="font-['Space_Grotesk',sans-serif] text-gray-400 font-medium mb-6">
+            <p className={footerBrandDescription}>
               Make smarter marketplace decisions with AI-powered analysis.
             </p>
           </div>
 
           {/* Product Links */}
           <div>
-            <h3 className="font-['Anton',sans-serif] text-xl mb-4 text-[#FF6600] tracking-wide">
+            <h3 className={footerColumnTitleProduct}>
               PRODUCT
             </h3>
-            <ul className="space-y-3">
+            <ul className={footerLinkList}>
               {productLinks.map((link) => (
                 <li key={link.name}>
                   <a
                     href={link.href}
-                    className="font-['Space_Grotesk',sans-serif] font-medium text-gray-400 hover:text-white transition-colors"
+                    className={footerLink}
                   >
                     {link.name}
                   </a>
@@ -47,17 +62,17 @@ export function Footer() {
 
           {/* Resources Links */}
           <div>
-            <h3 className="font-['Anton',sans-serif] text-xl mb-4 text-[#FF69B4] tracking-wide">
+            <h3 className={footerColumnTitleResources}>
               RESOURCES
             </h3>
-            <ul className="space-y-3">
+            <ul className={footerLinkList}>
               {resourceLinks.map((link) => (
                 <li key={link.name}>
                   <a
                     href={link.href}
                     target="_blank"
                     rel="noreferrer"
-                    className="font-['Space_Grotesk',sans-serif] font-medium text-gray-400 hover:text-white transition-colors"
+                    className={footerLink}
                   >
                     {link.name}
                   </a>
@@ -68,8 +83,8 @@ export function Footer() {
         </div>
 
         {/* Bottom Bar */}
-        <div className="border-t-4 border-gray-800 pt-8 text-center">
-          <p className="font-['Space_Grotesk',sans-serif] text-gray-400 font-medium">
+        <div className={footerBottomBar}>
+          <p className={footerCopyright}>
             © 2026 Baller. All rights reserved.
           </p>
         </div>
