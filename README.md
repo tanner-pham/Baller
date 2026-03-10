@@ -2,6 +2,17 @@
 
 Baller is a Next.js app that helps users evaluate Facebook Marketplace listings with pricing context and AI-assisted condition insights.
 
+## Jump to
+- [Beta Release](#beta-release-(v0.1.0))
+- [Gamma Release](#gamma-release-(v0.2.0))
+- [Final Release](#final-release-(v0.3.0))
+- [Core Features](#core-features)
+- [Tech Stack](#tech-stack)
+- [Project Layout](#project-layout)
+- [Quick Start](#quick-start)
+- [Documentation](#where-to-go-next)
+- [Project Document](#living-document)
+
 ## Final Release (v0.3.0)
 **Git Tag:** `final-release`
 
@@ -67,6 +78,8 @@ Users can analyze Facebook Marketplace listings to receive:
 - Database (Supabase caching layer)
 - External APIs (OpenAI GPT-4o-mini)
 - CI/CD (GitHub Actions with Jest + Mocha)
+
+---
 
 ## Core Features
 
