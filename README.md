@@ -2,6 +2,14 @@
 
 Baller is a Next.js app that helps users evaluate Facebook Marketplace listings with pricing context and AI-assisted condition insights.
 
+## Final Release (v0.3.0)
+**Git Tag:** `final-release`
+
+### What's New Since Gamma
+*UNSURE WHAT ALL THE NEW FEATURES ARE*
+
+---
+
 ## Gamma Release (v0.2.0)
 **Git Tag:** `gamma-release`
 
@@ -78,27 +86,18 @@ Users can analyze Facebook Marketplace listings to receive:
 - TypeScript
 - Tailwind CSS v4
 - Supabase (`@supabase/supabase-js`)
-- OpenAI SDK
-- Jest + Mocha/Chai test split
+- OpenAI SDK (GPT-4o-mini vision)
+- Playwright + Chromium (Marketplace scraper)
+- Jest (frontend tests) + Mocha/Chai (backend tests)
 
 ## Project Layout
 
-- `src/app/` routes, UI components, and route handlers
-- `src/lib/` shared utilities and auth/session hook
-- `src/types/` shared external payload typing
-- `src/styles/` global CSS and theme utilities
-- `backend/` backend helper modules/tests
+- `src/` frontend UI, routing, utilities
+- `backend/` backend helper modules
+- `tests/` jest + mocha/chai tests
+For a detailed directory structure, see [CONTRIBUTING.md](docs/CONTRIBUTING.md#architecture-overview)
 
-See folder-level docs for file-by-file maps:
-
-- `src/README.md`
-- `src/app/README.md`
-- `src/lib/README.md`
-- `src/styles/README.md`
-- `src/types/README.md`
-- `backend/README.md`
-
-## Environment Setup
+## Quick Start
 
 ### Prerequisites
 - Node.js v20 or higher
@@ -125,19 +124,14 @@ See folder-level docs for file-by-file maps:
    cp .env.example .env.local
    ```
    
-   Then configure the following required variables in `.env.local`:
-   - `SUPABASE_URL` - Your Supabase project URL
-   - `SUPABASE_ANON_KEY` - Supabase anonymous/public key
-   - `SUPABASE_SERVICE_ROLE_KEY` - Supabase service role key (server-only)
-   - `OPENAI_API_KEY` - OpenAI API key for GPT-4o-mini
-   - `MARKETPLACE_HTML_FETCH_MODE` - `auto`, `playwright`, or `http` (default `auto`)
-   - `BROWSERLESS_WS_URL` - Browserless Playwright websocket URL for Marketplace HTML fetches
+## Environment Variables
 
-   Optional variables:
-   - `FACEBOOK_COOKIE_HEADER` - Cookie header string for logged-in Marketplace access when needed
-   - `FACEBOOK_PLAYWRIGHT_STORAGE_STATE_B64` - Base64-encoded Playwright storage state JSON for authenticated Browserless sessions
-   - `MARKETPLACE_HTML_TIMEOUT_MS` - Marketplace fetch timeout per candidate in milliseconds
-   - `MARKETPLACE_PLAYWRIGHT_BOOTSTRAP` - Enable Playwright bootstrap navigation (`true`/`false`)
+1. Copy `.env.example` to `.env.local`.
+2. Configure at least:
+   - `SUPABASE_URL`
+   - `SUPABASE_ANON_KEY`
+   - `OPENAI_API_KEY`
+(For full environment variable documentation, see [CONTRIBUTING.md](docs/CONTRIBUTING.md#environment-variables))
 
    **Getting API Keys:**
    - Supabase: https://supabase.com/dashboard (create project → Settings → API)
@@ -157,46 +151,11 @@ npm run build
 npm start
 ```
 
-## Testing the System
-
-### Run All Tests
-```bash
-npm run test:all
-```
-
-### Frontend Tests Only (Jest)
-```bash
-npm test
-```
-- Runs Jest tests with coverage reporting
-- Coverage threshold: 80% (configured in `jest.config.ts`)
-- Tests UI components using React Testing Library
-
-### Backend Tests Only (Mocha + Chai)
-```bash
-npm run test:backend
-```
-- Runs Mocha/Chai tests for API routes and backend logic
-- Tests condition assessment API mocking
-- Tests Supabase client configuration
-
-### Linting
-```bash
-npm run lint
-```
-
-### Type Checking
-```bash
-npx tsc --noEmit
-```
-
-### Test Coverage
-Coverage reports are automatically generated when running `npm test`. View detailed coverage at `coverage/lcov-report/index.html` after running tests.
-
 ## Running the System
 
 ### Local Development
 ```bash
+npm ci
 npm run dev
 ```
 Then navigate to:
@@ -204,57 +163,16 @@ Then navigate to:
 - Dashboard: http://localhost:3000/dashboard
 - Auth: http://localhost:3000/auth
 
-### Running with Mock Data
-The dashboard works with placeholder data if you don't have all API keys configured. To test the full flow:
-1. Set up all environment variables (see Environment Setup)
-2. Run `npm run dev`
-3. Navigate to `/dashboard`
-4. The system will automatically fetch and analyze a demo listing
-
-### Continuous Integration
-Tests run automatically on:
-- Every push to any branch
-- Every pull request to `main`
-- View CI status: https://github.com/tanner-pham/Baller/actions
-
-## Environment Setup
-
-1. Copy `.env.example` to `.env.local`.
-2. Configure:
-   - `SUPABASE_URL`
-   - `SUPABASE_ANON_KEY`
-   - `SUPABASE_SERVICE_ROLE_KEY` (server-only)
-   - `OPENAI_API_KEY`
-   - `MARKETPLACE_HTML_FETCH_MODE` (`auto`, `playwright`, `http`)
-   - `BROWSERLESS_WS_URL` (required for Playwright transport)
-   - `FACEBOOK_COOKIE_HEADER` (optional)
-   - `FACEBOOK_PLAYWRIGHT_STORAGE_STATE_B64` (optional)
-   - `MARKETPLACE_HTML_TIMEOUT_MS` (optional)
-   - `MARKETPLACE_PLAYWRIGHT_BOOTSTRAP` (optional)
-
-## Local Development
-
-```bash
-npm ci
-npm run dev
-```
-
-## Quality and Test Commands
-
-```bash
-npm run lint
-npx tsc --noEmit
-npm run test
-npm run test:backend
-npm run test:all
-```
-
 ## Auth Flow
 
 - `/auth` supports sign up and login.
 - Authenticated users are redirected to `/dashboard`.
 - Guests can preview listing analysis on `/dashboard`.
 - Login is required for authenticated-only dashboard features such as search history.
+
+## Where to go Next
+- User Guide - [USER_GUIDE.md](docs/USER_GUIDE.md)
+- Developer Guide - [CONTRIBUTING.md](docs/CONTRIBUTING.md)
 
 ## Living Document
 
