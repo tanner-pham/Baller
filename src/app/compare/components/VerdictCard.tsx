@@ -3,13 +3,7 @@
 import { useRef, useState, useEffect } from 'react';
 import { Trophy, Scale } from 'lucide-react';
 import type { VerdictResult } from '../../api/compare-verdict/types';
-import {
-  anton,
-  space,
-  b5,
-  roundedXl,
-  shadow6,
-} from '../../consts';
+import { verdictCardStyles } from '../../consts';
 
 interface VerdictCardProps {
   verdict: VerdictResult | null;
@@ -53,11 +47,11 @@ export function VerdictCard({ verdict, isLoading, error, onReveal }: VerdictCard
   // Loading skeleton
   if (isLoading && !verdict) {
     return (
-      <div className={`bg-white ${b5} ${roundedXl} ${shadow6} p-8`}>
-        <div className="animate-pulse space-y-4">
-          <div className="h-8 bg-gray-200 rounded w-3/4" />
-          <div className="h-4 bg-gray-200 rounded w-full" />
-          <div className="h-4 bg-gray-200 rounded w-5/6" />
+      <div className={verdictCardStyles.shell}>
+        <div className={verdictCardStyles.skeleton}>
+          <div className={verdictCardStyles.skeletonLineLg} />
+          <div className={verdictCardStyles.skeletonLineSm} />
+          <div className={verdictCardStyles.skeletonLineMd} />
         </div>
       </div>
     );
@@ -66,8 +60,8 @@ export function VerdictCard({ verdict, isLoading, error, onReveal }: VerdictCard
   // Error state (non-blocking)
   if (error && !verdict) {
     return (
-      <div className={`bg-white ${b5} ${roundedXl} ${shadow6} p-8`}>
-        <p className={`${space} text-sm font-semibold text-gray-400 text-center`}>
+      <div className={verdictCardStyles.shell}>
+        <p className={verdictCardStyles.errorText}>
           {error}
         </p>
       </div>
@@ -78,25 +72,25 @@ export function VerdictCard({ verdict, isLoading, error, onReveal }: VerdictCard
   if (!verdict) return null;
 
   const isTie = verdict.verdict === 'TOO_CLOSE_TO_CALL';
-  const cardBg = isTie ? 'bg-[#FADF0B]' : 'bg-[#90EE90]';
+  const cardBg = isTie ? verdictCardStyles.tieBg : verdictCardStyles.winBg;
   const Icon = isTie ? Scale : Trophy;
 
   return (
     <div
       ref={cardRef}
-      className={`${cardBg} ${b5} ${roundedXl} ${shadow6} p-8 ${
+      className={`${verdictCardStyles.rootBase} ${cardBg} ${
         isRevealed
-          ? 'opacity-100 translate-y-0'
-          : 'opacity-0 translate-y-4'
-      } transition-all duration-700`}
+          ? verdictCardStyles.revealed
+          : verdictCardStyles.hidden
+      }`}
     >
-      <div className="flex items-center gap-3 mb-4">
-        <Icon className="size-8" strokeWidth={2.5} />
-        <h2 className={`${anton} text-2xl uppercase`}>
+      <div className={verdictCardStyles.headerRow}>
+        <Icon className={verdictCardStyles.icon} strokeWidth={2.5} />
+        <h2 className={verdictCardStyles.title}>
           {verdict.verdictHeadline}
         </h2>
       </div>
-      <p className={`${space} text-base font-semibold text-gray-700`}>
+      <p className={verdictCardStyles.body}>
         {verdict.verdictReasoning}
       </p>
     </div>

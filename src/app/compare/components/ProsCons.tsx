@@ -1,10 +1,7 @@
 import { ThumbsUp, ThumbsDown } from 'lucide-react';
 import type { ProConChip } from '../utils/prosConsEngine';
 import {
-  space,
-  b5,
-  roundedXl,
-  shadow4,
+  prosConsStyles,
 } from '../../consts';
 
 interface ProsConsProps {
@@ -18,14 +15,14 @@ function Chip({ chip }: { chip: ProConChip }) {
 
   return (
     <div
-      className={`${isPro ? 'bg-[#90EE90]' : 'bg-[#FF6600]'} ${b5} ${roundedXl} ${shadow4} px-3 py-1.5 inline-flex items-center gap-1.5`}
+      className={`${prosConsStyles.chipBase} ${isPro ? prosConsStyles.chipProBg : prosConsStyles.chipConBg}`}
     >
       {isPro ? (
-        <ThumbsUp className="size-3.5" strokeWidth={3} />
+        <ThumbsUp className={prosConsStyles.icon} strokeWidth={3} />
       ) : (
-        <ThumbsDown className="size-3.5 text-white" strokeWidth={3} />
+        <ThumbsDown className={prosConsStyles.iconCon} strokeWidth={3} />
       )}
-      <span className={`${space} text-xs font-bold ${isPro ? '' : 'text-white'}`}>
+      <span className={`${prosConsStyles.labelBase} ${isPro ? '' : prosConsStyles.labelCon}`}>
         {chip.label}
       </span>
     </div>
@@ -39,7 +36,7 @@ export function ProsCons({ ruleBasedChips, aiChips, isAiLoading }: ProsConsProps
   if (!hasChips && !showShimmer) return null;
 
   return (
-    <div className="flex flex-wrap gap-2">
+    <div className={prosConsStyles.wrap}>
       {ruleBasedChips.map((chip) => (
         <Chip key={`rule-${chip.label}`} chip={chip} />
       ))}
@@ -48,12 +45,8 @@ export function ProsCons({ ruleBasedChips, aiChips, isAiLoading }: ProsConsProps
       ))}
       {showShimmer && (
         <>
-          <div
-            className={`${b5} ${roundedXl} ${shadow4} px-3 py-1.5 bg-gray-200 animate-pulse inline-flex items-center gap-1.5 h-[30px] w-[100px]`}
-          />
-          <div
-            className={`${b5} ${roundedXl} ${shadow4} px-3 py-1.5 bg-gray-200 animate-pulse inline-flex items-center gap-1.5 h-[30px] w-[120px]`}
-          />
+          <div className={prosConsStyles.shimmerA} />
+          <div className={prosConsStyles.shimmerB} />
         </>
       )}
     </div>

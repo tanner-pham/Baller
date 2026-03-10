@@ -1,6 +1,6 @@
 'use client';
 
-import { anton, space, b5, roundedXl, shadow8 } from '../../consts';
+import { analysisProgressStyles } from '../../consts';
 
 interface AnalysisProgressProps {
   currentStep: number;
@@ -9,32 +9,32 @@ interface AnalysisProgressProps {
 
 export function AnalysisProgress({ currentStep, steps }: AnalysisProgressProps) {
   return (
-    <div className="p-20">
-      <div className={`mx-auto max-w-2xl bg-white ${b5} ${roundedXl} p-10 ${shadow8}`}>
-        <h2 className={`${anton} text-3xl uppercase text-center mb-8`}>
+    <div className={analysisProgressStyles.outer}>
+      <div className={analysisProgressStyles.card}>
+        <h2 className={analysisProgressStyles.title}>
           Analyzing Listing...
         </h2>
-        <div className="flex items-center justify-between gap-3">
+        <div className={analysisProgressStyles.row}>
           {steps.map((label, i) => {
             const isLastStep = currentStep >= steps.length - 1;
             let barBg: string;
             if (isLastStep || i < currentStep) {
-              barBg = 'bg-[#90EE90]';
+              barBg = analysisProgressStyles.barDone;
             } else if (i === currentStep) {
-              barBg = 'bg-[#FADF0B] animate-pulse';
+              barBg = analysisProgressStyles.barCurrent;
             } else {
-              barBg = 'bg-gray-200';
+              barBg = analysisProgressStyles.barPending;
             }
 
-            const labelColor = i <= currentStep ? 'text-black' : 'text-gray-400';
+            const labelColor = i <= currentStep ? analysisProgressStyles.labelDone : analysisProgressStyles.labelPending;
 
             return (
-              <div key={label} className="flex-1 flex flex-col">
+              <div key={label} className={analysisProgressStyles.stepCol}>
                 <div
                   data-testid={`step-bar-${i}`}
-                  className={`h-4 ${b5} ${roundedXl} mb-2 ${barBg}`}
+                  className={`${analysisProgressStyles.barBase} ${barBg}`}
                 />
-                <span className={`${space} text-xs font-semibold ${labelColor}`}>
+                <span className={`${analysisProgressStyles.labelBase} ${labelColor}`}>
                   {label}
                 </span>
               </div>

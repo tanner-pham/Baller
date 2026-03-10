@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { rootBodyClass, rootHtmlClass } from "./consts";
 
 export const metadata: Metadata = {
   title: "Baller",
@@ -12,8 +13,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="scroll-smooth">
-      <body className="antialiased">
+    <html lang="en" className={rootHtmlClass}>
+      <body className={rootBodyClass}>
         {children}
       </body>
     </html>

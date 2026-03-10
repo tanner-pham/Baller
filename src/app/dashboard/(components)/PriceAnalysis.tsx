@@ -1,3 +1,5 @@
+import { pricingAnalysisStyles } from '../../consts';
+
 export interface PricingAnalysisProps {
   suggestedOffer: string;
   modelAccuracy: string;
@@ -34,71 +36,66 @@ export function PricingAnalysis({
   const modelAccuracyDisplay = formatStatValue(modelAccuracy, '%');
   const marketValueDisplay = formatStatValue(marketValue, '$');
 
-  const cardStyle =
-    'rounded-xl border-5 border-black shadow-[6px_6px_0px_0px_#000000] transition-all duration-200';
-  const valueStyle =
-  "flex h-[56px] items-center justify-center text-4xl leading-none font-semibold text-gray-700 font-['Space_Grotesk',sans-serif] whitespace-nowrap tabular-nums";
-
   return (
-    <div className="border-b-4 border-black bg-[#FADF0B] p-15">
-      <div className="mx-auto mb-12 grid w-full max-w-6xl grid-cols-1 items-center justify-between gap-8 md:grid-cols-3">
+    <div className={pricingAnalysisStyles.section}>
+      <div className={pricingAnalysisStyles.topGrid}>
           <div
-            className={`${cardStyle} ${valueStyle} flex min-h-[180px] flex-col justify-center bg-[#90EE90] p-8 text-center`}
+            className={`${pricingAnalysisStyles.statCardBase} ${pricingAnalysisStyles.statValueRow} ${pricingAnalysisStyles.statBgSuggestedOffer} ${pricingAnalysisStyles.suggestedOfferEmphasis}`}
           >
-            <h3 className="mb-3 text-center text-3xl text-black font-['Anton',sans-serif]">
+            <h3 className={pricingAnalysisStyles.statTitle}>
               Suggested Offer
             </h3>
-            <p className="text-center text-3xl font-semibold text-gray-700 font-['Space_Grotesk',sans-serif]">
+            <p className={`${pricingAnalysisStyles.statValue} ${pricingAnalysisStyles.suggestedOfferValueEmphasis}`}>
               {suggestedOfferDisplay}
             </p>
           </div>
 
           <div
-            className={`${cardStyle} ${valueStyle} flex min-h-[180px] flex-col justify-center bg-[#FF69B4] p-8 text-center`}
+            className={`${pricingAnalysisStyles.statCardBase} ${pricingAnalysisStyles.statValueRow} ${pricingAnalysisStyles.statBgModelAccuracy}`}
           >
-            <h3 className="mb-3 text-center text-3xl text-black font-['Anton',sans-serif]">
+            <h3 className={pricingAnalysisStyles.statTitle}>
               Model Accuracy
             </h3>
-            <p className="text-center text-3xl font-semibold text-gray-700 font-['Space_Grotesk',sans-serif]">
+            <p className={pricingAnalysisStyles.statValue}>
               {modelAccuracyDisplay}
             </p>
           </div>
 
           <div
-            className={`${cardStyle} ${valueStyle} flex min-h-[180px] flex-col justify-center bg-[#FF6600] p-8 text-center`}
+            className={`${pricingAnalysisStyles.statCardBase} ${pricingAnalysisStyles.statValueRow} ${pricingAnalysisStyles.statBgMarketValue}`}
             data-market-value={marketValue}
           >
-            <h3 className="mb-3 text-center text-3xl text-black font-['Anton',sans-serif]">
+            <h3 className={pricingAnalysisStyles.statTitle}>
               Market Value
             </h3>
-            <p className="text-center text-3xl font-semibold text-gray-700 font-['Space_Grotesk',sans-serif]">
+            <p className={pricingAnalysisStyles.statValue}>
               {marketValueDisplay}
             </p>
           </div>
       </div>
 
-      <h2 className="mb-3 text-center text-3xl text-black font-['Anton',sans-serif]">WHY THIS PRICE?</h2>
+      <h2 className={pricingAnalysisStyles.whyTitle}>WHY THIS PRICE?</h2>
 
-      <div className="mx-auto mb-12 grid w-full max-w-6xl grid-cols-1 items-center justify-between gap-8 md:grid-cols-2">
+      <div className={pricingAnalysisStyles.reasonsGrid}>
         {topReasons.map((reason, index) => (
-          <div key={`${reason}-${index + 1}`} className={`${cardStyle} flex items-center gap-6 bg-white p-6`}>
-            <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl border-4 border-black bg-black text-2xl font-black text-white">
+          <div key={`${reason}-${index + 1}`} className={pricingAnalysisStyles.reasonCard}>
+            <div className={pricingAnalysisStyles.reasonNumber}>
               {index + 1}
             </div>
-            <p className="text-center text-base font-semibold text-gray-700 font-['Space_Grotesk',sans-serif]">
+            <p className={pricingAnalysisStyles.reasonText}>
               {reason}
             </p>
           </div>
         ))}
       </div>
 
-      <div className="mx-auto w-full max-w-6xl">
-        <h3 className="mb-3 text-center text-3xl text-black font-['Anton',sans-serif]">
+      <div className={pricingAnalysisStyles.tipWrap}>
+        <h3 className={pricingAnalysisStyles.tipTitle}>
           NEGOTIATION TIP
         </h3>
 
-        <div className={`${cardStyle} bg-white p-8`}>
-          <p className="text-center text-base font-semibold text-gray-700 font-['Space_Grotesk',sans-serif]">
+        <div className={pricingAnalysisStyles.tipCard}>
+          <p className={pricingAnalysisStyles.tipText}>
             {negotiationTip}
           </p>
         </div>

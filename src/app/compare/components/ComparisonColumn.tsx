@@ -3,12 +3,12 @@ import type { ProConChip } from '../utils/prosConsEngine';
 import { getFirstNonVideoImage } from '../../dashboard/utils/imageUtils';
 import { ProsCons } from './ProsCons';
 import {
-  anton,
-  space,
   b5,
-  shadow4,
-  shadow6,
-  roundedXl,
+  comparisonColumnStyles,
+  conditionBgExcellent,
+  conditionBgGood,
+  conditionBgFair,
+  conditionBgPoor,
 } from '../../consts';
 
 export interface ComparisonColumnProps {
@@ -22,10 +22,10 @@ export interface ComparisonColumnProps {
 }
 
 function getConditionColor(score: number): string {
-  if (score >= 0.8) return 'bg-[#00FF00]';
-  if (score >= 0.6) return 'bg-[#FADF0B]';
-  if (score >= 0.4) return 'bg-[#FF6600]';
-  return 'bg-[#FF0000]';
+  if (score >= 0.8) return conditionBgExcellent;
+  if (score >= 0.6) return conditionBgGood;
+  if (score >= 0.4) return conditionBgFair;
+  return conditionBgPoor;
 }
 
 function formatStatValue(value: string | undefined, suffix: '$' | '%'): string {
@@ -52,49 +52,51 @@ export function ComparisonColumn({ listing, assessment, marketValue, side, prosC
   return (
     <div
       data-testid={`comparison-column-${side}`}
-      className={`bg-white ${isWinner ? 'border-5 border-[#00FF00] shadow-[0_0_20px_rgba(0,255,0,0.3)]' : b5} ${roundedXl} ${shadow6} overflow-hidden flex flex-col transition-all duration-700`}
+      className={`${comparisonColumnStyles.rootBase} ${
+        isWinner ? comparisonColumnStyles.rootWinner : b5
+      }`}
     >
       {/* Listing Image */}
       {/* eslint-disable @next/next/no-img-element -- external Facebook CDN URLs */}
-      <div className={`w-full h-[200px] ${b5} ${roundedXl} overflow-hidden m-[-1px]`}>
+      <div className={comparisonColumnStyles.imageShell}>
         {displayImage ? (
           <img
             src={displayImage}
             alt={listing.title || 'Listing image'}
             referrerPolicy="no-referrer"
-            className="w-full h-full object-cover"
+            className={comparisonColumnStyles.image}
           />
         ) : (
-          <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-            <span className={`${space} text-sm font-semibold text-gray-400`}>No image</span>
+          <div className={comparisonColumnStyles.imageFallback}>
+            <span className={comparisonColumnStyles.imageFallbackText}>No image</span>
           </div>
         )}
       </div>
       {/* eslint-enable @next/next/no-img-element */}
 
-      <div className="p-5 flex flex-col gap-4">
+      <div className={comparisonColumnStyles.body}>
         {/* Title */}
-        <h2 className={`${anton} text-2xl uppercase text-black`}>
+        <h2 className={comparisonColumnStyles.title}>
           {listing.title || 'Untitled Listing'}
         </h2>
 
         {/* Price Badge */}
-        <div className="flex items-center gap-3 flex-wrap">
-          <div className={`bg-[#FF69B4] ${b5} ${shadow4} px-4 py-2 ${roundedXl}`}>
-            <span className={`${anton} text-xl text-black`}>{listing.price || 'N/A'}</span>
+        <div className={comparisonColumnStyles.priceRow}>
+          <div className={comparisonColumnStyles.priceBadge}>
+            <span className={comparisonColumnStyles.priceText}>{listing.price || 'N/A'}</span>
           </div>
         </div>
 
         {/* Condition Badge with Progress Bar */}
         {conditionScore !== undefined && conditionLabel && (
-          <div data-testid="condition-badge" className={`${getConditionColor(conditionScore)} ${b5} ${shadow4} ${roundedXl} px-4 py-3`}>
-            <div className="flex items-center justify-between mb-1">
-              <span className={`${space} text-sm font-bold uppercase`}>{conditionLabel}</span>
-              <span className={`${space} text-sm font-semibold`}>{Math.round(conditionScore * 100)}%</span>
+          <div data-testid="condition-badge" className={`${comparisonColumnStyles.conditionBadge} ${getConditionColor(conditionScore)}`}>
+            <div className={comparisonColumnStyles.conditionHeaderRow}>
+              <span className={comparisonColumnStyles.conditionLabel}>{conditionLabel}</span>
+              <span className={comparisonColumnStyles.conditionPct}>{Math.round(conditionScore * 100)}%</span>
             </div>
-            <div className={`h-3 w-full rounded-full bg-white/50 overflow-hidden border-2 border-black`}>
+            <div className={comparisonColumnStyles.conditionBar}>
               <div
-                className="h-full bg-black/30 transition-all duration-500"
+                className={comparisonColumnStyles.conditionBarFill}
                 style={{ width: `${Math.round(conditionScore * 100)}%` }}
               />
             </div>
@@ -109,32 +111,32 @@ export function ComparisonColumn({ listing, assessment, marketValue, side, prosC
         />
 
         {/* Stats Row: Suggested Offer | Market Value | Model Accuracy */}
-        <div className="grid grid-cols-3 gap-2">
-          <div className={`bg-[#90EE90] ${b5} ${roundedXl} p-3 text-center`}>
-            <p className={`${anton} text-xs uppercase mb-1`}>Suggested Offer</p>
-            <p className={`${space} text-sm font-bold`}>{suggestedOfferDisplay}</p>
+        <div className={comparisonColumnStyles.statsGrid}>
+          <div className={`${comparisonColumnStyles.statCardBase} ${comparisonColumnStyles.statBgSuggestedOffer}`}>
+            <p className={comparisonColumnStyles.statLabel}>Suggested Offer</p>
+            <p className={comparisonColumnStyles.statValue}>{suggestedOfferDisplay}</p>
           </div>
-          <div className={`bg-[#FF69B4] ${b5} ${roundedXl} p-3 text-center`}>
-            <p className={`${anton} text-xs uppercase mb-1`}>Market Value</p>
-            <p className={`${space} text-sm font-bold`}>{marketValueDisplay}</p>
+          <div className={`${comparisonColumnStyles.statCardBase} ${comparisonColumnStyles.statBgMarketValue}`}>
+            <p className={comparisonColumnStyles.statLabel}>Market Value</p>
+            <p className={comparisonColumnStyles.statValue}>{marketValueDisplay}</p>
           </div>
-          <div className={`bg-[#FF6600] ${b5} ${roundedXl} p-3 text-center`}>
-            <p className={`${anton} text-xs uppercase mb-1`}>Accuracy</p>
-            <p className={`${space} text-sm font-bold text-white`}>{modelAccuracyDisplay}</p>
+          <div className={`${comparisonColumnStyles.statCardBase} ${comparisonColumnStyles.statBgAccuracy}`}>
+            <p className={comparisonColumnStyles.statLabel}>Accuracy</p>
+            <p className={comparisonColumnStyles.statValueWhite}>{modelAccuracyDisplay}</p>
           </div>
         </div>
 
         {/* Why This Price? */}
         {topReasons && topReasons.length > 0 && (
           <div>
-            <h3 className={`${anton} text-lg uppercase text-black mb-2`}>Why This Price?</h3>
-            <div className="flex flex-col gap-2">
+            <h3 className={comparisonColumnStyles.sectionTitle}>Why This Price?</h3>
+            <div className={comparisonColumnStyles.reasonsCol}>
               {topReasons.map((reason, index) => (
-                <div key={`${reason}-${index + 1}`} className={`bg-white ${b5} ${roundedXl} p-3 flex items-center gap-3`}>
-                  <div className="flex-shrink-0 w-8 h-8 rounded-lg border-3 border-black bg-black text-white flex items-center justify-center text-sm font-black">
+                <div key={`${reason}-${index + 1}`} className={comparisonColumnStyles.reasonCard}>
+                  <div className={comparisonColumnStyles.reasonNumber}>
                     {index + 1}
                   </div>
-                  <p className={`${space} text-sm font-semibold text-gray-700`}>{reason}</p>
+                  <p className={comparisonColumnStyles.reasonText}>{reason}</p>
                 </div>
               ))}
             </div>
@@ -144,9 +146,9 @@ export function ComparisonColumn({ listing, assessment, marketValue, side, prosC
         {/* Negotiation Tip */}
         {negotiationTip && (
           <div>
-            <h3 className={`${anton} text-lg uppercase text-black mb-2`}>Negotiation Tip</h3>
-            <div className={`bg-white ${b5} ${roundedXl} p-3`}>
-              <p className={`${space} text-sm font-semibold text-gray-700`}>{negotiationTip}</p>
+            <h3 className={comparisonColumnStyles.sectionTitle}>Negotiation Tip</h3>
+            <div className={comparisonColumnStyles.tipCard}>
+              <p className={comparisonColumnStyles.tipText}>{negotiationTip}</p>
             </div>
           </div>
         )}

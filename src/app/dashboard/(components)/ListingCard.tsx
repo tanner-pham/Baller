@@ -2,14 +2,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { ExternalLink, BarChart3, Scale, Plus, Check } from 'lucide-react';
-import {
-  anton,
-  space,
-  b5,
-  shadow4,
-  roundedXl,
-  pressable,
-} from '../../consts';
+import { listingCardStyles } from '../../consts';
 
 interface ListingCardProps {
   title: string;
@@ -37,84 +30,85 @@ export default function ListingCard({
   const [hovered, setHovered] = useState<'baller' | 'compare' | null>(null);
 
   return (
-    <div className="flex h-full flex-col items-center rounded-xl border-5 border-black bg-[#FADF0B] p-6 text-center shadow-[6px_6px_0px_0px_#000000] transition-all">
+    <div className={listingCardStyles.root}>
 
       {/* Price */}
-      <div className="mb-6 rounded-xl border-5 border-black bg-[#90EE90] px-6 py-3 shadow-[4px_4px_0px_0px_#000000] transition-all">
-        <span className={`${anton} text-3xl text-black uppercase`}>
+      <div className={listingCardStyles.priceBox}>
+        <span className={listingCardStyles.priceText}>
           ${price.toLocaleString()}
         </span>
       </div>
 
       {/* Image with Add to Compare overlay */}
-      <div className="relative mb-6 h-44 w-full overflow-hidden rounded-xl border-5 border-black bg-white">
+      <div className={listingCardStyles.imageWrap}>
         {/* eslint-disable-next-line @next/next/no-img-element -- external Facebook CDN URLs */}
         <img
           src={image}
           alt={title}
           referrerPolicy="no-referrer"
-          className="h-full w-full object-cover"
+          className={listingCardStyles.image}
         />
         {onToggleCompare && (
           <button
             type="button"
             onClick={() => onToggleCompare()}
             aria-label="Add to compare"
-            className={`absolute top-2 right-2 flex size-8 items-center justify-center rounded-full ${b5} shadow-[2px_2px_0px_0px_#000000] transition-all ${
+            className={`${listingCardStyles.compareOverlayButtonBase} ${
               isSelectedForCompare
-                ? 'bg-[#FF69B4] text-white'
-                : 'bg-white text-black'
+                ? listingCardStyles.compareOverlaySelected
+                : listingCardStyles.compareOverlayUnselected
             }`}
           >
             {isSelectedForCompare ? (
-              <Check className="size-4" strokeWidth={3} />
+              <Check className={listingCardStyles.overlayIcon} strokeWidth={3} />
             ) : (
-              <Plus className="size-4" strokeWidth={3} />
+              <Plus className={listingCardStyles.overlayIcon} strokeWidth={3} />
             )}
           </button>
         )}
       </div>
 
       {/* Title */}
-      <h2 className={`${anton} text-3xl mb-3 text-center text-black`}>
+      <h2 className={listingCardStyles.title}>
         {title}
       </h2>
 
       {/* Location */}
-      <p className={`${space} font-semibold text-gray-700 text-center`}>
+      <p className={listingCardStyles.location}>
         {location}
       </p>
 
       {/* Baller Actions Row — flex back and forth on hover */}
       <div
-        className="mt-auto flex gap-2 w-full pt-6"
+        className={listingCardStyles.actionsRow}
         onMouseLeave={() => setHovered(null)}
       >
         {/* RUN IN BALLER - internal navigation */}
         {ballerUrl && (
           <div
-            className={`min-w-0 transition-all duration-300 ease-in-out ${
-              hovered === null ? 'flex-1' :
-              hovered === 'baller' ? 'flex-[3]' : 'flex-[0_0_2.5rem]'
+            className={`${listingCardStyles.actionColWrap} ${
+              hovered === null ? listingCardStyles.actionFlexDefault
+                : hovered === 'baller' ? listingCardStyles.actionFlexExpanded
+                  : listingCardStyles.actionFlexCollapsed
             }`}
             onMouseEnter={() => setHovered('baller')}
           >
             <Link
               href={ballerUrl}
-              className={`flex items-center justify-center h-full bg-[#FF6600] text-white ${b5} py-3 ${shadow4} ${roundedXl} ${pressable} overflow-hidden transition-all duration-300 ${
-                hovered !== null && hovered !== 'baller' ? 'px-0' : 'px-4'
+              className={`${listingCardStyles.actionLinkBase} ${listingCardStyles.actionLinkBallerBg} ${
+                hovered !== null && hovered !== 'baller' ? listingCardStyles.actionPadCollapsed : listingCardStyles.actionPadDefault
               }`}
             >
-              <div className={`transition-opacity duration-200 overflow-hidden ${
-                hovered !== null && hovered !== 'baller' ? 'opacity-0 w-0' : 'opacity-100'
+              <div className={`${listingCardStyles.actionInner} ${
+                hovered !== null && hovered !== 'baller' ? listingCardStyles.actionInnerHidden : listingCardStyles.actionInnerVisible
               }`}>
-                <span className={`${anton} text-base uppercase text-center block whitespace-nowrap`}>
+                <span className={listingCardStyles.actionLabel}>
                   RUN IN BALLER
                 </span>
                 {hovered === 'baller' && (
-                  <div className="flex items-center justify-center gap-1 mt-1">
-                    <BarChart3 className="size-3" />
-                    <span className={`${space} text-xs font-semibold whitespace-nowrap`}>Full price analysis</span>
+                  <div className={listingCardStyles.actionSubRow}>
+                    <BarChart3 className={listingCardStyles.actionSubIcon} />
+                    <span className={listingCardStyles.actionSubText}>Full price analysis</span>
                   </div>
                 )}
               </div>
@@ -125,28 +119,29 @@ export default function ListingCard({
         {/* COMPARE - internal navigation */}
         {compareUrl && (
           <div
-            className={`min-w-0 transition-all duration-300 ease-in-out ${
-              hovered === null ? 'flex-1' :
-              hovered === 'compare' ? 'flex-[3]' : 'flex-[0_0_2.5rem]'
+            className={`${listingCardStyles.actionColWrap} ${
+              hovered === null ? listingCardStyles.actionFlexDefault
+                : hovered === 'compare' ? listingCardStyles.actionFlexExpanded
+                  : listingCardStyles.actionFlexCollapsed
             }`}
             onMouseEnter={() => setHovered('compare')}
           >
             <Link
               href={compareUrl}
-              className={`flex items-center justify-center h-full bg-[#FF69B4] text-white ${b5} py-3 ${shadow4} ${roundedXl} ${pressable} overflow-hidden transition-all duration-300 ${
-                hovered !== null && hovered !== 'compare' ? 'px-0' : 'px-4'
+              className={`${listingCardStyles.actionLinkBase} ${listingCardStyles.actionLinkCompareBg} ${
+                hovered !== null && hovered !== 'compare' ? listingCardStyles.actionPadCollapsed : listingCardStyles.actionPadDefault
               }`}
             >
-              <div className={`transition-opacity duration-200 overflow-hidden ${
-                hovered !== null && hovered !== 'compare' ? 'opacity-0 w-0' : 'opacity-100'
+              <div className={`${listingCardStyles.actionInner} ${
+                hovered !== null && hovered !== 'compare' ? listingCardStyles.actionInnerHidden : listingCardStyles.actionInnerVisible
               }`}>
-                <span className={`${anton} text-base uppercase text-center block whitespace-nowrap`}>
+                <span className={listingCardStyles.actionLabel}>
                   COMPARE
                 </span>
                 {hovered === 'compare' && (
-                  <div className="flex items-center justify-center gap-1 mt-1">
-                    <Scale className="size-3" />
-                    <span className={`${space} text-xs font-semibold whitespace-nowrap`}>Side-by-side</span>
+                  <div className={listingCardStyles.actionSubRow}>
+                    <Scale className={listingCardStyles.actionSubIcon} />
+                    <span className={listingCardStyles.actionSubText}>Side-by-side</span>
                   </div>
                 )}
               </div>
@@ -160,12 +155,12 @@ export default function ListingCard({
         href={link}
         target="_blank"
         rel="noopener noreferrer"
-        className={`mt-2 flex w-full items-center justify-center gap-2 bg-[#3300FF] text-white ${b5} py-3 px-4 ${shadow4} ${roundedXl} ${pressable}`}
+        className={listingCardStyles.facebookLink}
       >
-        <span className={`${anton} text-base uppercase whitespace-nowrap`}>
+        <span className={listingCardStyles.facebookText}>
           VIEW ON FACEBOOK
         </span>
-        <ExternalLink className="size-4" />
+        <ExternalLink className={listingCardStyles.facebookIcon} />
       </a>
 
     </div>

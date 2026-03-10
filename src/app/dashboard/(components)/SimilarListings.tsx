@@ -1,6 +1,7 @@
 'use client';
 
 import ListingCard from './ListingCard';
+import { similarListingsStyles } from '../../consts';
 
 export interface SimilarListing {
   title: string;
@@ -31,14 +32,14 @@ export function SimilarListings({
   compareSelections,
 }: SimilarListingsProps) {
   return (
-    <section className="border-t-4 border-b-4 border-black bg-[#3300FF] p-15">
-      <div className="mx-auto w-full max-w-6xl">
-        <div className="relative rounded-xl border-5 border-black bg-white p-8 shadow-[8px_8px_0px_0px_#000000]">
-          <h1 className="mb-4 pb-7 text-center text-6xl text-black font-['Anton',sans-serif] lg:text-7xl">
+    <section className={similarListingsStyles.section}>
+      <div className={similarListingsStyles.container}>
+        <div className={similarListingsStyles.frame}>
+          <h1 className={similarListingsStyles.title}>
             SIMILAR LISTINGS
           </h1>
 
-          <div className="mb-6 flex snap-x snap-mandatory gap-6 overflow-x-auto no-scrollbar items-stretch">
+          <div className={similarListingsStyles.row}>
             {listings.map((listing) => {
               const ballerUrl = `/dashboard?listingUrl=${encodeURIComponent(listing.link)}`;
               const compareUrl = currentListingUrl
@@ -58,7 +59,7 @@ export function SimilarListings({
               return (
                 <div
                   key={`${listing.link}-${listing.title}`}
-                  className="w-[calc((100%_-_2*1.5rem)/3)] flex-shrink-0 snap-start flex"
+                  className={similarListingsStyles.itemWrap}
                 >
                   <ListingCard
                     {...listing}
@@ -72,7 +73,7 @@ export function SimilarListings({
             })}
           </div>
 
-          <p className="text-center text-sm text-gray-400 font-['Anton',sans-serif] uppercase tracking-widest">
+          <p className={similarListingsStyles.swipeHint}>
             Swipe for more &rarr;
           </p>
         </div>
