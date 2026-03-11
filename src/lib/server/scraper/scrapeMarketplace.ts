@@ -141,6 +141,10 @@ export async function scrapeMarketplaceListing(
     timeoutMs: DEFAULT_LISTING_FETCH_TIMEOUT_MS,
   });
 
+  // DEBUG: Save raw HTML for inspection
+  require('fs').writeFileSync('/tmp/baller-raw-html.txt', listingFetchResult.html.slice(0, 50000));
+  require('fs').writeFileSync('/tmp/baller-transport.txt', `transport: ${listingFetchResult.transport}, htmlLength: ${listingFetchResult.html.length}`);
+
   // Step 2: Parse listing from HTML
   let listing: NormalizedMarketplaceListing;
   let listingMetadata: { listingCandidates: number };

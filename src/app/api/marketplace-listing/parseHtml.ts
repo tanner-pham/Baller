@@ -920,6 +920,35 @@ export function parseMarketplaceListingHtml(input: {
 
   const requestedItemId = normalizeWhitespace(input.requestedItemId ?? undefined) ?? null;
 
+  // DEBUG: Search all parsed blocks for the requested item ID to find where it lives
+  const fs = require('fs');
+  const debugLines: string[] = [];
+  if (requestedItemId) {
+    const idStr = requestedItemId;
+    for (let i = 0; i < parsedBlocks.length; i++) {
+      const blockStr = JSON.stringify(parsedBlocks[i]);
+      if (blockStr.includes(idStr)) {
+        debugLines.push(`\n=== BLOCK ${i} contains requestedItemId ${idStr} ===`);
+        // Find the object containing the ID
+        walkObjects(parsedBlocks[i], (node) => {
+          const nodeStr = JSON.stringify(node);
+          if (nodeStr.includes(idStr) && nodeStr.length < 5000) {
+            const nodeId = isRecord(node) ? (node.id ?? node.listing_id) : undefined;
+            if (String(nodeId) === idStr) {
+              debugLines.push(`DIRECT ID MATCH - keys: ${Object.keys(node).join(', ')}`);
+              debugLines.push(`node snippet: ${nodeStr.slice(0, 2000)}`);
+            }
+          }
+        });
+      }
+    }
+  }
+  debugLines.push(`\ncandidates: ${candidates.length}, parsedBlocks: ${parsedBlocks.length}`);
+  if (domFallback) {
+    debugLines.push(`domFallback title: ${domFallback.listing.title}, location: ${domFallback.listing.location}`);
+  }
+  fs.writeFileSync('/tmp/baller-debug.log', debugLines.join('\n') + '\n');
+
   const selectedCandidate = (
     requestedItemId
       ? candidates.find((candidate) => {
