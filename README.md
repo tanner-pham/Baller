@@ -17,7 +17,42 @@ Baller is a Next.js app that helps users evaluate Facebook Marketplace listings 
 **Git Tag:** `final-release`
 
 ### What's New Since Gamma
-*UNSURE WHAT ALL THE NEW FEATURES ARE*
+The final release adds a full comparison engine, scam detection, and significant testing and infrastructure improvements.
+
+**Comparison View**
+- New `/compare` page with side-by-side listing analysis — dual data pipelines fetch and assess both listings in parallel.
+- Rule-based pros/cons engine generates instant chips comparing price, condition, and listing details.
+- AI-powered verdict via `/api/compare-verdict` endpoint using GPT to evaluate feature-level differences and pick a winner.
+- Diff summary banner highlights price and condition differences at a glance.
+- CompareBar sticky footer lets users select up to 2 listings from the dashboard for comparison.
+- ListingCard redesigned with three actions: RUN IN BALLER (analyze in dashboard), COMPARE (side-by-side), and VIEW ON FACEBOOK (external link).
+
+**Scam Detection**
+- GPT-powered scam risk scoring integrated into the existing condition assessment pipeline.
+- Returns a risk score (0.0-1.0), risk level (Low/Medium/High), and up to 4 specific red flag indicators.
+- ScamRiskBanner component displayed on the dashboard with color-coded risk levels and flagged concerns.
+
+**Dashboard UX**
+- AnalysisProgress component shows step-by-step loading state while listings are being fetched and analyzed.
+- Back to Listing button for returning to a previous analysis.
+- Improved spacing and layout consistency across dashboard sections.
+- Frontend code cleanup using shared style constants from `consts.ts`.
+
+**Scraper Improvements**
+- Replaced Playwright-based scraper with direct fetch + HTML parsing — faster and eliminates Playwright dependency issues on Vercel.
+- Hardened marketplace listing hydration to handle incomplete or malformed scrape results with stale cache fallbacks.
+
+**Testing and CI**
+- Relocated orphaned backend tests into `tests/backend/` directory structure.
+- Added test coverage for `imageUtils`, `http`, `listingUtils`, and `assess-condition/normalize`.
+- Fixed fetch is not defined errors in CompareClient tests by mocking `useCompareVerdict`.
+- Fixed Windows cmd compatibility for Mocha glob patterns.
+- 141 frontend (Jest) + 45 backend (Mocha) tests passing, lint clean.
+
+**Documentation**
+- Added user documentation (`docs/USER_GUIDE.md`).
+- Updated developer documentation (`docs/CONTRIBUTING.md`).
+- Updated issue templates.
 
 ---
 
