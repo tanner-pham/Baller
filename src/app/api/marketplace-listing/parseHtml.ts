@@ -171,7 +171,7 @@ function getListingPrice(value: UnknownRecord): string | undefined {
   return undefined;
 }
 
-function stripMeetupPreference(loc: string | undefined): string | undefined {
+export function stripMeetupPreference(loc: string | undefined): string | undefined {
   if (!loc) return loc;
   return normalizeWhitespace(
     loc.replace(/\s+(?:Public meetup|Seller'?s? location|Door (?:pickup|dropoff)|Meetup(?: & dropoff)?)$/i, ''),
@@ -619,7 +619,7 @@ function extractPriceFromText(content: string): string | undefined {
   return undefined;
 }
 
-function extractLocationFromText(content: string): string | undefined {
+export function extractLocationFromText(content: string): string | undefined {
   const locationPatterns = [
     /(?:Listed|Available)\s+in\s+(.+?)(?:\s+(?:Seller|Condition|Description|Message|Save)\b|$)/i,
     /(?:Location|Located)\s*[:\-]\s*(.+?)(?:\s+(?:Seller|Condition|Description|Message|Save)\b|$)/i,
@@ -637,7 +637,7 @@ function extractLocationFromText(content: string): string | undefined {
   return undefined;
 }
 
-function extractDescriptionFromText(content: string): string | undefined {
+export function extractDescriptionFromText(content: string): string | undefined {
   const descriptionMatch = content.match(
     /Description\s+(.+?)(?:\s+(?:Seller details|Condition|Listed|Location|Message seller|Save)\b|$)/i,
   );

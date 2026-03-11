@@ -18,6 +18,18 @@ const config: Config = {
       collectCoverageFrom: ['src/**/*.{ts,tsx}', '!src/**/*.d.ts', '!src/**/*.test.{ts,tsx}'],
       passWithNoTests: true,
     },
+    {
+      displayName: 'node',
+      testEnvironment: 'node',
+      testMatch: ['<rootDir>/src/**/*.test.{ts,tsx}'],
+      transform: {
+        '^.+\\.(ts|tsx)$': ['ts-jest', {}],
+      },
+      moduleNameMapper: {
+        '^@/(.*)$': '<rootDir>/$1',
+      },
+      passWithNoTests: true,
+    },
   ],
 };
 
