@@ -29,6 +29,11 @@ jest.mock('@/src/app/dashboard/hooks/useConditionAssessment', () => ({
   useConditionAssessment: (...args: unknown[]) => mockUseConditionAssessment(...args),
 }));
 
+// Mock useCompareVerdict to avoid real fetch calls in tests
+jest.mock('@/src/app/compare/hooks/useCompareVerdict', () => ({
+  useCompareVerdict: () => ({ verdict: null, isLoading: false, error: '' }),
+}));
+
 // Must import AFTER mocks are set up
 import CompareClient from '@/src/app/compare/CompareClient';
 
@@ -76,7 +81,6 @@ function setupMocks(overrides: {
     rightResolved = true,
   } = overrides;
 
-  // Track call count to return left vs right values
   let listingCallCount = 0;
   mockUseMarketplaceListing.mockImplementation(() => {
     listingCallCount++;
@@ -109,7 +113,6 @@ describe('CompareClient', () => {
   it('renders two ComparisonColumn components when both listings are loaded', () => {
     setupMocks();
     const { container } = render(<CompareClient />);
-
     expect(container.querySelector('[data-testid="comparison-column-left"]')).toBeInTheDocument();
     expect(container.querySelector('[data-testid="comparison-column-right"]')).toBeInTheDocument();
   });
@@ -117,7 +120,6 @@ describe('CompareClient', () => {
   it('renders ColumnSkeleton for right column while right listing is loading', () => {
     setupMocks({ rightLoading: true, rightResolved: false });
     const { container } = render(<CompareClient />);
-
     expect(container.querySelector('[data-testid="comparison-column-left"]')).toBeInTheDocument();
     expect(container.querySelector('[data-testid="column-skeleton"]')).toBeInTheDocument();
   });
@@ -125,7 +127,6 @@ describe('CompareClient', () => {
   it('renders breadcrumb "Back to Analysis" link at top', () => {
     setupMocks();
     render(<CompareClient />);
-
     const breadcrumb = screen.getByText(/back to analysis/i);
     expect(breadcrumb).toBeInTheDocument();
     const link = breadcrumb.closest('a');
@@ -135,7 +136,6 @@ describe('CompareClient', () => {
   it('reads left and right URLs from searchParams', () => {
     setupMocks();
     render(<CompareClient />);
-
     expect(mockGet).toHaveBeenCalledWith('left');
     expect(mockGet).toHaveBeenCalledWith('right');
   });
@@ -143,19 +143,17 @@ describe('CompareClient', () => {
   it('shows error state if left === right URL (same listing)', () => {
     mockGet.mockImplementation((key: string) => {
       if (key === 'left') return leftUrl;
-      if (key === 'right') return leftUrl; // Same URL
+      if (key === 'right') return leftUrl;
       return null;
     });
     setupMocks();
     render(<CompareClient />);
-
     expect(screen.getByText(/comparing the same listing/i)).toBeInTheDocument();
   });
 
   it('shows error state for failed column load', () => {
     setupMocks({ rightError: 'Failed to load listing', rightListing: null });
     render(<CompareClient />);
-
     expect(screen.getByText(/unable to load this listing/i)).toBeInTheDocument();
   });
 });
