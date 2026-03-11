@@ -77,7 +77,7 @@ Since Baller is open-source, we want reporting issues to be quick and easy. If y
 
 3. Click GitHub, then navigate to Issues.
 
-4. Select **[New Issue](https://github.com/tanner-pham/Baller/issues)** or choose from our [issue templates](.github/ISSUE_TEMPLATE).
+4. Select **[New Issue](https://github.com/tanner-pham/Baller/issues)** or choose from our [issue templates](https://github.com/tanner-pham/Baller/tree/main/.github/ISSUE_TEMPLATE).
 
 5. Describe the issue in as much detail as possible (include steps to reproduce, what you expected, and what actually happened).
 
