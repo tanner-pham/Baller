@@ -27,6 +27,8 @@ Note: This is different from the platform’s Share link. Use the image below as
 
 4. Paste the URL into Baller and click Search.
 
+5. If users want to paste in more than one listing, they must create an account.
+
 ### Creating an account (optional)
 
 You can create an account with Baller to keep a record of your **25 most recent listing analysis queries**, ensuring your history is never lost. Your dashboard will automatically save these searches, making it easy to revisit and compare listings that have caught your interest. You will need to provide an email and create a password. Ensure that you verify your email with the code sent to your inbox before logging in with your credentials. 
