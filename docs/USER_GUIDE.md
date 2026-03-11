@@ -29,7 +29,7 @@ Note: This is different from the platform’s Share link. Use the image below as
 
 ### Creating an account (optional)
 
-The intention of Baller is to push our users to create accounts. In future iterations we plan to implement it so that those who do want to utilize the app more then once will be pushed to create an account to do so. Creating an acount also has the benefit of storing a users most recent 25 analyzed listings for quick access later in the dashboard.
+You can create an account with Baller to keep a record of your **25 most recent listing analysis queries**, ensuring your history is never lost. Your dashboard will automatically save these searches, making it easy to revisit and compare listings that have caught your interest. You will need to provide an email and create a password. Ensure that you verify your email with the code sent to your inbox before logging in with your credentials. 
 
 ## Baller Basics
 
@@ -75,7 +75,7 @@ Since Baller is open-source, we want reporting issues to be quick and easy. If y
 
 3. Click GitHub, then navigate to Issues.
 
-4. Select **New Issue** or choose from our templates.
+4. Select **[New Issue](https://github.com/tanner-pham/Baller/issues)** or choose from our [issue templates](.github/ISSUE_TEMPLATE).
 
 5. Describe the issue in as much detail as possible (include steps to reproduce, what you expected, and what actually happened).
 
