@@ -3,9 +3,9 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: completed
-stopped_at: "Completed quick task 3: Fix description including see more text"
-last_updated: "2026-03-11T01:19:45.320Z"
-last_activity: "2026-03-11 — Completed quick task 3: Fix description including See more text and incorrect location extraction"
+stopped_at: "Completed quick task 5: Fix remaining marketplace listing extraction bugs where description is missing or location contains adjacent UI text, and reduce scrape latency without regressing data quality"
+last_updated: "2026-03-13T07:28:27Z"
+last_activity: "2026-03-13 — Completed quick task 5: Fix remaining marketplace listing extraction bugs where description is missing or location contains adjacent UI text, and reduce scrape latency without regressing data quality"
 progress:
   total_phases: 4
   completed_phases: 3
@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-03-05)
 Phase: 3 of 3 (Pros/Cons and Verdict)
 Plan: 2 of 2 in current phase (03-02 complete)
 Status: Complete
-Last activity: 2026-03-11 — Completed quick task 3: Fix description including See more text and incorrect location extraction
+Last activity: 2026-03-13 — Completed quick task 5: Fix remaining marketplace listing extraction bugs where description is missing or location contains adjacent UI text, and reduce scrape latency without regressing data quality
 
 Progress: [██████████] 100%
 
@@ -90,6 +90,8 @@ Recent decisions affecting current work:
 - [Quick-002]: Scraping stores a full `images[]` array when listing HTML exposes it, but both GPT-4o paths currently send only the first image
 - [Quick-003]: extractLocationFromText uses [a-z]\\s+ lookback before city capture to distinguish city name from condition adjectives (e.g., 'Good Federal Way' -> 'Federal Way')
 - [Quick-003]: DOM fallback location now applies stripMeetupPreference, matching JSON path behavior
+- [Quick-005]: Listing candidate dedupe now keeps the highest-quality record per item and expands structured description extraction beyond `redacted_description.text`
+- [Quick-005]: Location sanitization trims Marketplace CTA text across structured fields, DOM fallbacks, and simple-listing search fallbacks; incomplete listing scrapes now start comparable search and detail retry in parallel and merge recovered fields afterward
 
 ### Roadmap Evolution
 
@@ -112,9 +114,10 @@ None yet.
 | 1 | Fix intermittent marketplace listing scrape race where image and description are sometimes missing or wrong; verify the fix | 2026-03-09 | caa726c | [1-fix-intermittent-marketplace-listing-scr](./quick/1-fix-intermittent-marketplace-listing-scr/) |
 | 2 | Inspect whether marketplace scraping captures all listing images and whether GPT-4o receives all images or only the primary one | 2026-03-09 | 42b39d1 | [2-inspect-whether-marketplace-scraping-cap](./quick/2-inspect-whether-marketplace-scraping-cap/) |
 | 3 | Fix description including see more text — stop description bleed and extract City, ST from DOM fallback text | 2026-03-11 | 5dccc2d | [3-fix-description-including-see-more-text-](./quick/3-fix-description-including-see-more-text-/) |
+| 5 | Fix remaining marketplace listing extraction bugs where description is missing or location contains adjacent UI text, and reduce scrape latency without regressing data quality | 2026-03-13 | 8993013 | [5-fix-remaining-marketplace-listing-extrac](./quick/5-fix-remaining-marketplace-listing-extrac/) |
 
 ## Session Continuity
 
-Last session: 2026-03-11T01:19:45.317Z
-Stopped at: Completed quick task 3: Fix description including see more text
-Resume file: .planning/quick/3-fix-description-including-see-more-text-/3-SUMMARY.md
+Last session: 2026-03-13T07:28:27Z
+Stopped at: Completed quick task 5: Fix remaining marketplace listing extraction bugs where description is missing or location contains adjacent UI text, and reduce scrape latency without regressing data quality
+Resume file: .planning/quick/5-fix-remaining-marketplace-listing-extrac/5-SUMMARY.md
