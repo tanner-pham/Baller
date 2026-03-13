@@ -22,6 +22,20 @@ const DEFAULT_LISTING_FETCH_TIMEOUT_MS = 15_000;
 const DEFAULT_SEARCH_FETCH_TIMEOUT_MS = 15_000;
 const RETRY_LISTING_FETCH_TIMEOUT_MS = 25_000;
 
+type ScrapeMarketplaceListingDeps = {
+  parseMarketplaceListingHtml: typeof parseMarketplaceListingHtml;
+  parseMarketplaceSearchHtml: typeof parseMarketplaceSearchHtml;
+  buildMarketplaceSearchUrl: typeof buildMarketplaceSearchUrl;
+  fetchMarketplaceHtmlWithFallback: typeof fetchMarketplaceHtmlWithFallback;
+};
+
+const defaultScrapeMarketplaceListingDeps: ScrapeMarketplaceListingDeps = {
+  parseMarketplaceListingHtml,
+  parseMarketplaceSearchHtml,
+  buildMarketplaceSearchUrl,
+  fetchMarketplaceHtmlWithFallback,
+};
+
 function buildFetchCandidates(url: string): string[] {
   const candidates: string[] = [];
   const seen = new Set<string>();
@@ -118,6 +132,29 @@ function pickHigherQualityListing(
   return candidateScore >= currentScore ? candidateListing : currentListing;
 }
 
+function mergeMissingListingFields(
+  preferredListing: NormalizedMarketplaceListing,
+  fallbackListing: NormalizedMarketplaceListing,
+): NormalizedMarketplaceListing {
+  const preferredImages = preferredListing.images?.filter(Boolean) ?? [];
+  const fallbackImages = fallbackListing.images?.filter(Boolean) ?? [];
+
+  return {
+    ...preferredListing,
+    title: preferredListing.title || fallbackListing.title,
+    description: preferredListing.description || fallbackListing.description,
+    price: preferredListing.price || fallbackListing.price,
+    location: preferredListing.location || fallbackListing.location,
+    locationId: preferredListing.locationId || fallbackListing.locationId,
+    images: preferredImages.length > 0
+      ? Array.from(new Set([...preferredImages, ...fallbackImages]))
+      : fallbackImages.length > 0 ? fallbackImages : undefined,
+    sellerName: preferredListing.sellerName || fallbackListing.sellerName,
+    listingDate: preferredListing.listingDate || fallbackListing.listingDate,
+    condition: preferredListing.condition || fallbackListing.condition,
+  };
+}
+
 /**
  * Scrape a Facebook Marketplace listing and its comparables.
  *
@@ -132,9 +169,10 @@ function pickHigherQualityListing(
 export async function scrapeMarketplaceListing(
   listingUrl: string,
   listingId: string | null,
+  deps: ScrapeMarketplaceListingDeps = defaultScrapeMarketplaceListingDeps,
 ): Promise<NormalizedMarketplaceListing> {
   // Step 1: Fetch listing HTML
-  const listingFetchResult = await fetchMarketplaceHtmlWithFallback({
+  const listingFetchResult = await deps.fetchMarketplaceHtmlWithFallback({
     urls: buildFetchCandidates(listingUrl),
     referer: 'https://www.facebook.com/marketplace/',
     bootstrapUrl: 'https://www.facebook.com/marketplace/',
@@ -145,7 +183,7 @@ export async function scrapeMarketplaceListing(
   let listing: NormalizedMarketplaceListing;
   let listingMetadata: { listingCandidates: number };
   try {
-    const parsed = parseMarketplaceListingHtml({
+    const parsed = deps.parseMarketplaceListingHtml({
       html: listingFetchResult.html,
       requestedItemId: listingId,
     });
@@ -162,79 +200,85 @@ export async function scrapeMarketplaceListing(
 
   // Step 3: Fetch and parse comparable search results
   let simpleListings = listing.simpleListings ?? [];
+  const shouldRetryListingFetch = shouldRetryIncompleteListingFetch({
+    listing,
+    metadata: listingMetadata,
+    transport: listingFetchResult.transport,
+    capturedGraphqlPayloadMatchingItemIdCount:
+      listingFetchResult.capturedGraphqlPayloadMatchingItemIdCount,
+  });
 
-  if (simpleListings.length === 0) {
-    try {
-      const searchUrl = buildMarketplaceSearchUrl({
-        title: listing.title,
-        location: listing.location,
-        locationId: listing.locationId,
-        condition: listing.condition,
-        price: listing.price,
-      });
+  const comparableSearchPromise = simpleListings.length === 0
+    ? (async (): Promise<NormalizedSimpleListing[]> => {
+        try {
+          const searchUrl = deps.buildMarketplaceSearchUrl({
+            title: listing.title,
+            location: listing.location,
+            locationId: listing.locationId,
+            condition: listing.condition,
+            price: listing.price,
+          });
 
-      const searchFetchResult = await fetchMarketplaceHtmlWithFallback({
-        urls: buildFetchCandidates(searchUrl),
-        referer: 'https://www.facebook.com/marketplace/',
-        bootstrapUrl: 'https://www.facebook.com/marketplace/',
-        timeoutMs: DEFAULT_SEARCH_FETCH_TIMEOUT_MS,
-      });
+          const searchFetchResult = await deps.fetchMarketplaceHtmlWithFallback({
+            urls: buildFetchCandidates(searchUrl),
+            referer: 'https://www.facebook.com/marketplace/',
+            bootstrapUrl: 'https://www.facebook.com/marketplace/',
+            timeoutMs: DEFAULT_SEARCH_FETCH_TIMEOUT_MS,
+          });
 
-      simpleListings = parseMarketplaceSearchHtml(searchFetchResult.html);
-    } catch (searchError) {
-      console.warn(
-        '[scraper] Comparable search failed, continuing without comparables:',
-        searchError instanceof Error ? searchError.message : searchError,
-      );
+          return deps.parseMarketplaceSearchHtml(searchFetchResult.html);
+        } catch (searchError) {
+          console.warn(
+            '[scraper] Comparable search failed, continuing without comparables:',
+            searchError instanceof Error ? searchError.message : searchError,
+          );
+          return [];
+        }
+      })()
+    : Promise.resolve(simpleListings);
+  const retryListingPromise = shouldRetryListingFetch
+    ? (async (): Promise<NormalizedMarketplaceListing | null> => {
+        try {
+          const retryFetchResult = await deps.fetchMarketplaceHtmlWithFallback({
+            urls: buildFetchCandidates(listingUrl),
+            referer: 'https://www.facebook.com/marketplace/',
+            bootstrapUrl: 'https://www.facebook.com/marketplace/',
+            timeoutMs: RETRY_LISTING_FETCH_TIMEOUT_MS,
+          });
+
+          const retryParsed = deps.parseMarketplaceListingHtml({
+            html: retryFetchResult.html,
+            requestedItemId: listingId,
+          });
+
+          return retryParsed.listing;
+        } catch (retryError) {
+          console.warn(
+            '[scraper] Listing detail retry failed, using best initial payload:',
+            retryError instanceof Error ? retryError.message : retryError,
+          );
+          return null;
+        }
+      })()
+    : Promise.resolve(null);
+
+  if (shouldRetryListingFetch) {
+    const retriedListing = await retryListingPromise;
+
+    if (retriedListing) {
+      const preferredListing = pickHigherQualityListing(listing, retriedListing);
+      const fallbackListing = preferredListing === listing ? retriedListing : listing;
+      listing = mergeMissingListingFields(preferredListing, fallbackListing);
     }
   }
+
+  simpleListings = await comparableSearchPromise;
 
   // Step 4: Fill missing listing fields from search results
   // (when unauthenticated, listing page only returns og: meta — price/location
   // come from matching the listing in search results)
   if (!listing.price || !listing.location || !hasMarketplaceListingImage(listing)) {
     listing = mergeSearchMatchIntoListing(listing, simpleListings, listingId);
-  }
-
-  if (
-    shouldRetryIncompleteListingFetch({
-      listing,
-      metadata: listingMetadata,
-      transport: listingFetchResult.transport,
-      capturedGraphqlPayloadMatchingItemIdCount:
-        listingFetchResult.capturedGraphqlPayloadMatchingItemIdCount,
-    })
-  ) {
-    try {
-      const retryFetchResult = await fetchMarketplaceHtmlWithFallback({
-        urls: buildFetchCandidates(listingUrl),
-        referer: 'https://www.facebook.com/marketplace/',
-        bootstrapUrl: 'https://www.facebook.com/marketplace/',
-        timeoutMs: RETRY_LISTING_FETCH_TIMEOUT_MS,
-      });
-
-      const retryParsed = parseMarketplaceListingHtml({
-        html: retryFetchResult.html,
-        requestedItemId: listingId,
-      });
-
-      let retriedListing = retryParsed.listing;
-
-      if (
-        !retriedListing.price ||
-        !retriedListing.location ||
-        !hasMarketplaceListingImage(retriedListing)
-      ) {
-        retriedListing = mergeSearchMatchIntoListing(retriedListing, simpleListings, listingId);
-      }
-
-      listing = pickHigherQualityListing(listing, retriedListing);
-    } catch (retryError) {
-      console.warn(
-        '[scraper] Listing detail retry failed, using best initial payload:',
-        retryError instanceof Error ? retryError.message : retryError,
-      );
-    }
   }
 
   // Step 5: Convert simpleListings to similarListings for frontend compatibility
