@@ -90,6 +90,8 @@ Recent decisions affecting current work:
 - [Quick-002]: Scraping stores a full `images[]` array when listing HTML exposes it, but both GPT-4o paths currently send only the first image
 - [Quick-003]: extractLocationFromText uses [a-z]\\s+ lookback before city capture to distinguish city name from condition adjectives (e.g., 'Good Federal Way' -> 'Federal Way')
 - [Quick-003]: DOM fallback location now applies stripMeetupPreference, matching JSON path behavior
+- [Quick-004]: Backfill comparables is ephemeral (in-memory only, no Supabase upsert); stale entries refresh naturally on next non-fresh check
+- [Quick-004]: suggestedOfferEmphasis and suggestedOfferValueEmphasis left as dead code in consts.ts; cleanup deferred
 - [Quick-005]: Listing candidate dedupe now keeps the highest-quality record per item and expands structured description extraction beyond `redacted_description.text`
 - [Quick-005]: Location sanitization trims Marketplace CTA text across structured fields, DOM fallbacks, and simple-listing search fallbacks; incomplete listing scrapes now start comparable search and detail retry in parallel and merge recovered fields afterward
 
@@ -114,6 +116,7 @@ None yet.
 | 1 | Fix intermittent marketplace listing scrape race where image and description are sometimes missing or wrong; verify the fix | 2026-03-09 | caa726c | [1-fix-intermittent-marketplace-listing-scr](./quick/1-fix-intermittent-marketplace-listing-scr/) |
 | 2 | Inspect whether marketplace scraping captures all listing images and whether GPT-4o receives all images or only the primary one | 2026-03-09 | 42b39d1 | [2-inspect-whether-marketplace-scraping-cap](./quick/2-inspect-whether-marketplace-scraping-cap/) |
 | 3 | Fix description including see more text — stop description bleed and extract City, ST from DOM fallback text | 2026-03-11 | 5dccc2d | [3-fix-description-including-see-more-text-](./quick/3-fix-description-including-see-more-text-/) |
+| 4 | Fix Suggested Offer card font size inconsistency and backfill comparables on cache hit | 2026-03-10 | dd0fd2e | [4-fix-suggested-offer-card-font-size-incon](./quick/4-fix-suggested-offer-card-font-size-incon/) |
 | 5 | Fix remaining marketplace listing extraction bugs where description is missing or location contains adjacent UI text, and reduce scrape latency without regressing data quality | 2026-03-13 | 8993013 | [5-fix-remaining-marketplace-listing-extrac](./quick/5-fix-remaining-marketplace-listing-extrac/) |
 
 ## Session Continuity

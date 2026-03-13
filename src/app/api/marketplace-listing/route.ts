@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import type { NormalizedMarketplaceListing } from './types';
+import type { NormalizedMarketplaceListing, NormalizedSimilarListing, NormalizedSimpleListing } from './types';
 import { parseFacebookMarketplaceListingUrl } from '../../../lib/facebookMarketplaceListing';
 import { isCacheFresh } from '../../../lib/server/cacheTtl';
 import {
@@ -9,10 +9,47 @@ import {
 } from '../../../lib/server/listingCacheRepository';
 import { isCacheableMarketplaceListingPayload } from '../../../lib/server/marketplaceListingQuality';
 import { scrapeMarketplaceListing } from '../../../lib/server/scraper/scrapeMarketplace';
-import { MarketplaceHtmlFetchError } from '../../../lib/server/facebookMarketplaceHtmlFetcher';
+import { MarketplaceHtmlFetchError, fetchMarketplaceHtmlWithFallback } from '../../../lib/server/facebookMarketplaceHtmlFetcher';
+import { buildMarketplaceSearchUrl, parseMarketplaceSearchHtml } from './parseHtml';
 
 export const runtime = 'nodejs';
 export const maxDuration = 300;
+
+function parseNumericPrice(priceStr: string): number {
+  const digits = priceStr.replace(/[^\d.]/g, '');
+  const num = Number(digits);
+  return Number.isFinite(num) ? num : 0;
+}
+
+async function backfillComparables(
+  listing: NormalizedMarketplaceListing,
+): Promise<{ simpleListings: NormalizedSimpleListing[]; similarListings: NormalizedSimilarListing[] }> {
+  const searchUrl = buildMarketplaceSearchUrl({
+    title: listing.title,
+    location: listing.location,
+    locationId: listing.locationId,
+    condition: listing.condition,
+    price: listing.price,
+  });
+
+  const searchFetchResult = await fetchMarketplaceHtmlWithFallback({
+    urls: [searchUrl],
+    referer: 'https://www.facebook.com/marketplace/',
+    bootstrapUrl: 'https://www.facebook.com/marketplace/',
+    timeoutMs: 15_000,
+  });
+
+  const simpleListings = parseMarketplaceSearchHtml(searchFetchResult.html);
+  const similarListings: NormalizedSimilarListing[] = simpleListings.map((sl) => ({
+    title: sl.title,
+    price: parseNumericPrice(sl.price),
+    location: sl.location,
+    image: sl.image,
+    link: sl.link,
+  }));
+
+  return { simpleListings, similarListings };
+}
 
 /**
  * Adds cache-status metadata for observability without changing response JSON contracts.
@@ -92,10 +129,37 @@ export async function GET(request: NextRequest) {
               listingId,
               computedAt: cachedListing.computedAt,
             });
+
+            const cachedPayload = cachedListing.listingPayload;
+            const hasSimilarListings =
+              Array.isArray(cachedPayload.similarListings) && cachedPayload.similarListings.length > 0;
+
+            if (!hasSimilarListings) {
+              try {
+                const comparables = await backfillComparables(cachedPayload);
+                if (comparables.similarListings.length > 0) {
+                  cachedPayload.simpleListings = comparables.simpleListings;
+                  cachedPayload.similarListings = comparables.similarListings;
+                  console.info('Marketplace listing cache hit backfilled with comparables', {
+                    listingId,
+                    comparablesCount: comparables.similarListings.length,
+                  });
+                }
+              } catch (backfillError) {
+                console.warn(
+                  '[route:marketplace-listing] Comparable backfill failed on cache hit, returning without comparables',
+                  {
+                    listingId,
+                    error: backfillError instanceof Error ? backfillError.message : backfillError,
+                  },
+                );
+              }
+            }
+
             return withCacheStatus(
               NextResponse.json({
                 success: true,
-                listing: cachedListing.listingPayload,
+                listing: cachedPayload,
                 raw: {
                   cache: 'hit',
                   source: 'listing-cache',

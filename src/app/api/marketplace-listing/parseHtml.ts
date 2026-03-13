@@ -497,6 +497,10 @@ function normalizeConditionValue(rawCondition: string | null | undefined): strin
     return 'used_fair';
   }
 
+  if (normalized === 'used') {
+    return 'used_good';
+  }
+
   return undefined;
 }
 
@@ -1020,8 +1024,11 @@ export function parseMarketplaceListingHtml(input: {
 
         return candidateId === requestedItemId || candidateLinkId === requestedItemId;
       })
-    : candidates;
-  const selectedCandidate = matchingCandidates.reduce<UnknownRecord | undefined>((best, candidate) => {
+    : [];
+  const candidatePool = matchingCandidates.length > 0
+    ? matchingCandidates
+    : requestedItemId ? [] : candidates;
+  const selectedCandidate = candidatePool.reduce<UnknownRecord | undefined>((best, candidate) => {
     if (!best) {
       return candidate;
     }
@@ -1066,12 +1073,19 @@ export function parseMarketplaceListingHtml(input: {
 
   const primaryImage = getPrimaryListingImage(selectedCandidate);
   const listingPhotoUris = getAllListingPhotoUris(selectedCandidate);
+  const siblingPhotoUris = matchingCandidates
+    .filter((c) => c !== selectedCandidate)
+    .flatMap((c) => [
+      normalizeWhitespace(getPrimaryListingImage(c)),
+      ...getAllListingPhotoUris(c),
+    ]);
   const fallbackImages = domFallback?.listing.images ?? [];
   const images = Array.from(
     new Set(
       [
         normalizeWhitespace(primaryImage),
         ...listingPhotoUris,
+        ...siblingPhotoUris,
         ...galleryImages,
         ...fallbackImages,
       ].filter((image): image is string => Boolean(image)),

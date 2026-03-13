@@ -40,12 +40,12 @@ export function PricingAnalysis({
     <div className={pricingAnalysisStyles.section}>
       <div className={pricingAnalysisStyles.topGrid}>
           <div
-            className={`${pricingAnalysisStyles.statCardBase} ${pricingAnalysisStyles.statValueRow} ${pricingAnalysisStyles.statBgSuggestedOffer} ${pricingAnalysisStyles.suggestedOfferEmphasis}`}
+            className={`${pricingAnalysisStyles.statCardBase} ${pricingAnalysisStyles.statValueRow} ${pricingAnalysisStyles.statBgSuggestedOffer}`}
           >
             <h3 className={pricingAnalysisStyles.statTitle}>
               Suggested Offer
             </h3>
-            <p className={`${pricingAnalysisStyles.statValue} ${pricingAnalysisStyles.suggestedOfferValueEmphasis}`}>
+            <p className={pricingAnalysisStyles.statValue}>
               {suggestedOfferDisplay}
             </p>
           </div>
